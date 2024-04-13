@@ -1,5 +1,5 @@
-import Joi, { valid } from 'joi';
 import 'dotenv/config';
+import Joi from 'joi';
 
 const envVarsSchema = Joi.object()
   .keys({
@@ -18,7 +18,7 @@ const config = {
   env: envVars.NODE_ENV,
   port: envVars.PORT,
   mongoose: {
-    url: envVars.MONGODB_URL_CLOUD || envVars.MONGODB_URL_DEV,
+    url: envVars.NODE_ENV === 'development' ? envVars.MONGODB_URL_DEV : envVars.MONGODB_URL_CLOUD,
     options: {
       dbName: 'unicorn',
     },
