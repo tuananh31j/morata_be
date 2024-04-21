@@ -1,20 +1,15 @@
 import app from './app';
-import mongoose from 'mongoose';
 import config from './config/config';
+import connectDB from './config/database';
 
 const PORT = config.port;
 
 let server: any;
-mongoose
-  .connect(`${config.mongoose.url}`, {
-    dbName: config.mongoose.options.dbName,
-  })
-  .then(() => {
-    console.log('Connected to MongoDB');
-    server = app.listen(PORT, () => {
-      console.log(`Listening to port ${PORT}`);
-    });
+connectDB().then(() => {
+  server = app.listen(PORT, () => {
+    console.log(`Listening to port ${PORT}`);
   });
+});
 
 const exitHandler = () => {
   if (server) {
