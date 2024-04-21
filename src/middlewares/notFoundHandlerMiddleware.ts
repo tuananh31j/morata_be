@@ -1,4 +1,4 @@
-import { NotFoundError } from '@/error/cutomError';
+import { NotFoundError } from '@/error/customError';
 import { Request, Response, NextFunction } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 

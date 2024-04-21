@@ -1,4 +1,4 @@
-import { NotFoundError } from '@/error/cutomError';
+import { NotFoundError } from '@/error/customError';
 import customResponse from '@/helpers/response';
 import Category from '@/models/Category';
 import { Request, Response, NextFunction } from 'express';

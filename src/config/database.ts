@@ -42,6 +42,7 @@ export const connectDB = () => {
 
     setTimeout(() => {
       mongoose.connect(config.mongoose.url, {
+        dbName: config.mongoose.options.dbName,
         socketTimeoutMS: 3000,
         connectTimeoutMS: 3000,
       } as ConnectOptions);
@@ -60,9 +61,9 @@ export const connectDB = () => {
   });
 
   // mongoose.connect return promise
-  mongoose.connect(config.mongoose.url, {} as ConnectOptions);
+  mongoose.connect(config.mongoose.url, { dbName: config.mongoose.options.dbName } as ConnectOptions);
 
-  return mongoose.connect(config.mongoose.url, { dbName: 'unicorn' });
+  return mongoose.connect(config.mongoose.url, { dbName: config.mongoose.options.dbName });
 };
 
 export default connectDB;
