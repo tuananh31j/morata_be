@@ -13,7 +13,7 @@ const { value: envVars, error } = envVarsSchema.prefs({ errors: { label: 'key' }
 if (error) {
   throw new Error(`Config validation error: ${error.message}`);
 }
-console.log('envVars.PORT', envVars.PORT);
+
 const config = {
   env: envVars.NODE_ENV,
   port: envVars.PORT,
