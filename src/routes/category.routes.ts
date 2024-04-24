@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { categoryController } from '@/controllers';
-import { categoryValidation, validateObjectId } from '@/validation';
+import { validateObjectId } from '@/validation';
+import { categoryValidation } from '@/validation/category';
 
 const router = Router();
 
