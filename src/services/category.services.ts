@@ -6,7 +6,7 @@ import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 
 // @Get: getAllCategories
 export const getAllCategories = async (req: Request, res: Response, next: NextFunction) => {
-  const categories = await Category.find({});
+  const categories = await Category.find({}).lean();
   return res
     .status(StatusCodes.OK)
     .json(customResponse({ data: categories, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
@@ -14,7 +14,7 @@ export const getAllCategories = async (req: Request, res: Response, next: NextFu
 
 // @Get: getDetailedCategory
 export const getDetailedCategory = async (req: Request, res: Response, next: NextFunction) => {
-  const category = await Category.findById(req.params.id);
+  const category = await Category.findById(req.params.id).lean();
 
   if (!category) {
     throw new NotFoundError(`${ReasonPhrases.NOT_FOUND}/ID: ${req.params.id}`);

@@ -1,2 +1,3 @@
 export * from './objectIdValidation';
-export * from './category';
+export * as categoryValidation from './category';
+export * as brandValidation from './brand';
