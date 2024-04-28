@@ -1,6 +1,8 @@
+import { ICategorySchema } from '@/interfaces/schema/category';
 import mongoose from 'mongoose';
+import MongooseDelete, { SoftDeleteModel } from 'mongoose-delete';
 
-const categorySchema = new mongoose.Schema(
+const CategorySchema = new mongoose.Schema<ICategorySchema>(
   {
     name: {
       type: String,
@@ -19,6 +21,11 @@ const categorySchema = new mongoose.Schema(
   },
 );
 
-const Category = mongoose.model('Category', categorySchema);
+CategorySchema.plugin(MongooseDelete, { deletedAt: true });
+
+const Category: SoftDeleteModel<ICategorySchema> = mongoose.model<ICategorySchema>(
+  'Category',
+  CategorySchema,
+) as MongooseDelete.SoftDeleteModel<ICategorySchema>;
 
 export default Category;

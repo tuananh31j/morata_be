@@ -14,12 +14,10 @@ export const getAllCategories = async (req: Request, res: Response, next: NextFu
 
 // @Get: getDetailedCategory
 export const getDetailedCategory = async (req: Request, res: Response, next: NextFunction) => {
-  const category = await Category.findById(req.params.id).lean();
-
+  const category = await Category.findOne({ _id: req.params.id, deleted: false }).lean();
   if (!category) {
-    throw new NotFoundError(`${ReasonPhrases.NOT_FOUND}/ID: ${req.params.id}`);
+    throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} category with id: ${req.params.id}`);
   }
-
   return res
     .status(StatusCodes.OK)
     .json(customResponse({ data: category, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
@@ -36,12 +34,11 @@ export const createNewCategory = async (req: Request, res: Response, next: NextF
     );
 };
 
-// @Patch: createNewCategory
+// @Patch: updateCategory
 export const updateCateGory = async (req: Request, res: Response, next: NextFunction) => {
   const category = await Category.findByIdAndUpdate(req.params.id, { ...req.body }, { new: true });
-
   if (!category) {
-    throw new NotFoundError(`${ReasonPhrases.NOT_FOUND}/ID: ${req.params.id}`);
+    throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} category with id: ${req.params.id}`);
   }
 
   return res
@@ -52,9 +49,8 @@ export const updateCateGory = async (req: Request, res: Response, next: NextFunc
 // @Delete: deleteCategory
 export const deleteCategory = async (req: Request, res: Response, next: NextFunction) => {
   const category = await Category.findByIdAndDelete(req.params.id);
-
   if (!category) {
-    throw new NotFoundError(`${ReasonPhrases.NOT_FOUND}/ID: ${req.params.id}`);
+    throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} category with id: ${req.params.id}`);
   }
 
   return res

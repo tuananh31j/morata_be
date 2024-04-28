@@ -30,6 +30,4 @@ const cartSchema = new mongoose.Schema({
   totalQuantity: Number,
 });
 
-const Cart = mongoose.model('Cart', cartSchema);
-
-export default Cart;
+export default mongoose.model('Cart', cartSchema);

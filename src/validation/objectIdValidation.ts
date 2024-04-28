@@ -3,5 +3,12 @@ import { NotFoundError } from '@/error/customError';
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 
 export const validateObjectId: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
-  return mongoose.isValidObjectId(req.params.id) ? next(new NotFoundError(`Not found ${req.params.id}`)) : next();
+  if (!req.params) {
+    next(new NotFoundError(`Need the request params for this route.`));
+  }
+  for (const param in req.params) {
+    !mongoose.isValidObjectId(req.params[param])
+      ? next(new NotFoundError(`Invalid param: ${req.params[param]}`))
+      : next();
+  }
 };

@@ -1,13 +1,14 @@
 import { Router } from 'express';
 import { brandController } from '@/controllers';
-import { brandValidation, validateObjectId } from '@/validation';
+import { validateObjectId } from '@/validation';
+import { createBrandValidation, updateBrandValidation } from '@/validation/brand';
 
 const router = Router();
 
 router.get('/all', brandController.getAllBrands);
 router.get('/:id', [validateObjectId], brandController.getDetailedBrand);
-router.post('/', brandController.createNewBrand);
-router.patch('/:id', [validateObjectId], brandController.updateBrand);
+router.post('/', [createBrandValidation], brandController.createNewBrand);
+router.patch('/:id', [validateObjectId, updateBrandValidation], brandController.updateBrand);
 router.delete('/:id', [validateObjectId], brandController.deleteBrand);
 
 export default router;
