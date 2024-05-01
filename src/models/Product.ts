@@ -1,11 +1,7 @@
 import { IProductSchema } from '@/interfaces/schema/product';
 import mongoose, { PaginateModel, Schema } from 'mongoose';
-import MongooseDelete, { SoftDeleteModel } from 'mongoose-delete';
 import paginate from 'mongoose-paginate-v2';
 
-// Define the interface for the product schema
-
-// Define the product schema
 const ProductSchema = new Schema<IProductSchema>(
   {
     name: {
@@ -59,6 +55,10 @@ const ProductSchema = new Schema<IProductSchema>(
         ref: 'Review',
       },
     ],
+    deleted: {
+      type: Boolean,
+      default: false,
+    },
     attributes: {
       type: Schema.Types.Mixed,
     },
@@ -66,14 +66,11 @@ const ProductSchema = new Schema<IProductSchema>(
   { timestamps: true, versionKey: false },
 );
 
-ProductSchema.plugin(MongooseDelete, { deletedAt: true });
 ProductSchema.plugin(paginate);
 
-interface IProductModel extends PaginateModel<IProductSchema> {}
-
-const Product: SoftDeleteModel<IProductSchema> = mongoose.model<IProductSchema>(
+const Product: PaginateModel<IProductSchema> = mongoose.model<IProductSchema, PaginateModel<IProductSchema>>(
   'Product',
   ProductSchema,
-) as MongooseDelete.SoftDeleteModel<IProductSchema>;
+);
 
 export default Product;

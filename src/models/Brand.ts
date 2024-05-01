@@ -1,6 +1,5 @@
 import { IBrandSchema } from '@/interfaces/schema/brand';
 import mongoose from 'mongoose';
-import MongooseDelete, { SoftDeleteModel } from 'mongoose-delete';
 
 const BrandSchema = new mongoose.Schema<IBrandSchema>(
   {
@@ -25,11 +24,6 @@ const BrandSchema = new mongoose.Schema<IBrandSchema>(
   },
 );
 
-BrandSchema.plugin(MongooseDelete, { deletedAt: true });
-
-const Brand: SoftDeleteModel<IBrandSchema> = mongoose.model<IBrandSchema>(
-  'Brand',
-  BrandSchema,
-) as MongooseDelete.SoftDeleteModel<IBrandSchema>;
+const Brand = mongoose.model<IBrandSchema>('Brand', BrandSchema);
 
 export default Brand;

@@ -1,6 +1,6 @@
 import app from './app';
-import config from './config/config';
-import connectDB from './config/database';
+import config from './config/env.config';
+import connectDB from './config/database.config';
 
 const PORT = config.port;
 

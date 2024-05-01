@@ -1,5 +1,5 @@
 import mongoose, { ConnectOptions, Error } from 'mongoose';
-import config from './config';
+import config from './env.config';
 
 mongoose.set('strictQuery', true);
 

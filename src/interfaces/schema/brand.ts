@@ -1,6 +1,6 @@
-import { SoftDeleteDocument } from 'mongoose-delete';
+import { Document } from 'mongoose';
 
-export interface IBrandSchema extends SoftDeleteDocument {
+export interface IBrandSchema extends Document {
   name: string;
   description: string;
   country: string;

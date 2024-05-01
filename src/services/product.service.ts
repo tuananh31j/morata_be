@@ -1,12 +1,22 @@
 import { NotFoundError } from '@/error/customError';
 import customResponse from '@/helpers/response';
 import { Product } from '@/models';
-import { Request, Response, NextFunction } from 'express';
+import { uploadFiles } from '@/utils/files';
+import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 
 // @Get: getAllProducts
 export const getAllProducts = async (req: Request, res: Response, next: NextFunction) => {
-  const products = await Product.find({}).lean();
+  const query = { deleted: false };
+  console.log(req.params);
+  const options: any = {
+    page: req.query.page ? +req.query.page : 1,
+    limit: req.query.limit ? +req.query.limit : 10,
+    sort: { createdAt: -1 },
+    lean: true,
+  };
+
+  const products = await Product.paginate(query, options);
   return res
     .status(StatusCodes.OK)
     .json(customResponse({ data: products, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
@@ -14,10 +24,10 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
 
 // @Get: getDetailedProduct
 export const getDetailedProduct = async (req: Request, res: Response, next: NextFunction) => {
-  const product = await Product.findById(req.params.id).lean();
+  const product = await Product.findOne({ _id: req.params.id, deleted: false }).lean();
 
   if (!Product) {
-    throw new NotFoundError(`${ReasonPhrases.NOT_FOUND}/ID: ${req.params.id}`);
+    throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${req.params.id}`);
   }
 
   return res
@@ -27,7 +37,7 @@ export const getDetailedProduct = async (req: Request, res: Response, next: Next
 
 // @Get Top Latest Products
 export const getTopLatestProducts = async (req: Request, res: Response, next: NextFunction) => {
-  const topLatestProducts = await Product.find({}).sort({ createdAt: -1 }).limit(10);
+  const topLatestProducts = await Product.find({ deleted: false }).sort({ createdAt: -1 }).limit(10).lean();
   if (topLatestProducts.length < 1) throw new NotFoundError('Not Found Product');
   return res
     .status(StatusCodes.OK)
@@ -38,7 +48,7 @@ export const getTopLatestProducts = async (req: Request, res: Response, next: Ne
 
 // @Get Top Deals Of The Day
 export const getTopDealsOfTheDay = async (req: Request, res: Response, next: NextFunction) => {
-  const topDealsProducts = await Product.find({}).sort({ discountPercentage: 1 }).limit(2);
+  const topDealsProducts = await Product.find({ deleted: false }).sort({ discountPercentage: 1 }).limit(2).lean();
   if (topDealsProducts.length < 1) throw new NotFoundError('Not Found Product');
   return res
     .status(StatusCodes.OK)
@@ -70,6 +80,9 @@ export const getTopReviewsProducts = async (req: Request, res: Response, next: N
       $sort: { numReviews: -1 }, // Sort by 'numReviews' in descending order
     },
     {
+      $match: { deleted: false },
+    },
+    {
       $limit: 10, // Limit the results to 10 documents
     },
   ];
@@ -88,6 +101,7 @@ export const getTopRelativeProducts = async (req: Request, res: Response, next: 
   const topRelativeProducts = await Product.find({
     category: req.params.cateId,
     _id: { $ne: req.params.id },
+    deleted: false,
   })
     .sort({ createdAt: -1 })
     .limit(10);
@@ -101,21 +115,37 @@ export const getTopRelativeProducts = async (req: Request, res: Response, next: 
 
 // @Post: createNewProduct
 export const createNewProduct = async (req: Request, res: Response, next: NextFunction) => {
+  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+  const thumbnailFile = files['thumbnail'];
+  const imagesFiles = files['images'];
+  const thumbnailURL = await uploadFiles(thumbnailFile);
+  const imagesURLs = await uploadFiles(imagesFiles);
+
+  req.body.thumbnail = thumbnailURL[0];
+  req.body.images = imagesURLs;
+
   const product = await Product.create({ ...req.body });
 
-  return res
-    .status(StatusCodes.CREATED)
-    .json(
-      customResponse({ data: product, success: true, status: StatusCodes.CREATED, message: ReasonPhrases.CREATED }),
-    );
+  return res.status(StatusCodes.CREATED).json(
+    customResponse({
+      data: product,
+      success: true,
+      status: StatusCodes.CREATED,
+      message: ReasonPhrases.CREATED,
+    }),
+  );
 };
 
 // @Patch: updateProduct
 export const updateProduct = async (req: Request, res: Response, next: NextFunction) => {
-  const product = await Product.findByIdAndUpdate(req.params.id, { ...req.body }, { new: true });
+  const product = await Product.findOneAndUpdate(
+    { _id: req.params.id, deleted: false },
+    { ...req.body },
+    { new: true },
+  );
 
   if (!Product) {
-    throw new NotFoundError(`${ReasonPhrases.NOT_FOUND}/ID: ${req.params.id}`);
+    throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${req.params.id}`);
   }
 
   return res
@@ -125,10 +155,9 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
 
 // @Delete: deleteProduct
 export const deleteProduct = async (req: Request, res: Response, next: NextFunction) => {
-  const product = await Product.findByIdAndDelete(req.params.id);
-
+  const product = await Product.findOneAndUpdate({ _id: req.params.id, deleted: false }, { deleted: true });
   if (!product) {
-    throw new NotFoundError(`${ReasonPhrases.NOT_FOUND}/ID: ${req.params.id}`);
+    throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${req.params.id}`);
   }
 
   return res

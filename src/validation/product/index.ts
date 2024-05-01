@@ -1,2 +1,2 @@
-export * from './productSchema';
+export { default as productSchema } from './productSchema';
 export * from './productValidation';

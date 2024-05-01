@@ -1,6 +1,6 @@
 import { NotFoundError } from '@/error/customError';
 import customResponse from '@/helpers/response';
-import Brand from '@/models/Brand';
+import { Product, Brand } from '@/models';
 import { Request, Response, NextFunction } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 
@@ -49,6 +49,8 @@ export const updateCateGory = async (req: Request, res: Response, next: NextFunc
 
 // @Delete: deleteBrand
 export const deleteBrand = async (req: Request, res: Response, next: NextFunction) => {
+  const productsByBrand = await Product.find({ brand: req.params.id }).lean();
+  await Product.deleteMany(productsByBrand);
   const brand = await Brand.findByIdAndDelete(req.params.id);
 
   if (!brand) {

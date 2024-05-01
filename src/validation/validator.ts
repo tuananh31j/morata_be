@@ -3,7 +3,7 @@ import { NextFunction } from 'express';
 import Joi from 'joi';
 
 const validator = async (schemaName: Joi.ObjectSchema, body: object, next: NextFunction) => {
-  const value = await schemaName.validate(body, {
+  const value = schemaName.validate(body, {
     abortEarly: false, // include all errors
     allowUnknown: true, // ignore unknown props
     stripUnknown: true, // remove unknown props

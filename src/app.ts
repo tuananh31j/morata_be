@@ -7,9 +7,14 @@ import morgan from 'morgan';
 import notFoundHandler from './middlewares/notFoundHandlerMiddleware';
 import errorHandler from './middlewares/errorHandlerMiddleware';
 import router from './routes';
-import { corsOptions } from './config/corsOptions';
+import { corsOptions } from './config/cors.config';
+import firebaseConfig from './config/firebase.config';
+import { initializeApp } from 'firebase/app';
 
 const app: Express = express();
+
+// firebase app
+initializeApp(firebaseConfig);
 
 app.use(cors(corsOptions));
 app.use(morgan('dev'));

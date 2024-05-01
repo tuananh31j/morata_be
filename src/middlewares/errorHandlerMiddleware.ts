@@ -1,4 +1,4 @@
-import config from '@/config/config';
+import config from '@/config/env.config';
 import { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 

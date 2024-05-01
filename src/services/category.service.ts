@@ -1,6 +1,6 @@
 import { NotFoundError } from '@/error/customError';
 import customResponse from '@/helpers/response';
-import Category from '@/models/Category';
+import { Category, Product } from '@/models';
 import { Request, Response, NextFunction } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 
@@ -48,6 +48,8 @@ export const updateCateGory = async (req: Request, res: Response, next: NextFunc
 
 // @Delete: deleteCategory
 export const deleteCategory = async (req: Request, res: Response, next: NextFunction) => {
+  const productsByCategory = await Product.find({ category: req.params.id }).lean();
+  await Product.deleteMany(productsByCategory);
   const category = await Category.findByIdAndDelete(req.params.id);
   if (!category) {
     throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} category with id: ${req.params.id}`);
