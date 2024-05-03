@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { productSchema } from './Product';
+import { ProductSchema } from './Product';
 
 const attributeSchema = new mongoose.Schema({
   name: {
@@ -11,4 +11,4 @@ const attributeSchema = new mongoose.Schema({
   },
 });
 
-productSchema.add({ attributes: [attributeSchema] });
+ProductSchema.add({ attributes: [attributeSchema] });

@@ -2,7 +2,7 @@ import { IProductSchema } from '@/interfaces/schema/product';
 import mongoose, { PaginateModel, Schema } from 'mongoose';
 import paginate from 'mongoose-paginate-v2';
 
-const ProductSchema = new Schema<IProductSchema>(
+export const ProductSchema = new Schema<IProductSchema>(
   {
     name: {
       type: String,

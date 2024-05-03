@@ -3,9 +3,10 @@ import Joi from 'joi';
 
 const envVarsSchema = Joi.object()
   .keys({
-    NODE_ENV: Joi.string().valid('production', 'development', 'test').required(),
+    NODE_ENV: Joi.string().valid('production', 'development').required(),
     PORT: Joi.number().default(5555),
-    MONGODB_URL_DEV: Joi.string().required().description('Local Mongo DB'),
+    MONGODB_URL_DEV: Joi.string().description('Local Mongo DB'),
+    MONGODB_URL_CLOUD: Joi.string().description('Cloud Mongo DB'),
   })
   .unknown();
 
@@ -20,7 +21,7 @@ const config = {
   mongoose: {
     url: envVars.NODE_ENV === 'development' ? envVars.MONGODB_URL_DEV : envVars.MONGODB_URL_CLOUD,
     options: {
-      dbName: 'unicorn',
+      dbName: 'morata',
     },
   },
 };
