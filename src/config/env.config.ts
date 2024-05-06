@@ -7,6 +7,15 @@ const envVarsSchema = Joi.object()
     PORT: Joi.number().default(5555),
     MONGODB_URL_DEV: Joi.string().description('Local Mongo DB'),
     MONGODB_URL_CLOUD: Joi.string().description('Cloud Mongo DB'),
+    FIREBASE_API_KEY: Joi.string().description('Firebase Api Key'),
+    FIREBASE_AUTH_DOMAIN: Joi.string().description('Firebase Auth Domain'),
+    FIREBASE_PROJECT_ID: Joi.string().description('Firebase Project Id'),
+    FIREBASE_STORAGE_BUCKET: Joi.string().description('Firebase Storage Bucket'),
+    FIREBASE_MESSAGING_SENDER_ID: Joi.string().description('Firebase Messaging Sender Id'),
+    FIREBASE_APP_ID: Joi.string().description('Firebase App Id'),
+    FIREBASE_MEASUREMENT_ID: Joi.string().description('Firebase Measurement Id'),
+    STRIPE_PUBLIC_KEY: Joi.string().description('Stripe Public Key'),
+    STRIPE_SECRET_KEY: Joi.string().description('Stripe Secrete Key'),
   })
   .unknown();
 
@@ -23,6 +32,19 @@ const config = {
     options: {
       dbName: 'morata',
     },
+  },
+  firebaseConfig: {
+    apiKey: envVars.FIREBASE_API_KEY,
+    authDomain: envVars.FIREBASE_AUTH_DOMAIN,
+    projectId: envVars.FIREBASE_PROJECT_ID,
+    storageBucket: envVars.FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: envVars.FIREBASE_MESSAGING_SENDER_ID,
+    appId: envVars.FIREBASE_APP_ID,
+    measurementId: envVars.FIREBASE_MEASUREMENT_ID,
+  },
+  stripeConfig: {
+    publicKey: envVars.STRIPE_PUBLIC_KEY,
+    secretKey: envVars.STRIPE_SECRET_KEY,
   },
 };
 
