@@ -5,11 +5,19 @@ import { uploadFiles } from '@/utils/files';
 import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 
+type Options = {
+  page: number;
+  limit: number;
+  sort: {
+    createdAt: number;
+  };
+  lean: boolean;
+};
+
 // @Get: getAllProducts
 export const getAllProducts = async (req: Request, res: Response, next: NextFunction) => {
   const query = { deleted: false };
-  console.log(req.params);
-  const options: any = {
+  const options: Options = {
     page: req.query.page ? +req.query.page : 1,
     limit: req.query.limit ? +req.query.limit : 10,
     sort: { createdAt: -1 },
@@ -144,7 +152,7 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
     { new: true },
   );
 
-  if (!Product) {
+  if (!product) {
     throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${req.params.id}`);
   }
 
