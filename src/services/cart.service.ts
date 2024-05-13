@@ -1,6 +1,7 @@
 import { BadRequestError } from '@/error/customError';
 import customResponse from '@/helpers/response';
-import { Cart, Product } from '@/models';
+import Cart from '@/models/Cart';
+import Product from '@/models/Product';
 import { CartData } from '@/types/cart';
 import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
