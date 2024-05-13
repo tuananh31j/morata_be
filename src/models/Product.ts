@@ -59,9 +59,7 @@ export const ProductSchema = new Schema<IProductSchema>(
       type: Boolean,
       default: false,
     },
-    attributes: {
-      type: Schema.Types.Mixed,
-    },
+    attributes: [{ type: Schema.Types.ObjectId, ref: 'Attribute' }],
   },
   { timestamps: true, versionKey: false },
 );

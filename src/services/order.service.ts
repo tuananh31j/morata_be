@@ -1,4 +1,3 @@
-import { Order } from '@/models';
 import { NextFunction, Request } from 'express';
 import Stripe from 'stripe';
 import config from '@/config/env.config';

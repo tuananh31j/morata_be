@@ -1,6 +1,7 @@
 import { NotFoundError } from '@/error/customError';
 import customResponse from '@/helpers/response';
-import { Product, Brand } from '@/models';
+import Brand from '@/models/Brand';
+import Product from '@/models/Product';
 import { Request, Response, NextFunction } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 
