@@ -21,6 +21,16 @@ export class BadRequestError extends HttpException {
     this.status = StatusCodes.BAD_REQUEST;
   }
 }
+export class DuplicateError extends HttpException {
+  public status: number;
+  public name: string;
+
+  constructor(message: string) {
+    super(message);
+    this.name = ReasonPhrases.CONFLICT;
+    this.status = StatusCodes.CONFLICT;
+  }
+}
 export class UnauthenticatedError extends HttpException {
   public status: number;
   public name: string;

@@ -4,4 +4,5 @@ export * as productController from './product.controllers';
 export * as cartController from './cart.controllers';
 export * as orderController from './order.controllers';
 export * as attributeController from './attribute.controllers';
+export * as authController from './auth.controllers';
 export * as dataController from './data.controllers';

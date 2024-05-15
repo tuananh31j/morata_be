@@ -4,6 +4,7 @@ import compression from 'compression';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
 import notFoundHandler from './middlewares/notFoundHandlerMiddleware';
 import errorHandler from './middlewares/errorHandlerMiddleware';
 import router from './routes';
@@ -21,6 +22,7 @@ app.use(morgan('dev'));
 app.use(helmet());
 app.use(compression());
 
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

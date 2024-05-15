@@ -1,6 +1,5 @@
 import { NotFoundError } from '@/error/customError';
-import { Request, Response, NextFunction } from 'express';
-import { ReasonPhrases, StatusCodes } from 'http-status-codes';
+import { NextFunction, Request, Response } from 'express';
 
 const notFoundHandler = (req: Request, res: Response, next: NextFunction) => {
   const err = new NotFoundError('This route does not exist.');

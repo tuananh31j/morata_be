@@ -1,5 +1,4 @@
 import { attributeController } from '@/controllers';
-import { attribute } from '@/services';
 import { Router } from 'express';
 
 const router = Router();
