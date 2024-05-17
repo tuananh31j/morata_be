@@ -9,7 +9,6 @@ import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 // @Get cart by user
 export const getCartByUser = async (req: Request, res: Response, next: NextFunction) => {
   const cart = await Cart.findOne({ user: req.params.userId }).populate('items.productId').lean();
-  console.log('get cart:', cart);
   const cartData: CartData = {
     userId: req.params.userId,
     items: cart

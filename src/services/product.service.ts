@@ -135,29 +135,28 @@ export const createNewProduct = async (req: Request, res: Response, next: NextFu
 
   const newProduct = new Product({ ...req.body });
 
-  if (req.body.attributes) {
-    for (const attribute of req.body.attributes) {
-      let valueAttribute;
+  // if (req.body.attributes) {
+  //   for (const attribute of req.body.attributes) {
+  //     let valueAttribute;
 
-      let existingAttribute = await Attribute.findOne({ name: attribute.name });
-      if (!existingAttribute) {
-        throw new BadRequestError(`${attribute.name} does not existed`);
-      }
+  //     let existingAttribute = await Attribute.findOne({ name: attribute.name });
+  //     if (!existingAttribute) {
+  //       throw new BadRequestError(`${attribute.name} does not existed`);
+  //     }
 
-      for (const valueAttr of attribute.values) {
-        const { name, value } = valueAttr;
+  //     for (const valueAttr of attribute.values) {
+  //       const { name, value } = valueAttr;
 
-        valueAttribute = await ValueAttribute.create({ name, value });
-        existingAttribute.values.push(valueAttribute._id);
-        await existingAttribute.save();
-        newProduct.attributes.push(existingAttribute._id);
-        await newProduct.save();
-      }
-    }
-  } else {
-    throw new BadRequestError('Attributes is required.');
-  }
-
+  //       valueAttribute = await ValueAttribute.create({ name, value });
+  //       existingAttribute.values.push(valueAttribute._id);
+  //       await existingAttribute.save();
+  //       newProduct.attributes.push(existingAttribute._id);
+  //       await newProduct.save();
+  //     }
+  //   }
+  // } else {
+  //   throw new BadRequestError('Attributes is required.');
+  // }
   return res.status(StatusCodes.CREATED).json(
     customResponse({
       data: newProduct,

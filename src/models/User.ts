@@ -28,6 +28,11 @@ const UserSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    role: {
+      type: String,
+      default: 'user',
+      enum: ['user', 'superAdmin'],
+    },
   },
   {
     timestamps: true,
@@ -42,10 +47,6 @@ UserSchema.pre('save', async function (next) {
   }
   next();
 });
-
-UserSchema.methods.comparePassword = async function (candidatePassword: string) {
-  return await bcrypt.compare(candidatePassword, this.password);
-};
 
 UserSchema.methods.toJSON = function () {
   const obj = this.toObject();

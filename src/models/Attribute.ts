@@ -2,10 +2,6 @@ import mongoose from 'mongoose';
 
 const ValueAttributesSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: true,
-    },
     value: {
       type: String,
       required: true,
@@ -27,10 +23,6 @@ const AttributeSchema = new mongoose.Schema(
       required: true,
     },
     values: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ValueAttribute' }],
-    category: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Category',
-    },
   },
   {
     timestamps: false,
@@ -38,4 +30,4 @@ const AttributeSchema = new mongoose.Schema(
   },
 );
 
-export const Attribute = mongoose.model('Attributes', AttributeSchema);
+export const Attribute = mongoose.model('Attribute', AttributeSchema);

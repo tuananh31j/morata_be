@@ -16,6 +16,10 @@ const envVarsSchema = Joi.object()
     FIREBASE_MEASUREMENT_ID: Joi.string().description('Firebase Measurement Id'),
     STRIPE_PUBLIC_KEY: Joi.string().description('Stripe Public Key'),
     STRIPE_SECRET_KEY: Joi.string().description('Stripe Secrete Key'),
+    JWT_ACCESS_TOKEN_KEY: Joi.string().required().description('JWT Access Token Key'),
+    JWT_REFRESH_TOKEN_KEY: Joi.string().required().description('JWT Refresh Token Key'),
+    JWT_ACCESS_EXPIRATION: Joi.number().default(15).description('minutes after which access tokens expire'),
+    JWT_REFRESH_EXPIRATION: Joi.number().default(7).description('days after which refresh tokens expire'),
   })
   .unknown();
 
@@ -32,6 +36,13 @@ const config = {
     options: {
       dbName: 'morata',
     },
+  },
+
+  jwt: {
+    accessTokenKey: envVars.JWT_ACCESS_TOKEN_KEY,
+    refreshTokenKey: envVars.JWT_REFRESH_TOKEN_KEY,
+    accessExpiration: envVars.JWT_ACCESS_EXPIRATION,
+    refreshExpiration: envVars.JWT_REFRESH_EXPIRATION,
   },
   firebaseConfig: {
     apiKey: envVars.FIREBASE_API_KEY,

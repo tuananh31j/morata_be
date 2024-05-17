@@ -13,5 +13,5 @@ export interface IProductSchema extends Document {
   brand: Schema.Types.ObjectId;
   reviews: Schema.Types.ObjectId[];
   deleted: boolean;
-  attributes: Record<string, any>;
+  details: [{ name: string; value: any }];
 }
