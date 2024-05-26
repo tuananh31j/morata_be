@@ -10,7 +10,7 @@ router.get('/all', productController.getAllProducts);
 router.get('/latest', productController.getTopLatestProducts);
 router.get('/deals', productController.getTopDealsOfTheDay);
 router.get('/reviews', productController.getTopReviewsProducts);
-router.get('/related/:id/:cateId', [validateObjectId], productController.getTopRelativeProducts);
+router.get('/related', productController.getTopRelativeProducts);
 router.get('/:id', [validateObjectId], productController.getDetailedProduct);
 
 router.post(

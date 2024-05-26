@@ -1,8 +1,7 @@
 import { NotFoundError } from '@/error/customError';
 import customResponse from '@/helpers/response';
 import Category from '@/models/Category';
-import Product from '@/models/Product';
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 
 // @Get: getAllCategories

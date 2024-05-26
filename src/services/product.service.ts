@@ -16,7 +16,7 @@ type Options = {
 
 // @Get: getAllProducts
 export const getAllProducts = async (req: Request, res: Response, next: NextFunction) => {
-  const query = { deleted: false };
+  const query = { isDeleted: false };
   const options: Options = {
     page: req.query.page ? +req.query.page : 1,
     limit: req.query.limit ? +req.query.limit : 10,
@@ -32,7 +32,7 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
 
 // @Get: getDetailedProduct
 export const getDetailedProduct = async (req: Request, res: Response, next: NextFunction) => {
-  const product = await Product.findOne({ _id: req.params.id, deleted: false }).lean();
+  const product = await Product.findOne({ _id: req.params.id, isDeleted: false }).lean();
 
   if (!Product) {
     throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${req.params.id}`);
@@ -45,8 +45,7 @@ export const getDetailedProduct = async (req: Request, res: Response, next: Next
 
 // @Get Top Latest Products
 export const getTopLatestProducts = async (req: Request, res: Response, next: NextFunction) => {
-  const topLatestProducts = await Product.find({ deleted: false }).sort({ createdAt: -1 }).limit(10).lean();
-  if (topLatestProducts.length < 1) throw new NotFoundError('Not Found Product');
+  const topLatestProducts = await Product.find({ isDeleted: false }).sort({ createdAt: -1 }).limit(10).lean();
   return res
     .status(StatusCodes.OK)
     .json(
@@ -56,8 +55,7 @@ export const getTopLatestProducts = async (req: Request, res: Response, next: Ne
 
 // @Get Top Deals Of The Day
 export const getTopDealsOfTheDay = async (req: Request, res: Response, next: NextFunction) => {
-  const topDealsProducts = await Product.find({ deleted: false }).sort({ discountPercentage: 1 }).limit(2).lean();
-  if (topDealsProducts.length < 1) throw new NotFoundError('Not Found Product');
+  const topDealsProducts = await Product.find({ isDeleted: false }).sort({ discountPercentage: 1 }).limit(2).lean();
   return res
     .status(StatusCodes.OK)
     .json(customResponse({ data: topDealsProducts, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
@@ -68,35 +66,31 @@ export const getTopReviewsProducts = async (req: Request, res: Response, next: N
   const aggregationPipeline = [
     {
       $lookup: {
-        from: 'Review', // Replace with your review collection name
-        localField: '_id',
-        foreignField: 'product',
-        as: 'reviews',
+        from: 'Review', // Foreign collection
+        localField: '_id', // Field in Product that references Review
+        foreignField: 'productId', // Field in Review that references Product
+        as: 'reviews', // Name for the aggregated reviews
       },
     },
     {
-      $unwind: '$reviews', // Unwind the 'reviews' array
+      $unwind: '$reviews', // Deconstructs the reviews array into separate documents
     },
     {
       $group: {
-        _id: '$_id',
-        product: { $first: '$name' }, // Replace with desired product property
-        numReviews: { $sum: 1 }, // Count the number of reviews
+        _id: '$_id', // Group by product ID
+        name: { $first: '$name' }, // Get the first name from the grouped products
+        reviewCount: { $sum: 1 }, // Count the number of reviews in the group
       },
     },
     {
-      $sort: { numReviews: -1 }, // Sort by 'numReviews' in descending order
+      $sort: { reviewCount: -1 }, // Sort by review count in descending order (most reviews first)
     },
     {
-      $match: { deleted: false },
-    },
-    {
-      $limit: 10, // Limit the results to 10 documents
+      $limit: 5, // Limit to the top 5 products
     },
   ];
 
   const topReviewsProducts = await Product.aggregate(aggregationPipeline as any[]);
-  if (topReviewsProducts.length < 1) throw new NotFoundError('Not Found Product');
   return res
     .status(StatusCodes.OK)
     .json(
@@ -106,14 +100,8 @@ export const getTopReviewsProducts = async (req: Request, res: Response, next: N
 
 // @Get Top Hot Relative Products and the same category
 export const getTopRelativeProducts = async (req: Request, res: Response, next: NextFunction) => {
-  const topRelativeProducts = await Product.find({
-    category: req.params.cateId,
-    _id: { $ne: req.params.id },
-    deleted: false,
-  })
-    .sort({ createdAt: -1 })
-    .limit(10);
-  if (topRelativeProducts.length < 1) throw new NotFoundError('Not Found Product');
+  const topRelativeProducts = await Product.find({ _id: { $ne: req.body.productId }, isDeleted: false });
+
   return res
     .status(StatusCodes.OK)
     .json(
@@ -153,7 +141,7 @@ export const createNewProduct = async (req: Request, res: Response, next: NextFu
 // @Patch: updateProduct
 export const updateProduct = async (req: Request, res: Response, next: NextFunction) => {
   const product = await Product.findOneAndUpdate(
-    { _id: req.params.id, deleted: false },
+    { _id: req.params.id, isDeleted: false },
     { ...req.body },
     { new: true },
   );
@@ -169,7 +157,7 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
 
 // @Delete: deleteProduct
 export const deleteProduct = async (req: Request, res: Response, next: NextFunction) => {
-  const product = await Product.findOneAndUpdate({ _id: req.params.id, deleted: false }, { deleted: true });
+  const product = await Product.findOneAndUpdate({ _id: req.params.id, isDeleted: false }, { new: true });
   if (!product) {
     throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${req.params.id}`);
   }

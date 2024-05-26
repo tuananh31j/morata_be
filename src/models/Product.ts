@@ -50,12 +50,15 @@ export const ProductSchema = new Schema<IProductSchema>(
       type: Schema.Types.ObjectId,
       ref: 'Brand',
     },
-    reviewIds: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'Review',
-      },
-    ],
+    reviewIds: {
+      type: [
+        {
+          type: Schema.Types.ObjectId,
+          ref: 'Review',
+        },
+      ],
+      default: [],
+    },
     isAvailable: {
       type: Boolean,
       default: true,
