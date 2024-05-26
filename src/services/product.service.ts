@@ -65,28 +65,16 @@ export const getTopDealsOfTheDay = async (req: Request, res: Response, next: Nex
 export const getTopReviewsProducts = async (req: Request, res: Response, next: NextFunction) => {
   const aggregationPipeline = [
     {
-      $lookup: {
-        from: 'Review', // Foreign collection
-        localField: '_id', // Field in Product that references Review
-        foreignField: 'productId', // Field in Review that references Product
-        as: 'reviews', // Name for the aggregated reviews
+      $project: {
+        _id: 1,
+        reviewCount: { $size: '$reviewIds' },
       },
     },
     {
-      $unwind: '$reviews', // Deconstructs the reviews array into separate documents
+      $sort: { reviewCount: -1 },
     },
     {
-      $group: {
-        _id: '$_id', // Group by product ID
-        name: { $first: '$name' }, // Get the first name from the grouped products
-        reviewCount: { $sum: 1 }, // Count the number of reviews in the group
-      },
-    },
-    {
-      $sort: { reviewCount: -1 }, // Sort by review count in descending order (most reviews first)
-    },
-    {
-      $limit: 5, // Limit to the top 5 products
+      $limit: 5,
     },
   ];
 
