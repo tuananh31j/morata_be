@@ -21,8 +21,3 @@ export const createNewBrand = asyncHandler(async (req: Request, res: Response, n
 export const updateBrand = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   return await brandService.updateCateGory(req, res, next);
 });
-
-// @Delete: deleteBrand
-export const deleteBrand = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  return await brandService.deleteBrand(req, res, next);
-});

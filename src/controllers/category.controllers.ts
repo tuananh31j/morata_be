@@ -21,8 +21,3 @@ export const createNewCategory = asyncHandler(async (req: Request, res: Response
 export const updateCateGory = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   return await categoryService.updateCateGory(req, res, next);
 });
-
-// @Delete: deleteCategory
-export const deleteCategory = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  return await categoryService.deleteCategory(req, res, next);
-});

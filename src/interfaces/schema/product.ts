@@ -9,9 +9,10 @@ export interface IProductSchema extends Document {
   stock: number;
   images: string[];
   thumbnail: string;
-  category: Schema.Types.ObjectId;
-  brand: Schema.Types.ObjectId;
-  reviews: Schema.Types.ObjectId[];
-  deleted: boolean;
-  details: [{ name: string; value: any }];
+  categoryId: Schema.Types.ObjectId;
+  brandId: Schema.Types.ObjectId;
+  reviewIds: Schema.Types.ObjectId[];
+  isAvailable: boolean;
+  isDeleted: boolean;
+  variations: Schema.Types.Mixed;
 }

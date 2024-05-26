@@ -1,6 +1,5 @@
-import { BadRequestError, NotFoundError } from '@/error/customError';
+import { NotFoundError } from '@/error/customError';
 import customResponse from '@/helpers/response';
-import { Attribute, ValueAttribute } from '@/models/Attribute';
 import Product from '@/models/Product';
 import { uploadFiles } from '@/utils/files';
 import { NextFunction, Request, Response } from 'express';
@@ -125,38 +124,22 @@ export const getTopRelativeProducts = async (req: Request, res: Response, next: 
 // @Post: createNewProduct
 export const createNewProduct = async (req: Request, res: Response, next: NextFunction) => {
   const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-  const thumbnailFile = files['thumbnail'];
-  const imagesFiles = files['images'];
-  const thumbnailURL = await uploadFiles(thumbnailFile);
-  const imagesURLs = await uploadFiles(imagesFiles);
+  if (files && files['thumbnail']) {
+    const thumbnailURL = await uploadFiles(files['thumbnail']);
+    console.log(thumbnailURL);
+    req.body.thumbnail = thumbnailURL[0];
+  }
 
-  req.body.thumbnail = thumbnailURL[0];
-  req.body.images = imagesURLs;
+  if (files && files['images']) {
+    const imagesURLs = await uploadFiles(files['images']);
+    console.log(imagesURLs);
+    req.body.images = imagesURLs;
+  }
 
   const newProduct = new Product({ ...req.body });
 
-  // if (req.body.attributes) {
-  //   for (const attribute of req.body.attributes) {
-  //     let valueAttribute;
+  newProduct.save();
 
-  //     let existingAttribute = await Attribute.findOne({ name: attribute.name });
-  //     if (!existingAttribute) {
-  //       throw new BadRequestError(`${attribute.name} does not existed`);
-  //     }
-
-  //     for (const valueAttr of attribute.values) {
-  //       const { name, value } = valueAttr;
-
-  //       valueAttribute = await ValueAttribute.create({ name, value });
-  //       existingAttribute.values.push(valueAttribute._id);
-  //       await existingAttribute.save();
-  //       newProduct.attributes.push(existingAttribute._id);
-  //       await newProduct.save();
-  //     }
-  //   }
-  // } else {
-  //   throw new BadRequestError('Attributes is required.');
-  // }
   return res.status(StatusCodes.CREATED).json(
     customResponse({
       data: newProduct,

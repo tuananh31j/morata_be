@@ -7,11 +7,11 @@ import { addProductValidation } from '@/validation/product';
 const router = Router();
 
 router.get('/all', productController.getAllProducts);
+router.get('/latest', productController.getTopLatestProducts);
+router.get('/deals', productController.getTopDealsOfTheDay);
+router.get('/reviews', productController.getTopReviewsProducts);
+router.get('/related/:id/:cateId', [validateObjectId], productController.getTopRelativeProducts);
 router.get('/:id', [validateObjectId], productController.getDetailedProduct);
-router.get('/top-latest', productController.getTopLatestProducts);
-router.get('/top-deals', productController.getTopDealsOfTheDay);
-router.get('/top-reviews', productController.getTopReviewsProducts);
-router.get('/top-relative/:id/:cateId', [validateObjectId], productController.getTopRelativeProducts);
 
 router.post(
   '/',
@@ -19,7 +19,7 @@ router.post(
     { name: 'thumbnail', maxCount: 1 },
     { name: 'images', maxCount: 5 },
   ]),
-  // [addProductValidation],
+  [addProductValidation],
   productController.createNewProduct,
 );
 router.patch('/:id', [validateObjectId], productController.updateProduct);

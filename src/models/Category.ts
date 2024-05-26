@@ -13,7 +13,6 @@ const CategorySchema = new mongoose.Schema<ICategorySchema>(
       type: String,
       trim: true,
     },
-    subCategories: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Attribute' }],
   },
   {
     timestamps: false,
