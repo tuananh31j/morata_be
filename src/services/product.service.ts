@@ -87,7 +87,7 @@ export const getTopReviewsProducts = async (req: Request, res: Response, next: N
 };
 
 // @Get Top Hot Relative Products and the same category
-export const getTopRelativeProducts = async (req: Request, res: Response, next: NextFunction) => {
+export const getTopRelatedProducts = async (req: Request, res: Response, next: NextFunction) => {
   const topRelativeProducts = await Product.find({ _id: { $ne: req.body.productId }, isDeleted: false });
 
   return res
@@ -95,6 +95,15 @@ export const getTopRelativeProducts = async (req: Request, res: Response, next: 
     .json(
       customResponse({ data: topRelativeProducts, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }),
     );
+};
+
+// @Get all product by category
+export const getAllProductByCategory = async (req: Request, res: Response, next: NextFunction) => {
+  const products = await Product.find({ categoryId: req.params.cateId, isDeleted: false });
+
+  return res
+    .status(StatusCodes.OK)
+    .json(customResponse({ data: products, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
 };
 
 // @Post: createNewProduct
@@ -145,7 +154,7 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
 
 // @Delete: deleteProduct
 export const deleteProduct = async (req: Request, res: Response, next: NextFunction) => {
-  const product = await Product.findOneAndUpdate({ _id: req.params.id, isDeleted: false }, { new: true });
+  const product = await Product.findOneAndUpdate({ _id: req.params.id, isDeleted: true }, { new: true });
   if (!product) {
     throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${req.params.id}`);
   }

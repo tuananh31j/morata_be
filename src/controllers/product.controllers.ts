@@ -28,8 +28,13 @@ export const getTopReviewsProducts = asyncHandler(async (req: Request, res: Resp
 });
 
 // @Get Top Hot Relative Products and the same category
-export const getTopRelativeProducts = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  return await productService.getTopRelativeProducts(req, res, next);
+export const getTopRelatedProducts = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  return await productService.getTopRelatedProducts(req, res, next);
+});
+
+// @Get all product by category
+export const getAllProductByCategory = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  return await productService.getAllProductByCategory(req, res, next);
 });
 
 // @Post: createNewProduct

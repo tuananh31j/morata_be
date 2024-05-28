@@ -42,6 +42,10 @@ export const ProductSchema = new Schema<IProductSchema>(
     thumbnail: {
       type: String,
     },
+    sku: {
+      type: String,
+      unique: true,
+    },
     categoryId: {
       type: Schema.Types.ObjectId,
       ref: 'Category',
