@@ -18,8 +18,13 @@ const envVarsSchema = Joi.object()
     STRIPE_SECRET_KEY: Joi.string().description('Stripe Secrete Key'),
     JWT_ACCESS_TOKEN_KEY: Joi.string().required().description('JWT Access Token Key'),
     JWT_REFRESH_TOKEN_KEY: Joi.string().required().description('JWT Refresh Token Key'),
-    JWT_ACCESS_EXPIRATION: Joi.number().default(15).description('minutes after which access tokens expire'),
-    JWT_REFRESH_EXPIRATION: Joi.number().default(7).description('days after which refresh tokens expire'),
+    JWT_ACCESS_EXPIRATION: Joi.string().default('15m').description('minutes after which access tokens expire'),
+    JWT_REFRESH_EXPIRATION: Joi.string().default('30d').description('days after which refresh tokens expire'),
+    COOKIE_MAX_AGE: Joi.number()
+      .empty()
+      .default(1000 * 60 * 60 * 24 * 30)
+      .custom((envVar: string) => Number(envVar))
+      .description('Max age cookie'),
   })
   .unknown();
 
@@ -43,6 +48,9 @@ const config = {
     refreshTokenKey: envVars.JWT_REFRESH_TOKEN_KEY,
     accessExpiration: envVars.JWT_ACCESS_EXPIRATION,
     refreshExpiration: envVars.JWT_REFRESH_EXPIRATION,
+  },
+  cookie: {
+    maxAge: envVars.COOKIE_MAX_AGE,
   },
   firebaseConfig: {
     apiKey: envVars.FIREBASE_API_KEY,

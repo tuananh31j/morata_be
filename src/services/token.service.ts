@@ -14,17 +14,16 @@ export const saveToken = async (token: string, userId: string, type: string) => 
   return await Token.create({ token, userId, type });
 };
 
-export const verifyToken = async (token: string, type: string) => {
-  const decoded = jwt.verify(token, type);
+export const verifyToken = async (token: string, secretKey: string, type: string) => {
+  const decoded = jwt.verify(token, secretKey);
 
   if (!decoded) {
-    throw new NotAcceptableError('Unauthorized: Invalid Token.');
+    throw new NotAcceptableError('Not Acceptable: Invalid Verified Token.');
   }
-
   const foundedToken = await Token.findOne({ token: token, type: type });
 
   if (!foundedToken) {
-    throw new NotAcceptableError('Unauthorized: Invalid Token.');
+    throw new NotAcceptableError('Not Acceptable: Invalid Verified Token.');
   }
   return foundedToken;
 };

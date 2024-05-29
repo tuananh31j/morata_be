@@ -6,7 +6,6 @@ import cartRouter from './cart.routes';
 import orderRouter from './order.routes';
 import authRouter from './auth.routes';
 import reviewRouter from './review.routes';
-import dataRouter from './data.routes';
 
 const router = Router();
 
@@ -18,6 +17,5 @@ router.use('/carts', cartRouter);
 router.use('/orders', orderRouter);
 router.use('/auth', authRouter);
 router.use('/reviews', reviewRouter);
-router.use('/import-data', dataRouter);
 
 export default router;

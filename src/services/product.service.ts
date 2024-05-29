@@ -97,7 +97,7 @@ export const getTopRelatedProducts = async (req: Request, res: Response, next: N
     );
 };
 
-// @Get all product by category
+// @Get all products by category
 export const getAllProductByCategory = async (req: Request, res: Response, next: NextFunction) => {
   const products = await Product.find({ categoryId: req.params.cateId, isDeleted: false });
 

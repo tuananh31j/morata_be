@@ -20,7 +20,7 @@ export const login = asyncHandler(async (req: Request, res: Response, next: Next
     httpOnly: true,
     sameSite: 'none',
     secure: config.env === 'production' ? true : false,
-    maxAge: config.jwt.refreshExpiration,
+    maxAge: config.cookie.maxAge,
   });
 
   return res.status(StatusCodes.OK).json(
@@ -33,10 +33,14 @@ export const login = asyncHandler(async (req: Request, res: Response, next: Next
   );
 });
 
+// @Logout
+export const logout = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  return await authService.logout(req, res, next);
+});
+
 // @Refresh Token
 export const refresh = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const data = await authService.refresh(req, res, next);
-  console.log(data);
 
   return res.status(StatusCodes.OK).json(
     customResponse({

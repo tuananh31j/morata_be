@@ -5,4 +5,3 @@ export * as cartController from './cart.controllers';
 export * as orderController from './order.controllers';
 export * as authController from './auth.controllers';
 export * as reviewController from './review.controllers';
-export * as dataController from './data.controllers';
