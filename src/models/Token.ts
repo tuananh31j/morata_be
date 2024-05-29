@@ -1,8 +1,7 @@
 import { tokenTypes } from '@/constant/token';
-import { ITokenDoc, ITokenModel } from '@/interfaces/token';
-import mongoose from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
-const TokenSchema = new mongoose.Schema<ITokenDoc, ITokenModel>(
+const TokenSchema = new mongoose.Schema(
   {
     token: {
       type: String,
@@ -10,7 +9,7 @@ const TokenSchema = new mongoose.Schema<ITokenDoc, ITokenModel>(
       index: true,
     },
     user: {
-      type: String,
+      type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
     },
