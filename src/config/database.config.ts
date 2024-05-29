@@ -8,7 +8,10 @@ export const connectDB = () => {
   // @event connected: Emitted when this connection successfully connects to the db. May be emitted multiple times in reconnected scenarios
   mongoose.connection.on('connected', () => {
     if (config.env && config.env === 'development') {
-      console.log('MongoDB database connection established successfully');
+      console.log('Local MongoDB database connection established successfully');
+    }
+    if (config.env && config.env === 'production') {
+      console.log('Cloud MongoDB database connection established successfully');
     }
   });
 

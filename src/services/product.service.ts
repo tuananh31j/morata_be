@@ -1,15 +1,23 @@
 import { NotFoundError } from '@/error/customError';
 import customResponse from '@/helpers/response';
-import { Product } from '@/models';
+import Product from '@/models/Product';
 import { uploadFiles } from '@/utils/files';
 import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 
+type Options = {
+  page: number;
+  limit: number;
+  sort: {
+    createdAt: number;
+  };
+  lean: boolean;
+};
+
 // @Get: getAllProducts
 export const getAllProducts = async (req: Request, res: Response, next: NextFunction) => {
-  const query = { deleted: false };
-  console.log(req.params);
-  const options: any = {
+  const query = { isDeleted: false };
+  const options: Options = {
     page: req.query.page ? +req.query.page : 1,
     limit: req.query.limit ? +req.query.limit : 10,
     sort: { createdAt: -1 },
@@ -24,7 +32,7 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
 
 // @Get: getDetailedProduct
 export const getDetailedProduct = async (req: Request, res: Response, next: NextFunction) => {
-  const product = await Product.findOne({ _id: req.params.id, deleted: false }).lean();
+  const product = await Product.findOne({ _id: req.params.id, isDeleted: false }).lean();
 
   if (!Product) {
     throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${req.params.id}`);
@@ -37,8 +45,7 @@ export const getDetailedProduct = async (req: Request, res: Response, next: Next
 
 // @Get Top Latest Products
 export const getTopLatestProducts = async (req: Request, res: Response, next: NextFunction) => {
-  const topLatestProducts = await Product.find({ deleted: false }).sort({ createdAt: -1 }).limit(10).lean();
-  if (topLatestProducts.length < 1) throw new NotFoundError('Not Found Product');
+  const topLatestProducts = await Product.find({ isDeleted: false }).sort({ createdAt: -1 }).limit(10).lean();
   return res
     .status(StatusCodes.OK)
     .json(
@@ -48,8 +55,7 @@ export const getTopLatestProducts = async (req: Request, res: Response, next: Ne
 
 // @Get Top Deals Of The Day
 export const getTopDealsOfTheDay = async (req: Request, res: Response, next: NextFunction) => {
-  const topDealsProducts = await Product.find({ deleted: false }).sort({ discountPercentage: 1 }).limit(2).lean();
-  if (topDealsProducts.length < 1) throw new NotFoundError('Not Found Product');
+  const topDealsProducts = await Product.find({ isDeleted: false }).sort({ discountPercentage: 1 }).limit(2).lean();
   return res
     .status(StatusCodes.OK)
     .json(customResponse({ data: topDealsProducts, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
@@ -59,36 +65,20 @@ export const getTopDealsOfTheDay = async (req: Request, res: Response, next: Nex
 export const getTopReviewsProducts = async (req: Request, res: Response, next: NextFunction) => {
   const aggregationPipeline = [
     {
-      $lookup: {
-        from: 'Review', // Replace with your review collection name
-        localField: '_id',
-        foreignField: 'product',
-        as: 'reviews',
+      $project: {
+        _id: 1,
+        reviewCount: { $size: '$reviewIds' },
       },
     },
     {
-      $unwind: '$reviews', // Unwind the 'reviews' array
+      $sort: { reviewCount: -1 },
     },
     {
-      $group: {
-        _id: '$_id',
-        product: { $first: '$name' }, // Replace with desired product property
-        numReviews: { $sum: 1 }, // Count the number of reviews
-      },
-    },
-    {
-      $sort: { numReviews: -1 }, // Sort by 'numReviews' in descending order
-    },
-    {
-      $match: { deleted: false },
-    },
-    {
-      $limit: 10, // Limit the results to 10 documents
+      $limit: 5,
     },
   ];
 
   const topReviewsProducts = await Product.aggregate(aggregationPipeline as any[]);
-  if (topReviewsProducts.length < 1) throw new NotFoundError('Not Found Product');
   return res
     .status(StatusCodes.OK)
     .json(
@@ -97,15 +87,9 @@ export const getTopReviewsProducts = async (req: Request, res: Response, next: N
 };
 
 // @Get Top Hot Relative Products and the same category
-export const getTopRelativeProducts = async (req: Request, res: Response, next: NextFunction) => {
-  const topRelativeProducts = await Product.find({
-    category: req.params.cateId,
-    _id: { $ne: req.params.id },
-    deleted: false,
-  })
-    .sort({ createdAt: -1 })
-    .limit(10);
-  if (topRelativeProducts.length < 1) throw new NotFoundError('Not Found Product');
+export const getTopRelatedProducts = async (req: Request, res: Response, next: NextFunction) => {
+  const topRelativeProducts = await Product.find({ _id: { $ne: req.body.productId }, isDeleted: false });
+
   return res
     .status(StatusCodes.OK)
     .json(
@@ -113,22 +97,37 @@ export const getTopRelativeProducts = async (req: Request, res: Response, next: 
     );
 };
 
+// @Get all products by category
+export const getAllProductByCategory = async (req: Request, res: Response, next: NextFunction) => {
+  const products = await Product.find({ categoryId: req.params.cateId, isDeleted: false });
+
+  return res
+    .status(StatusCodes.OK)
+    .json(customResponse({ data: products, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+};
+
 // @Post: createNewProduct
 export const createNewProduct = async (req: Request, res: Response, next: NextFunction) => {
   const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-  const thumbnailFile = files['thumbnail'];
-  const imagesFiles = files['images'];
-  const thumbnailURL = await uploadFiles(thumbnailFile);
-  const imagesURLs = await uploadFiles(imagesFiles);
+  if (files && files['thumbnail']) {
+    const thumbnailURL = await uploadFiles(files['thumbnail']);
+    console.log(thumbnailURL);
+    req.body.thumbnail = thumbnailURL[0];
+  }
 
-  req.body.thumbnail = thumbnailURL[0];
-  req.body.images = imagesURLs;
+  if (files && files['images']) {
+    const imagesURLs = await uploadFiles(files['images']);
+    console.log(imagesURLs);
+    req.body.images = imagesURLs;
+  }
 
-  const product = await Product.create({ ...req.body });
+  const newProduct = new Product({ ...req.body });
+
+  newProduct.save();
 
   return res.status(StatusCodes.CREATED).json(
     customResponse({
-      data: product,
+      data: newProduct,
       success: true,
       status: StatusCodes.CREATED,
       message: ReasonPhrases.CREATED,
@@ -139,12 +138,12 @@ export const createNewProduct = async (req: Request, res: Response, next: NextFu
 // @Patch: updateProduct
 export const updateProduct = async (req: Request, res: Response, next: NextFunction) => {
   const product = await Product.findOneAndUpdate(
-    { _id: req.params.id, deleted: false },
+    { _id: req.params.id, isDeleted: false },
     { ...req.body },
     { new: true },
   );
 
-  if (!Product) {
+  if (!product) {
     throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${req.params.id}`);
   }
 
@@ -155,7 +154,7 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
 
 // @Delete: deleteProduct
 export const deleteProduct = async (req: Request, res: Response, next: NextFunction) => {
-  const product = await Product.findOneAndUpdate({ _id: req.params.id, deleted: false }, { deleted: true });
+  const product = await Product.findOneAndUpdate({ _id: req.params.id, isDeleted: true }, { new: true });
   if (!product) {
     throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${req.params.id}`);
   }

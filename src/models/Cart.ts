@@ -18,16 +18,8 @@ const cartSchema = new mongoose.Schema({
         required: true,
         min: 1,
       },
-      total: Number, //total price
-      discountPercentage: Number,
-      discountedPrice: Number,
-      thumbnail: String,
     },
   ],
-  total: Number, // total price
-  discountedTotal: Number,
-  totalProducts: Number,
-  totalQuantity: Number,
 });
 
 export default mongoose.model('Cart', cartSchema);

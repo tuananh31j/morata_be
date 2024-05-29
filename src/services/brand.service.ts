@@ -1,6 +1,7 @@
 import { NotFoundError } from '@/error/customError';
 import customResponse from '@/helpers/response';
-import { Product, Brand } from '@/models';
+import Brand from '@/models/Brand';
+import Product from '@/models/Product';
 import { Request, Response, NextFunction } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 
@@ -45,19 +46,4 @@ export const updateCateGory = async (req: Request, res: Response, next: NextFunc
   return res
     .status(StatusCodes.OK)
     .json(customResponse({ data: brand, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
-};
-
-// @Delete: deleteBrand
-export const deleteBrand = async (req: Request, res: Response, next: NextFunction) => {
-  const productsByBrand = await Product.find({ brand: req.params.id }).lean();
-  await Product.deleteMany(productsByBrand);
-  const brand = await Brand.findByIdAndDelete(req.params.id);
-
-  if (!brand) {
-    throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} brand with id: ${req.params.id}`);
-  }
-
-  return res
-    .status(StatusCodes.OK)
-    .json(customResponse({ data: null, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
 };
