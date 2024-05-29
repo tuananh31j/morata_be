@@ -15,7 +15,7 @@ const CategorySchema = new mongoose.Schema<ICategorySchema>(
     },
   },
   {
-    timestamps: true,
+    timestamps: false,
     versionKey: false,
   },
 );

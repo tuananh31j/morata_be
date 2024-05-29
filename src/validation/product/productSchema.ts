@@ -10,7 +10,7 @@ const productSchema = {
     stock: Joi.number().min(0).default(0),
     images: Joi.array().items(Joi.string()),
     thumbnail: Joi.string(),
-    category: Joi.string()
+    categoryId: Joi.string()
       .required()
       .custom((value, helper) => {
         if (!mongoose.Types.ObjectId.isValid(value)) {
@@ -18,7 +18,7 @@ const productSchema = {
         }
         return value;
       }),
-    brand: Joi.string()
+    brandId: Joi.string()
       .required()
       .custom((value, helper) => {
         if (!mongoose.Types.ObjectId.isValid(value)) {
@@ -26,7 +26,7 @@ const productSchema = {
         }
         return value;
       }),
-    attributes: Joi.any(),
+    variations: Joi.any(),
   }),
 };
 

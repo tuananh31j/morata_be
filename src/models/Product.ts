@@ -26,7 +26,8 @@ export const ProductSchema = new Schema<IProductSchema>(
     rating: {
       type: Number,
       min: 0,
-      default: 0,
+      max: 5,
+      default: 5,
     },
     stock: {
       type: Number,
@@ -41,30 +42,51 @@ export const ProductSchema = new Schema<IProductSchema>(
     thumbnail: {
       type: String,
     },
-    category: {
+    sku: {
+      type: String,
+      unique: true,
+    },
+    categoryId: {
       type: Schema.Types.ObjectId,
       ref: 'Category',
     },
-    brand: {
+    brandId: {
       type: Schema.Types.ObjectId,
       ref: 'Brand',
     },
-    reviews: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'Review',
-      },
-    ],
-    deleted: {
+    reviewIds: {
+      type: [
+        {
+          type: Schema.Types.ObjectId,
+          ref: 'Review',
+        },
+      ],
+      default: [],
+    },
+    isAvailable: {
+      type: Boolean,
+      default: true,
+    },
+    isDeleted: {
       type: Boolean,
       default: false,
     },
-    attributes: {
-      type: Schema.Types.Mixed,
-    },
+    variations: Schema.Types.Mixed,
   },
   { timestamps: true, versionKey: false },
 );
+
+const variationAttributeSchema = new Schema({
+  attribute: {
+    type: String,
+    required: true,
+  },
+  value: {
+    type: Schema.Types.Mixed,
+  },
+});
+
+ProductSchema.add({ variations: variationAttributeSchema });
 
 ProductSchema.plugin(paginate);
 
