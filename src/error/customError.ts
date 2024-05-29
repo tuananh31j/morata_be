@@ -51,3 +51,14 @@ export class UnauthorizedError extends HttpException {
     this.status = StatusCodes.FORBIDDEN;
   }
 }
+
+export class NotAcceptableError extends HttpException {
+  public status: number;
+  public name: string;
+
+  constructor(message: string) {
+    super(message);
+    this.name = ReasonPhrases.NOT_ACCEPTABLE;
+    this.status = StatusCodes.NOT_ACCEPTABLE;
+  }
+}

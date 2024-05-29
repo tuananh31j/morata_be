@@ -14,18 +14,18 @@ export const register = asyncHandler(async (req: Request, res: Response, next: N
 // @Login
 export const login = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const user = await authService.login(req, res, next);
-  const token = await generateAuthTokens(user);
+  const { refreshToken, accessToken } = await generateAuthTokens(user);
 
-  res.cookie('jwt', token.refresh.token, {
+  res.cookie('jwt', refreshToken, {
     httpOnly: true,
     sameSite: 'none',
     secure: config.env === 'production' ? true : false,
-    expires: token.refresh.expires,
+    maxAge: config.jwt.refreshExpiration,
   });
 
   return res.status(StatusCodes.OK).json(
     customResponse({
-      data: { user, accessToken: token.access },
+      data: { user, accessToken: accessToken },
       success: true,
       status: StatusCodes.OK,
       message: ReasonPhrases.OK,

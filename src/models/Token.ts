@@ -8,7 +8,7 @@ const TokenSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-    user: {
+    userId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
@@ -17,14 +17,6 @@ const TokenSchema = new mongoose.Schema(
       type: String,
       enum: [tokenTypes.REFRESH, tokenTypes.RESET_PASSWORD, tokenTypes.VERIFY_EMAIL],
       required: true,
-    },
-    expires: {
-      type: Date,
-      required: true,
-    },
-    blacklisted: {
-      type: Boolean,
-      default: false,
     },
   },
   {

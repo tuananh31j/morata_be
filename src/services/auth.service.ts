@@ -1,13 +1,11 @@
-import { BadRequestError, DuplicateError, UnauthorizedError } from '@/error/customError';
+import { tokenTypes } from '@/constant/token';
+import { BadRequestError, DuplicateError, NotAcceptableError, UnauthorizedError } from '@/error/customError';
 import customResponse from '@/helpers/response';
 import User from '@/models/User';
+import bcrypt from 'bcryptjs';
 import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
-import bcrypt from 'bcryptjs';
 import { generateAuthTokens, verifyToken } from './token.service';
-import { tokenTypes } from '@/constant/token';
-import config from '@/config/env.config';
-import Token from '@/models/Token';
 
 // @Register
 export const register = async (req: Request, res: Response, next: NextFunction) => {
@@ -49,16 +47,12 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
   if (!cookie.jwt) {
     throw new UnauthorizedError('Token: No permission to access.');
   }
+  const token = await verifyToken(cookie.jwt, tokenTypes.REFRESH);
 
-  const decoded = await verifyToken(cookie.jwt, tokenTypes.REFRESH, config.jwt.refreshTokenKey);
-
-  const foundedUser = await User.findById(decoded.user);
-  if (!foundedUser) {
-    throw new UnauthorizedError('Token: No permission to access.');
+  const user = await User.findById(token.userId);
+  if (!user) {
+    throw new NotAcceptableError('Unauthorized: Invalid refresh token');
   }
 
-  await Token.findOneAndDelete({ user: decoded.user });
-  const { access, refresh } = await generateAuthTokens(foundedUser);
-
-  return { access, refresh };
+  return await generateAuthTokens(user);
 };
