@@ -68,6 +68,18 @@ export const getTopReviewsProducts = async (req: Request, res: Response, next: N
       $project: {
         _id: 1,
         reviewCount: { $size: '$reviewIds' },
+        name: 1,
+        description: 1,
+        price: 1,
+        discountPercentage: 1,
+        rating: 1,
+        stock: 1,
+        images: 1,
+        thumbnail: 1,
+        brandId: 1,
+        reviewIds: 1,
+        isAvailable: 1,
+        variations: 1,
       },
     },
     {

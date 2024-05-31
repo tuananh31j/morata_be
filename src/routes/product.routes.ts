@@ -11,7 +11,7 @@ router.get('/latest', productController.getTopLatestProducts);
 router.get('/deals', productController.getTopDealsOfTheDay);
 router.get('/reviews', productController.getTopReviewsProducts);
 router.get('/related', productController.getTopRelatedProducts);
-router.get('/:cateId', productController.getAllProductByCategory);
+router.get('/byCate/:cateId', productController.getAllProductByCategory);
 router.get('/:id', [validateObjectId], productController.getDetailedProduct);
 
 router.post(
