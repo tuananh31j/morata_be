@@ -1,4 +1,4 @@
-import { getDownloadURL, getStorage, ref, uploadBytesResumable } from 'firebase/storage';
+import { getDownloadURL, getStorage, listAll, ref, uploadBytesResumable } from 'firebase/storage';
 import { getCurrentDateTime } from './datetime';
 
 export const uploadFiles = async (files: Express.Multer.File[]) => {
@@ -19,4 +19,16 @@ export const uploadFiles = async (files: Express.Multer.File[]) => {
   }
 
   return fileURL;
+};
+
+export const getListAllFilesStorage = async (folderName: string) => {
+  const storage = getStorage();
+  const storageRef = ref(storage, folderName);
+  try {
+    const res = await listAll(storageRef);
+    const urls = await Promise.all(res.items.map((itemRef) => getDownloadURL(itemRef)));
+    return urls;
+  } catch (error) {
+    console.error('Error listing files:', error);
+  }
 };

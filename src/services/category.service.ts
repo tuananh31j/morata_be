@@ -1,6 +1,8 @@
 import { NotFoundError } from '@/error/customError';
 import customResponse from '@/helpers/response';
 import Category from '@/models/Category';
+import Product from '@/models/Product';
+import { getListAllFilesStorage } from '@/utils/files';
 import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 
@@ -10,6 +12,62 @@ export const getAllCategories = async (req: Request, res: Response, next: NextFu
   return res
     .status(StatusCodes.OK)
     .json(customResponse({ data: categories, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+};
+
+// @Get 10 popular categories
+export const getPopularCategories = async (req: Request, res: Response, next: NextFunction) => {
+  const pipeline = [
+    {
+      $group: {
+        _id: '$categoryId',
+        totalProducts: { $sum: 1 },
+      },
+    },
+    {
+      $sort: { totalProducts: -1 },
+    },
+    {
+      $limit: 6,
+    },
+    {
+      $lookup: {
+        from: 'categories',
+        localField: '_id',
+        foreignField: '_id',
+        as: 'categoryDetails',
+      },
+    },
+    {
+      $unwind: '$categoryDetails',
+    },
+    {
+      $project: {
+        _id: 0,
+        categoryId: '$_id',
+        categoryName: '$categoryDetails.name',
+        totalProducts: 1,
+      },
+    },
+  ];
+
+  const folderResource = 'categories/';
+  const popularCategories = await Product.aggregate(pipeline as any[]);
+  const images = await getListAllFilesStorage(folderResource);
+
+  for (let i = 0; i < popularCategories.length; i++) {
+    if (images && popularCategories) {
+      popularCategories[i]['image'] = images[0];
+    }
+  }
+
+  return res.status(StatusCodes.OK).json(
+    customResponse({
+      data: popularCategories,
+      success: true,
+      status: StatusCodes.OK,
+      message: ReasonPhrases.OK,
+    }),
+  );
 };
 
 // @Get: getDetailedCategory

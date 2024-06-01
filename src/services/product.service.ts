@@ -34,7 +34,7 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
 export const getDetailedProduct = async (req: Request, res: Response, next: NextFunction) => {
   const product = await Product.findOne({ _id: req.params.id, isDeleted: false }).lean();
 
-  if (!Product) {
+  if (!product) {
     throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${req.params.id}`);
   }
 
@@ -100,7 +100,9 @@ export const getTopReviewsProducts = async (req: Request, res: Response, next: N
 
 // @Get Top Hot Relative Products and the same category
 export const getTopRelatedProducts = async (req: Request, res: Response, next: NextFunction) => {
-  const topRelativeProducts = await Product.find({ _id: { $ne: req.body.productId }, isDeleted: false });
+  const topRelativeProducts = await Product.find({ _id: { $ne: req.body.productId }, isDeleted: false })
+    .limit(10)
+    .sort({ createdAt: -1 });
 
   return res
     .status(StatusCodes.OK)

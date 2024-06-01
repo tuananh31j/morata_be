@@ -7,6 +7,11 @@ export const getAllCategories = asyncHandler(async (req: Request, res: Response,
   return await categoryService.getAllCategories(req, res, next);
 });
 
+// @Get: getPopularCategories
+export const getPopularCategories = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  return await categoryService.getPopularCategories(req, res, next);
+});
+
 // @Get: getDetailedCategory
 export const getDetailedCategory = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   return await categoryService.getDetailedCategory(req, res, next);
