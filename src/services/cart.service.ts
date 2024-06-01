@@ -2,56 +2,51 @@ import { BadRequestError } from '@/error/customError';
 import customResponse from '@/helpers/response';
 import Cart from '@/models/Cart';
 import Product from '@/models/Product';
-import { CartData } from '@/types/cart';
 import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
+import { any } from 'joi';
 
 // @Get cart by user
 export const getCartByUser = async (req: Request, res: Response, next: NextFunction) => {
-  const cart = await Cart.findOne({ user: req.params.userId }).populate('items.productId').lean();
-  const cartData: CartData = {
-    userId: req.params.userId,
-    items: cart
-      ? cart!.items.map((item: any) => {
-          return {
-            productId: item.productId._id,
-            name: item.productId.name,
-            price: item.productId.price,
-            quantity: item.productId.quantity,
-            thumbnail: item.productId.thumbnail,
-          };
-        })
-      : [],
-  };
+  const cart = await Cart.findOne({ userId: req.params.id })
+    .populate('items.productId', 'name price thumbnail discountPercentage')
+    .lean();
+  if (!cart) {
+    throw new BadRequestError('Not found cart');
+  }
 
   return res
     .status(StatusCodes.OK)
-    .json(customResponse({ data: cartData, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+    .json(customResponse({ data: cart, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
 };
 
 // @Add to cart
 export const addToCart = async (req: Request, res: Response, next: NextFunction) => {
-  let cart = await Cart.findOne({ user: req.body.userId });
-  if (!cart) {
-    cart = new Cart({ user: req.body.userId, items: [] });
-  }
-
   const product = await Product.findById(req.body.productId);
   if (!product) {
-    throw new BadRequestError(`Not found product with Id: ${req.body.productId}`);
+    throw new BadRequestError(`Not found product with id ${req.body.productId}`);
+  }
+  if (req.body.quantity < 1) {
+    throw new BadRequestError(`Quantity must be at least 1`);
   }
 
-  const existingItem = cart.items.find((item) => item.productId.equals(req.body.productId));
+  // Find the cart for the user or create a new one
+  let cart = await Cart.findOne({ userId: req.body.userId });
+  if (!cart) {
+    cart = new Cart({ userId: req.body.userId, items: [] });
+  }
 
-  if (existingItem) {
-    existingItem.quantity += req.body.quantity;
+  // Check if the product already exists in the cart
+  const existingItemIndex = cart.items.findIndex((item) => item.productId.equals(req.body.productId));
+  if (existingItemIndex !== -1) {
+    // Update the quantity if the product is already in the cart
+    cart.items[existingItemIndex].quantity += req.body.quantity;
   } else {
-    const newItem = {
-      productId: req.body.productId,
-      quantity: req.body.quantity,
-    };
-    cart.items.push(newItem);
+    // Add the new product to the cart
+    cart.items.push({ productId: req.body.productId, quantity: req.body.quantity });
   }
+
+  // Save the cart
   await cart.save();
 
   return res
@@ -61,12 +56,12 @@ export const addToCart = async (req: Request, res: Response, next: NextFunction)
 
 // @Remove one cart item
 export const removeCartItem = async (req: Request, res: Response, next: NextFunction) => {
-  const cart = await Cart.findOne({ user: req.body.userId });
+  const cart: any = await Cart.findOne({ userId: req.body.userId });
   if (!cart) {
     throw new BadRequestError(`Not found cart with userId: ${req.body.userId}`);
   }
-
-  cart.items.filter((item) => item.productId._id !== req.body.productId);
+  const cartItems = cart.items.filter((item: any) => item.productId._id.toString() !== req.body.productId);
+  cart.items = [...cartItems];
   await cart.save();
 
   return res
@@ -76,18 +71,16 @@ export const removeCartItem = async (req: Request, res: Response, next: NextFunc
 
 // @Remove all cart items
 export const removeAllCartItems = async (req: Request, res: Response, next: NextFunction) => {
-  const cart: any = await Cart.findOne({ user: req.body.userId }).lean();
+  const cart: any = await Cart.deleteOne({ userId: req.body.userId });
   if (!cart) {
     throw new BadRequestError(`Not found cart with userId: ${req.body.userId}`);
   }
 
-  cart.items = [];
-
-  await cart.save();
-
   return res
-    .status(StatusCodes.OK)
-    .json(customResponse({ data: cart, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+    .status(StatusCodes.NO_CONTENT)
+    .json(
+      customResponse({ data: null, success: true, status: StatusCodes.NO_CONTENT, message: ReasonPhrases.NO_CONTENT }),
+    );
 };
 
 // @Increase  cart item quantity
