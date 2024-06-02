@@ -100,7 +100,7 @@ export const getTopReviewsProducts = async (req: Request, res: Response, next: N
 
 // @Get Top Hot Relative Products and the same category
 export const getTopRelatedProducts = async (req: Request, res: Response, next: NextFunction) => {
-  const topRelativeProducts = await Product.find({ _id: { $ne: req.body.productId }, isDeleted: false })
+  const topRelativeProducts = await Product.find({ _id: { $ne: req.params.id }, isDeleted: false })
     .limit(10)
     .sort({ createdAt: -1 });
 
