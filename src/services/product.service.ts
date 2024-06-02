@@ -14,6 +14,7 @@ type Options = {
   price?: { min: number; max: number }; // Filter by price range (optional)
   isAvailable?: boolean; // Filter by availability (optional)
   brandId?: string; // Filter by brand (optional)
+  categoryId?: string; // Filter by category (optional)
   rating?: { min: number; max: number }; // Filter by rating range (optional)
 };
 
@@ -33,7 +34,7 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
   if (req.query.brandId) {
     filter.brandId = req.query.brandId; // Filter by brand ID
   }
-  if (req.query.brandId) {
+  if (req.query.categoryId) {
     filter.categoryId = req.query.categoryId; // Filter by category ID
   }
   if (req.query.rating) {
