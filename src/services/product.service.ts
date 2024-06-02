@@ -8,19 +8,46 @@ import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 type Options = {
   page: number;
   limit: number;
-  sort: {
-    createdAt: number;
-  };
+  sort?: { [key: string]: number };
   lean: boolean;
+  // Filter properties
+  price?: { min: number; max: number }; // Filter by price range (optional)
+  isAvailable?: boolean; // Filter by availability (optional)
+  brandId?: string; // Filter by brand (optional)
+  rating?: { min: number; max: number }; // Filter by rating range (optional)
 };
 
 // @Get: getAllProducts
 export const getAllProducts = async (req: Request, res: Response, next: NextFunction) => {
-  const query = { isDeleted: false };
+  let query: { isDeleted: boolean } = { isDeleted: false }; // Filter for non-deleted products
+
+  // Build filter object based on request query parameters
+  const filter: { [key: string]: any } = {};
+  if (req.query.price) {
+    const priceRange = JSON.parse(req.query.price as string); // Assuming price is provided as JSON string
+    filter.price = { $gte: priceRange.min, $lte: priceRange.max }; // Filter by price range
+  }
+  if (req.query.isAvailable) {
+    filter.isAvailable = Boolean(JSON.parse(req.query.isAvailable as string)); // Parse boolean value
+  }
+  if (req.query.brandId) {
+    filter.brandId = req.query.brandId; // Filter by brand ID
+  }
+  if (req.query.brandId) {
+    filter.categoryId = req.query.categoryId; // Filter by category ID
+  }
+  if (req.query.rating) {
+    const ratingRange = JSON.parse(req.query.rating as string);
+    filter.rating = { $gte: ratingRange.min, $lte: ratingRange.max }; // Filter by rating range
+  }
+
+  // Combine filter with base query
+  query = { ...query, ...filter };
+
   const options: Options = {
     page: req.query.page ? +req.query.page : 1,
     limit: req.query.limit ? +req.query.limit : 10,
-    sort: { createdAt: -1 },
+    sort: req.query.sort ? JSON.parse(req.query.sort as string) : { createdAt: -1 }, // Parse sort criteria from JSON
     lean: true,
   };
 
