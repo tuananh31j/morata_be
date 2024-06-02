@@ -20,6 +20,9 @@ const UserSchema = new mongoose.Schema(
       required: true,
       minlength: 6,
     },
+    avatar: {
+      type: String,
+    },
     address: {
       type: String,
       trim: true,

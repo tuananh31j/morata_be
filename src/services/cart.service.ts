@@ -1,10 +1,10 @@
-import { BadRequestError } from '@/error/customError';
+import { BadRequestError, NotFoundError } from '@/error/customError';
 import customResponse from '@/helpers/response';
 import Cart from '@/models/Cart';
 import Product from '@/models/Product';
 import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
-import { any } from 'joi';
+import _ from 'lodash';
 
 // @Get cart by user
 export const getCartByUser = async (req: Request, res: Response, next: NextFunction) => {
@@ -12,7 +12,7 @@ export const getCartByUser = async (req: Request, res: Response, next: NextFunct
     .populate('items.productId', 'name price thumbnail discountPercentage')
     .lean();
   if (!cart) {
-    throw new BadRequestError('Not found cart');
+    throw new NotFoundError('Not found cart or cart is not exist.');
   }
 
   return res
@@ -49,9 +49,13 @@ export const addToCart = async (req: Request, res: Response, next: NextFunction)
   // Save the cart
   await cart.save();
 
+  const cartData = _.pick(cart, ['userId', 'items']);
+
   return res
     .status(StatusCodes.OK)
-    .json(customResponse({ data: cart, success: true, status: StatusCodes.CREATED, message: ReasonPhrases.CREATED }));
+    .json(
+      customResponse({ data: cartData, success: true, status: StatusCodes.CREATED, message: ReasonPhrases.CREATED }),
+    );
 };
 
 // @Remove one cart item
@@ -71,10 +75,14 @@ export const removeCartItem = async (req: Request, res: Response, next: NextFunc
 
 // @Remove all cart items
 export const removeAllCartItems = async (req: Request, res: Response, next: NextFunction) => {
-  const cart: any = await Cart.deleteOne({ userId: req.body.userId });
+  const cart: any = await Cart.findOne({ userId: req.body.userId });
+
   if (!cart) {
     throw new BadRequestError(`Not found cart with userId: ${req.body.userId}`);
   }
+
+  cart.items = [];
+  await cart.save();
 
   return res
     .status(StatusCodes.NO_CONTENT)
@@ -93,7 +101,7 @@ export const increaseCartItemQuantity = async (req: Request, res: Response, next
 
   const cartItem = cart.items.find((item) => item.productId.toString() === req.body.productId);
   if (!cartItem) {
-    throw new BadRequestError(`Not found product with Id: ${req.body.productId}`);
+    throw new BadRequestError(`Not found product with Id: ${req.body.productId} inside this cart`);
   }
 
   cartItem.quantity++;
@@ -118,7 +126,9 @@ export const decreaseCartItemQuantity = async (req: Request, res: Response, next
     throw new BadRequestError(`Not found product with Id: ${req.body.productId}`);
   }
 
-  cartItem.quantity--;
+  if (cartItem.quantity > 1) {
+    cartItem.quantity--;
+  }
 
   await cart.save();
 

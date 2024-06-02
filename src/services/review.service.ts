@@ -17,3 +17,13 @@ export const createNewReview = async (req: Request, res: Response, next: NextFun
       customResponse({ data: newReview, success: true, status: StatusCodes.CREATED, message: ReasonPhrases.CREATED }),
     );
 };
+
+export const getAllReviewsOfProduct = async (req: Request, res: Response, next: NextFunction) => {
+  const listReviews = await Review.find({ productId: req.query.productId })
+    .populate('userId', 'username avatar -_id')
+    .lean();
+
+  return res
+    .status(StatusCodes.CREATED)
+    .json(customResponse({ data: listReviews, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+};

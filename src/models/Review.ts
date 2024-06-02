@@ -18,10 +18,6 @@ const reviewSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
     },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
     productId: {
       type: Schema.Types.ObjectId,
       ref: 'Product',
