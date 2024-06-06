@@ -11,6 +11,7 @@ import router from './routes';
 import { corsOptions } from './config/cors.config';
 import firebaseConfig from './config/firebase.config';
 import { initializeApp } from 'firebase/app';
+import { checkoutController } from './controllers';
 
 const app: Express = express();
 
@@ -23,7 +24,15 @@ app.use(helmet());
 app.use(compression());
 
 app.use(cookieParser());
-app.use(express.json());
+
+// webhook
+app.post('/webhook', express.raw({ type: 'application/json' }), checkoutController.handleSessionEvents);
+
+app.use(
+  express.json({
+    limit: '5mb',
+  }),
+);
 app.use(express.urlencoded({ extended: true }));
 
 // routes

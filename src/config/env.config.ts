@@ -16,6 +16,10 @@ const envVarsSchema = Joi.object()
     FIREBASE_MEASUREMENT_ID: Joi.string().description('Firebase Measurement Id'),
     STRIPE_PUBLIC_KEY: Joi.string().description('Stripe Public Key'),
     STRIPE_SECRET_KEY: Joi.string().description('Stripe Secrete Key'),
+    STRIPE_URL_SUCCESS: Joi.string().description('Stripe url success.'),
+    STRIPE_URL_CANCEL: Joi.string().description('Stripe url cancel.'),
+    STRIPE_ENDPOINT_SECRET: Joi.string().description('Stripe endpoint secret.'),
+    CLIENT_DOMAIN: Joi.string().description('Client domain'),
     JWT_ACCESS_TOKEN_KEY: Joi.string().required().description('JWT Access Token Key'),
     JWT_REFRESH_TOKEN_KEY: Joi.string().required().description('JWT Refresh Token Key'),
     JWT_ACCESS_EXPIRATION: Joi.string().default('15m').description('minutes after which access tokens expire'),
@@ -64,6 +68,12 @@ const config = {
   stripeConfig: {
     publicKey: envVars.STRIPE_PUBLIC_KEY,
     secretKey: envVars.STRIPE_SECRET_KEY,
+    urlSuccess: envVars.STRIPE_URL_SUCCESS,
+    urlCancel: envVars.STRIPE_URL_CANCEL,
+    endpointSecret: envVars.STRIPE_ENDPOINT_SECRET,
+  },
+  clientDomain: {
+    url: envVars.CLIENT_DOMAIN,
   },
 };
 

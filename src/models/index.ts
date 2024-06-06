@@ -5,5 +5,4 @@ export * from './Order';
 export * from './Cart';
 export * from './Review';
 export * from './User';
-export * from './SubCategory';
 export * from './Token';

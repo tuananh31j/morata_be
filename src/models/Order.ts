@@ -1,7 +1,7 @@
-import mongoose from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
 const orderSchema = new mongoose.Schema({
-  user: {
+  userId: {
     // Reference the User model
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -23,23 +23,38 @@ const orderSchema = new mongoose.Schema({
         type: Number,
         required: true,
       },
+      image: {
+        type: String,
+        required: true,
+      },
     },
   ],
+  totalPrice: {
+    // total price after calculate tax fee
+    type: Number,
+    required: true,
+  },
+  tax: {
+    type: Number,
+  },
+  shippingFee: {
+    type: Number,
+  },
   shippingAddress: {
-    type: String,
-    trim: true,
+    type: Schema.Types.ObjectId,
+    ref: 'ShippingAddress',
   },
   paymentMethod: {
     type: String,
     trim: true,
+    enum: ['cash', 'stripe'],
+    required: true,
   },
   orderStatus: {
     type: String,
     trim: true,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
+    default: 'pending',
+    enum: ['pending', 'confirmed', 'on_delivering', 'done'],
   },
 });
 

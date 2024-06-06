@@ -93,7 +93,7 @@ export const removeAllCartItems = async (req: Request, res: Response, next: Next
 
 // @Increase  cart item quantity
 export const increaseCartItemQuantity = async (req: Request, res: Response, next: NextFunction) => {
-  const cart = await Cart.findOne({ user: req.body.userId });
+  const cart = await Cart.findOne({ userId: req.body.userId });
 
   if (!cart) {
     throw new BadRequestError(`Not found cart with userId: ${req.body.userId}`);
@@ -115,7 +115,7 @@ export const increaseCartItemQuantity = async (req: Request, res: Response, next
 
 // @Decrease cart item quantity
 export const decreaseCartItemQuantity = async (req: Request, res: Response, next: NextFunction) => {
-  const cart = await Cart.findOne({ user: req.body.userId });
+  const cart = await Cart.findOne({ userId: req.body.userId });
 
   if (!cart) {
     throw new BadRequestError(`Not found cart with userId: ${req.body.userId}`);
