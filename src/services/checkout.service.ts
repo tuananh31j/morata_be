@@ -1,7 +1,9 @@
-import { ErrorRequestHandler, NextFunction, Request, Response } from 'express';
-import Stripe from 'stripe';
 import config from '@/config/env.config';
 import { BadRequestError } from '@/error/customError';
+import { OrderSchema } from '@/interfaces/schema/order';
+import Order from '@/models/Order';
+import { NextFunction, Request, Response } from 'express';
+import Stripe from 'stripe';
 
 const stripe = new Stripe(config.stripeConfig.secretKey);
 
@@ -22,6 +24,12 @@ export const createCheckout = async (req: Request, res: Response, next: NextFunc
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
     line_items: lineItems,
+    phone_number_collection: {
+      enabled: true,
+    },
+    invoice_creation: {
+      enabled: true,
+    },
     mode: 'payment',
     success_url: config.stripeConfig.urlSuccess,
     cancel_url: config.stripeConfig.urlCancel,
@@ -46,11 +54,61 @@ export const handleSessionEvents = async (req: Request, res: Response, next: Nex
 
   // Handle the event
   switch (event.type) {
-    case 'payment_intent.succeeded':
-      const paymentIntentSucceeded = event.data.object;
+    case 'checkout.session.completed': {
+      const session = event.data.object as Stripe.Checkout.Session;
 
-      console.log('paymentIntentSucceeded:', paymentIntentSucceeded);
+      try {
+        const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
+
+        // Initialize an array to hold line items with product details
+        const detailedLineItems = [];
+        // Fetch detailed product information for each line item
+        for (const item of lineItems.data) {
+          if (item.price && item.price.product) {
+            const product = await stripe.products.retrieve(item.price.product as string);
+            detailedLineItems.push({
+              ...item,
+              image: product.images[0],
+              name: product.name,
+            });
+          }
+        }
+
+        const dataItems = detailedLineItems.map((item) => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.amount_total,
+          image: item.image,
+        }));
+
+        // Create a new order
+        const newOrder = new Order({
+          userId: session.metadata?.userId, // Assuming you have userId in metadata
+          items: dataItems,
+          totalPrice: session.amount_total,
+          paymentMethod: session.payment_method_types[0],
+          shippingAddress: session.customer_details?.address,
+          customerInfo: {
+            name: session.customer_details?.name!,
+            email: session.customer_details?.email!,
+            phone: session.customer_details?.phone!,
+          },
+          isPaid: true,
+        });
+
+        await newOrder.save();
+
+        console.log('Order saved successfully');
+      } catch (error) {
+        console.error('Error processing checkout.session.completed event:', error);
+      }
+
       break;
+    }
+    case 'payment_intent.succeeded': {
+      const session = event.data.object;
+      break;
+    }
     default:
       console.log(`Unhandled event type ${event.type}`);
   }

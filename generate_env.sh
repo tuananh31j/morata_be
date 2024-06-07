@@ -1,0 +1,1 @@
+grep -v '^#' env_configs.sh | grep -v '^export' > .env

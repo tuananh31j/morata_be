@@ -1,17 +1,14 @@
+import { OrderSchema } from '@/interfaces/schema/order';
 import mongoose, { Schema } from 'mongoose';
 
-const orderSchema = new mongoose.Schema({
+const orderSchema = new mongoose.Schema<OrderSchema>({
   userId: {
-    // Reference the User model
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
+    type: String,
   },
   items: [
     {
-      productId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Product',
+      name: {
+        type: String,
         required: true,
       },
       quantity: {
@@ -27,6 +24,7 @@ const orderSchema = new mongoose.Schema({
         type: String,
         required: true,
       },
+      _id: false,
     },
   ],
   totalPrice: {
@@ -36,19 +34,33 @@ const orderSchema = new mongoose.Schema({
   },
   tax: {
     type: Number,
+    default: 0.1,
   },
   shippingFee: {
     type: Number,
+    default: 0,
+  },
+  customerInfo: {
+    name: { type: String, required: true },
+    email: { type: String, required: true },
+    phone: { type: String, required: true },
   },
   shippingAddress: {
-    type: Schema.Types.ObjectId,
-    ref: 'ShippingAddress',
+    city: String,
+    country: String,
+    line1: String,
+    line2: String,
+    postal_code: String,
+    state: String,
   },
   paymentMethod: {
     type: String,
     trim: true,
-    enum: ['cash', 'stripe'],
     required: true,
+  },
+  isPaid: {
+    type: Boolean,
+    default: false,
   },
   orderStatus: {
     type: String,
@@ -58,4 +70,4 @@ const orderSchema = new mongoose.Schema({
   },
 });
 
-export default mongoose.model('Order', orderSchema);
+export default mongoose.model<OrderSchema>('Order', orderSchema);
