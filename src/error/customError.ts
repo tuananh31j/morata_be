@@ -31,7 +31,7 @@ export class DuplicateError extends HttpException {
     this.status = StatusCodes.CONFLICT;
   }
 }
-export class UnauthenticatedError extends HttpException {
+export class UnAuthenticatedError extends HttpException {
   public status: number;
   public name: string;
 
@@ -41,7 +41,7 @@ export class UnauthenticatedError extends HttpException {
     this.status = StatusCodes.UNAUTHORIZED;
   }
 }
-export class UnauthorizedError extends HttpException {
+export class UnAuthorizedError extends HttpException {
   public status: number;
   public name: string;
 

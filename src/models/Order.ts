@@ -1,7 +1,8 @@
 import { OrderSchema } from '@/interfaces/schema/order';
-import mongoose, { Schema } from 'mongoose';
+import mongoose, { PaginateModel, Schema } from 'mongoose';
+import paginate from 'mongoose-paginate-v2';
 
-const orderSchema = new mongoose.Schema<OrderSchema>(
+const OrderSchema = new mongoose.Schema<OrderSchema>(
   {
     userId: {
       type: String,
@@ -58,6 +59,8 @@ const orderSchema = new mongoose.Schema<OrderSchema>(
       type: String,
       trim: true,
       required: true,
+      enum: ['cash', 'card'],
+      default: 'cash',
     },
     isPaid: {
       type: Boolean,
@@ -76,4 +79,8 @@ const orderSchema = new mongoose.Schema<OrderSchema>(
   },
 );
 
-export default mongoose.model<OrderSchema>('Order', orderSchema);
+OrderSchema.plugin(paginate);
+
+const Order: PaginateModel<OrderSchema> = mongoose.model<OrderSchema, PaginateModel<OrderSchema>>('Order', OrderSchema);
+
+export default Order;

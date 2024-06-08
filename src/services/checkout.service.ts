@@ -113,17 +113,11 @@ export const handleSessionEvents = async (req: Request, res: Response, next: Nex
     case 'checkout.session.async_payment_succeeded': {
       const session = event.data.object;
 
-      // Fulfill the purchase...
-      // fulfillOrder(session);
-
       break;
     }
 
     case 'checkout.session.async_payment_failed': {
       const session = event.data.object;
-
-      // Send an email to the customer asking them to retry their order
-      // emailCustomerAboutFailedPayment(session);
 
       break;
     }

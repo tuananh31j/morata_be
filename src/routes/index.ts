@@ -10,13 +10,13 @@ import reviewRouter from './review.routes';
 
 const router = Router();
 
+router.use('/auth', authRouter);
 router.use('/categories', categoryRouter);
 router.use('/brands', brandRouter);
 router.use('/products', productRouter);
+router.use('/reviews', reviewRouter);
 router.use('/carts', cartRouter);
 router.use(checkoutRouter);
 router.use('/orders', orderRouter);
-router.use('/auth', authRouter);
-router.use('/reviews', reviewRouter);
 
 export default router;

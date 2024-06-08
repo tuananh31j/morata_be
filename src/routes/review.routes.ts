@@ -1,9 +1,10 @@
 import { reviewController } from '@/controllers';
+import { authenticate } from '@/middlewares/authenticateMiddleware';
 import { Router } from 'express';
 
 const router = Router();
 
-router.post('/', reviewController.createNewReview);
 router.get('/', reviewController.getAllReviewsOfProduct);
+router.post('/', authenticate, reviewController.createNewReview);
 
 export default router;

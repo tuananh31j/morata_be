@@ -7,6 +7,7 @@ import bcrypt from 'bcryptjs';
 import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import { generateToken, verifyToken } from './token.service';
+import _ from 'lodash';
 
 // @Register
 export const register = async (req: Request, res: Response, next: NextFunction) => {
@@ -39,7 +40,8 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     throw new BadRequestError('Incorrect email or password');
   }
 
-  return foundedUser;
+  const user = _.pick(foundedUser, ['_id', 'username', 'email', 'role']);
+  return user;
 };
 
 export const refresh = async (req: Request, res: Response, next: NextFunction) => {
