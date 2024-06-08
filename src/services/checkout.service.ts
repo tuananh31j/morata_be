@@ -38,6 +38,56 @@ export const createCheckout = async (req: Request, res: Response, next: NextFunc
   return res.status(200).json({ sessionId: session.id, sessionUrl: session.url });
 };
 
+const createOrder = async (session: Stripe.Checkout.Session) => {
+  try {
+    const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
+
+    // Initialize an array to hold line items with product details
+    const detailedLineItems = [];
+    // Fetch detailed product information for each line item
+    for (const item of lineItems.data) {
+      if (item.price && item.price.product) {
+        const product = await stripe.products.retrieve(item.price.product as string);
+        detailedLineItems.push({
+          ...item,
+          image: product.images[0],
+          name: product.name,
+        });
+      }
+    }
+
+    const dataItems = detailedLineItems.map((item) => ({
+      name: item.name,
+      quantity: item.quantity,
+      price: item.amount_total,
+      image: item.image,
+    }));
+
+    // Create a new order
+    if (session) {
+      const newOrder = new Order({
+        userId: session.metadata?.userId, // Assuming you have userId in metadata
+        items: dataItems,
+        totalPrice: session.amount_total,
+        paymentMethod: session.payment_method_types[0],
+        shippingAddress: session.customer_details?.address,
+        customerInfo: {
+          name: session.customer_details?.name,
+          email: session.customer_details?.email,
+          phone: session.customer_details?.phone,
+        },
+        isPaid: session.payment_status === 'paid',
+      });
+
+      await newOrder.save();
+    }
+
+    console.log('Order saved successfully');
+  } catch (error) {
+    console.error('Error processing checkout.session.completed event:', error);
+  }
+};
+
 export const handleSessionEvents = async (req: Request, res: Response, next: NextFunction) => {
   const payload = req.body;
   const sig: any = req.headers['stripe-signature'];
@@ -56,59 +106,28 @@ export const handleSessionEvents = async (req: Request, res: Response, next: Nex
   switch (event.type) {
     case 'checkout.session.completed': {
       const session = event.data.object as Stripe.Checkout.Session;
-
-      try {
-        const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
-
-        // Initialize an array to hold line items with product details
-        const detailedLineItems = [];
-        // Fetch detailed product information for each line item
-        for (const item of lineItems.data) {
-          if (item.price && item.price.product) {
-            const product = await stripe.products.retrieve(item.price.product as string);
-            detailedLineItems.push({
-              ...item,
-              image: product.images[0],
-              name: product.name,
-            });
-          }
-        }
-
-        const dataItems = detailedLineItems.map((item) => ({
-          name: item.name,
-          quantity: item.quantity,
-          price: item.amount_total,
-          image: item.image,
-        }));
-
-        // Create a new order
-        const newOrder = new Order({
-          userId: session.metadata?.userId, // Assuming you have userId in metadata
-          items: dataItems,
-          totalPrice: session.amount_total,
-          paymentMethod: session.payment_method_types[0],
-          shippingAddress: session.customer_details?.address,
-          customerInfo: {
-            name: session.customer_details?.name!,
-            email: session.customer_details?.email!,
-            phone: session.customer_details?.phone!,
-          },
-          isPaid: true,
-        });
-
-        await newOrder.save();
-
-        console.log('Order saved successfully');
-      } catch (error) {
-        console.error('Error processing checkout.session.completed event:', error);
-      }
-
+      await createOrder(session);
       break;
     }
-    case 'payment_intent.succeeded': {
+
+    case 'checkout.session.async_payment_succeeded': {
       const session = event.data.object;
+
+      // Fulfill the purchase...
+      // fulfillOrder(session);
+
       break;
     }
+
+    case 'checkout.session.async_payment_failed': {
+      const session = event.data.object;
+
+      // Send an email to the customer asking them to retry their order
+      // emailCustomerAboutFailedPayment(session);
+
+      break;
+    }
+
     default:
       console.log(`Unhandled event type ${event.type}`);
   }
