@@ -35,7 +35,7 @@ export const getAllOrdersByUser = async (req: Request, res: Response, next: Next
   }
 
   if (req.query.orderStatus) {
-    filter.isPaid = req.query.orderStatus;
+    filter.orderStatus = req.query.orderStatus;
   }
 
   const options: Options = {

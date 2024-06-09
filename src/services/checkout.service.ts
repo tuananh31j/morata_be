@@ -35,7 +35,8 @@ export const createCheckout = async (req: Request, res: Response, next: NextFunc
     cancel_url: config.stripeConfig.urlCancel,
   });
 
-  return res.status(200).json({ sessionId: session.id, sessionUrl: session.url });
+  // return res.status(200).json({ sessionId: session.id, sessionUrl: session.url });
+  return res.redirect(session.url as string);
 };
 
 const createOrder = async (session: Stripe.Checkout.Session) => {
