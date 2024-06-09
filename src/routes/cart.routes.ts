@@ -4,7 +4,6 @@ import { authenticate } from '@/middlewares/authenticateMiddleware';
 
 const router = Router();
 
-router.use(authenticate);
 router.get('/:id', cartController.getCartByUser);
 router.post('/add', cartController.addToCart);
 router.patch('/increase', cartController.increaseCartItemQuantity);
