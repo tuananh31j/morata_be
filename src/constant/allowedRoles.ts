@@ -1,1 +1,5 @@
-export const allowedRoles = ['user', 'admin', 'superAdmin'];
+export const Role = {
+  USER: 'user',
+  ADMIN: 'admin',
+  SUPER_ADMIN: 'super_admin',
+};

@@ -4,6 +4,8 @@ import { validateObjectId } from '@/validation';
 import upload from '@/middlewares/multerMiddleware';
 import { addProductValidation } from '@/validation/product';
 import { authenticate } from '@/middlewares/authenticateMiddleware';
+import { authorize } from '@/middlewares/authorizeMiddleware';
+import { Role } from '@/constant/allowedRoles';
 
 const router = Router();
 
@@ -18,6 +20,7 @@ router.get('/:id', [validateObjectId], productController.getDetailedProduct);
 router.post(
   '/',
   authenticate,
+  authorize(Role.ADMIN),
   upload.fields([
     { name: 'thumbnail', maxCount: 1 },
     { name: 'images', maxCount: 5 },
@@ -25,7 +28,7 @@ router.post(
   [addProductValidation],
   productController.createNewProduct,
 );
-router.patch('/:id', authenticate, [validateObjectId], productController.updateProduct);
-router.delete('/:id', authenticate, [validateObjectId], productController.deleteProduct);
+router.patch('/:id', [authenticate, authorize(Role.ADMIN), validateObjectId], productController.updateProduct);
+router.delete('/:id', [authenticate, authorize(Role.ADMIN), validateObjectId], productController.deleteProduct);
 
 export default router;

@@ -1,7 +1,12 @@
-import { allowedRoles } from '@/constant/allowedRoles';
 import { UnAuthorizedError } from '@/error/customError';
-import { NextFunction, Request } from 'express';
+import { NextFunction, Request, Response } from 'express';
 
-export const permissionAllow = (req: Request, res: Response, next: NextFunction) => {
-  return req.role && allowedRoles.includes(req.role) ? next() : next(new UnAuthorizedError('No permission to access!'));
+export const authorize = (...allowedRoles: string[]) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (req.role && allowedRoles.includes(req.role)) {
+      return next();
+    } else {
+      return next(new UnAuthorizedError('No permission to access!'));
+    }
+  };
 };

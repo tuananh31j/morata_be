@@ -9,7 +9,7 @@ interface JwtPayload {
   role: string;
 }
 
-export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
+export const authenticate = (req: Request, res: Response, next: NextFunction) => {
   const cookies = req.cookies;
   if (!cookies.jwt) {
     return next(new UnAuthorizedError('Token: UnAuthorized access.'));
@@ -37,6 +37,6 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     req.userId = decodedToken.userId;
     req.role = decodedToken.role;
 
-    next();
+    return next();
   });
 };
