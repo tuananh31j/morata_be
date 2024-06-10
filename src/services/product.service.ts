@@ -11,6 +11,7 @@ type Options = {
   sort?: { [key: string]: number };
   lean: boolean;
   // Filter properties
+  search?: string; //Filter by name (optional)
   price?: { min: number; max: number }; // Filter by price range (optional)
   isAvailable?: boolean; // Filter by availability (optional)
   brandId?: string; // Filter by brand (optional)
@@ -24,6 +25,11 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
 
   // Build filter object based on request query parameters
   const filter: { [key: string]: any } = {};
+  if (req.query.search) {
+    const search = req.query.search as string;
+    filter.name = { $regex: new RegExp(search, 'i') };
+  }
+
   if (req.query.price) {
     const priceRange = JSON.parse(req.query.price as string); // Assuming price is provided as JSON string
     filter.price = { $gte: priceRange.min, $lte: priceRange.max }; // Filter by price range
