@@ -33,9 +33,10 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
       return next(new UnAuthenticatedError('Token verification failed.'));
     }
 
-    const decodedToken = decoded as JwtPayload;
-    req.userId = decodedToken.userId;
-    req.role = decodedToken.role;
+    const { userId, role } = decoded as JwtPayload;
+
+    req.userId = userId;
+    req.role = role;
 
     return next();
   });

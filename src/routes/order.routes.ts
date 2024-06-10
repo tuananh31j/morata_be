@@ -6,7 +6,7 @@ const router = Router();
 
 router.get('/user', authenticate, orderController.getAllOrdersByUser);
 router.get('/:id', authenticate, orderController.getDetailedOrder);
-
 router.post('/', authenticate, orderController.createOrder);
+router.post('/cancel', authenticate, orderController.cancelOrder);
 
 export default router;

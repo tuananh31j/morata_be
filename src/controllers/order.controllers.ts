@@ -13,3 +13,7 @@ export const getAllOrdersByUser = asyncHandler(async (req: Request, res: Respons
 export const getDetailedOrder = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   return await orderService.getDetailedOrder(req, res, next);
 });
+
+export const cancelOrder = asyncHandler(async (req: any, res: Response, next: NextFunction) => {
+  return await orderService.cancelOrder(req, res, next);
+});

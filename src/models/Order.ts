@@ -5,7 +5,9 @@ import paginate from 'mongoose-paginate-v2';
 const OrderSchema = new mongoose.Schema<OrderSchema>(
   {
     userId: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
     },
     items: [
       {
@@ -66,11 +68,16 @@ const OrderSchema = new mongoose.Schema<OrderSchema>(
       type: Boolean,
       default: false,
     },
+    canceledBy: {
+      type: String,
+      default: 'user',
+      enum: ['user', 'admin'],
+    },
     orderStatus: {
       type: String,
       trim: true,
       default: 'pending',
-      enum: ['pending', 'canceled', 'confirmed', 'shipping', 'done'],
+      enum: ['pending', 'cancelled', 'confirmed', 'shipping', 'done'],
     },
   },
   {

@@ -28,5 +28,6 @@ export interface OrderSchema {
   };
   paymentMethod: string;
   isPaid: boolean;
+  canceledBy: string;
   orderStatus: string;
 }
