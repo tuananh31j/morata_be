@@ -3,10 +3,11 @@ import config from './config/env.config';
 import connectDB from './config/database.config';
 
 const PORT = config.port;
+const NETWORK = config.network;
 
 let server: any;
 connectDB().then(() => {
-  server = app.listen(PORT, () => {
+  server = app.listen(PORT, `${NETWORK}`, () => {
     console.log(`Listening to port ${PORT}`);
   });
 });

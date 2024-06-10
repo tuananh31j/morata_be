@@ -4,7 +4,8 @@ import Joi from 'joi';
 const envVarsSchema = Joi.object()
   .keys({
     NODE_ENV: Joi.string().valid('production', 'development').required(),
-    PORT: Joi.number().default(5555),
+    PORT: Joi.number().default(80),
+    NETWORK: Joi.string().default('0.0.0.0'),
     MONGODB_URL_DEV: Joi.string().description('Local Mongo DB'),
     MONGODB_URL_CLOUD: Joi.string().description('Cloud Mongo DB'),
     FIREBASE_API_KEY: Joi.string().description('Firebase Api Key'),
@@ -41,6 +42,7 @@ if (error) {
 const config = {
   env: envVars.NODE_ENV,
   port: envVars.PORT,
+  network: envVars.NETWORK,
   mongoose: {
     url: envVars.NODE_ENV === 'development' ? envVars.MONGODB_URL_DEV : envVars.MONGODB_URL_CLOUD,
     options: {

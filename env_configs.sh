@@ -2,6 +2,7 @@ NODE_ENV=production
 
 
 PORT=5000
+NETWORK=0.0.0.0
 MONGODB_URL_DEV=mongodb://127.0.0.1:27017/morata
 MONGODB_URL_CLOUD=mongodb+srv://morata:KfQSuwYMNBdp3knn@cluster0.iovfzc0.mongodb.net/
 
