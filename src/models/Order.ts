@@ -4,11 +4,6 @@ import paginate from 'mongoose-paginate-v2';
 
 const OrderSchema = new mongoose.Schema<OrderSchema>(
   {
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
     items: [
       {
         name: {
@@ -49,6 +44,12 @@ const OrderSchema = new mongoose.Schema<OrderSchema>(
       email: { type: String, required: true },
       phone: { type: String, required: true },
     },
+    receiverInfo: {
+      name: { type: String, required: true },
+      email: { type: String, required: true },
+      phone: { type: String, required: true },
+    },
+
     shippingAddress: {
       city: String,
       country: String,
@@ -73,11 +74,14 @@ const OrderSchema = new mongoose.Schema<OrderSchema>(
       default: 'user',
       enum: ['user', 'admin'],
     },
+    description: {
+      type: String,
+    },
     orderStatus: {
       type: String,
       trim: true,
       default: 'pending',
-      enum: ['pending', 'cancelled', 'confirmed', 'shipping', 'done'],
+      enum: ['pending', 'cancelled', 'confirmed', 'shipping', 'delivered', 'done'],
     },
   },
   {

@@ -8,12 +8,16 @@ interface ItemOrder {
 }
 
 export interface OrderSchema {
-  userId: mongoose.Schema.Types.ObjectId;
   items: ItemOrder[];
   totalPrice: number;
   tax: number;
   shippingFee: number;
   customerInfo: {
+    name: string;
+    email: string;
+    phone: string;
+  };
+  receiverInfo: {
     name: string;
     email: string;
     phone: string;
@@ -29,5 +33,6 @@ export interface OrderSchema {
   paymentMethod: string;
   isPaid: boolean;
   canceledBy: string;
+  description: string;
   orderStatus: string;
 }

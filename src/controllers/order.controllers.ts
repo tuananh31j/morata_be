@@ -6,6 +6,10 @@ export const createOrder = asyncHandler(async (req: Request, res: Response, next
   return await orderService.createOrder(req, res, next);
 });
 
+export const getAllOrders = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  return await orderService.getAllOrders(req, res, next);
+});
+
 export const getAllOrdersByUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   return await orderService.getAllOrdersByUser(req, res, next);
 });
