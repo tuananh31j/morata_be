@@ -8,6 +8,7 @@ interface ItemOrder {
 }
 
 export interface OrderSchema {
+  userId: mongoose.Schema.Types.ObjectId;
   items: ItemOrder[];
   totalPrice: number;
   tax: number;

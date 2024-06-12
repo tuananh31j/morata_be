@@ -4,6 +4,10 @@ import paginate from 'mongoose-paginate-v2';
 
 const OrderSchema = new mongoose.Schema<OrderSchema>(
   {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
     items: [
       {
         name: {
