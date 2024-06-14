@@ -7,3 +7,4 @@ export * as checkoutService from './checkout.service';
 export * as authService from './auth.service';
 export * as reviewService from './review.service';
 export * as tokenService from './token.service';
+export * as attributeService from './attribute.service';

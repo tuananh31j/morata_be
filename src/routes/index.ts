@@ -7,11 +7,13 @@ import checkoutRouter from './checkout.routes';
 import orderRouter from './order.routes';
 import authRouter from './auth.routes';
 import reviewRouter from './review.routes';
+import attributeRouter from './attribute.routes';
 
 const router = Router();
 
 router.use('/auth', authRouter);
 router.use('/categories', categoryRouter);
+router.use('/attributes', attributeRouter);
 router.use('/brands', brandRouter);
 router.use('/products', productRouter);
 router.use('/reviews', reviewRouter);

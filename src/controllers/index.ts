@@ -6,3 +6,4 @@ export * as orderController from './order.controllers';
 export * as checkoutController from './checkout.controllers';
 export * as authController from './auth.controllers';
 export * as reviewController from './review.controllers';
+export * as attributeController from './attribute.controllers';

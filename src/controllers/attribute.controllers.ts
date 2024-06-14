@@ -2,22 +2,17 @@ import { Request, Response, NextFunction } from 'express';
 import asyncHandler from '@/middlewares/asyncHandlerMiddleware';
 import { attributeService } from '../services/index';
 
-// ================================ Value Attribute ===============================
+// ================================ Attribute ===============================
 
-export const createNewValueAttribute = async (req: Request, res: Response, next: NextFunction) => {
-  return await attributeService.createNewValueAttribute(req, res, next);
-};
+export const createAttribute = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  return await attributeService.createAttribute(req, res, next);
+});
 
-export const getAllValueAttributes = async (req: Request, res: Response, next: NextFunction) => {
-  return await attributeService.getAllValueAttributes(req, res, next);
-};
+export const getAllAttributesByCategory = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  return await attributeService.getAllAttributesByCategory(req, res, next);
+});
 
-// ============================ Attribute ===========================================
-
-export const createNewAttribute = async (req: Request, res: Response, next: NextFunction) => {
-  return await attributeService.createNewAttribute(req, res, next);
-};
-
-export const getAllAttributes = async (req: Request, res: Response, next: NextFunction) => {
-  return await attributeService.getAllAttributes(req, res, next);
-};
+// ================================ Attribute Value===============================
+export const addValueToAttribute = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  return await attributeService.addValueToAttribute(req, res, next);
+});

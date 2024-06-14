@@ -1,17 +1,17 @@
-import express, { Express } from 'express';
-import 'dotenv/config';
 import compression from 'compression';
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
+import 'dotenv/config';
+import express, { Express } from 'express';
+import { initializeApp } from 'firebase/app';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import cookieParser from 'cookie-parser';
-import notFoundHandler from './middlewares/notFoundHandlerMiddleware';
-import errorHandler from './middlewares/errorHandlerMiddleware';
-import router from './routes';
 import { corsOptions } from './config/cors.config';
 import firebaseConfig from './config/firebase.config';
-import { initializeApp } from 'firebase/app';
 import { checkoutController } from './controllers';
+import errorHandler from './middlewares/errorHandlerMiddleware';
+import notFoundHandler from './middlewares/notFoundHandlerMiddleware';
+import router from './routes';
 
 const app: Express = express();
 

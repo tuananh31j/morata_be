@@ -24,6 +24,7 @@ export const createCheckout = async (req: Request, res: Response, next: NextFunc
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
     line_items: lineItems,
+    metadata: { userId: req.userId.toString() },
     phone_number_collection: {
       enabled: true,
     },
@@ -66,7 +67,7 @@ const createOrder = async (session: Stripe.Checkout.Session) => {
     // Create a new order
     if (session) {
       const newOrder = new Order({
-        userId: session.metadata?.userId, // Assuming you have userId in metadata
+        userId: session.metadata && session.metadata?.userId, // Assuming you have userId in metadata
         items: dataItems,
         totalPrice: session.amount_total,
         paymentMethod: session.payment_method_types[0],
@@ -90,6 +91,7 @@ const createOrder = async (session: Stripe.Checkout.Session) => {
 
 export const handleSessionEvents = async (req: Request, res: Response, next: NextFunction) => {
   const payload = req.body;
+
   const sig: any = req.headers['stripe-signature'];
 
   let event;
@@ -106,6 +108,7 @@ export const handleSessionEvents = async (req: Request, res: Response, next: Nex
   switch (event.type) {
     case 'checkout.session.completed': {
       const session = event.data.object as Stripe.Checkout.Session;
+
       await createOrder(session);
       break;
     }
