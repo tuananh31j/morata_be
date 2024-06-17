@@ -134,7 +134,8 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
 
 //@POST Cancel order
 export const cancelOrder = async (req: Request, res: Response, next: NextFunction) => {
-  const foundedOrder = await Order.findOne({ userId: req.userId as string, _id: req.body.orderId });
+  const foundedOrder = await Order.findOne({ _id: req.body.orderId });
+
 
   if (!foundedOrder) {
     throw new BadRequestError(`Not found order with id ${req.body.orderId}`);
