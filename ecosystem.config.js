@@ -7,7 +7,7 @@ module.exports = {
       interpreter: 'none',
       watch: false,
       env: {
-        NODE_ENV: 'development',
+        NODE_ENV: 'production',
       },
     },
   ],
