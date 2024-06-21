@@ -49,9 +49,9 @@ const OrderSchema = new mongoose.Schema<OrderSchema>(
       phone: { type: String, required: true },
     },
     receiverInfo: {
-      name: { type: String, required: true },
-      email: { type: String, required: true },
-      phone: { type: String, required: true },
+      name: { type: String },
+      email: { type: String },
+      phone: { type: String },
     },
 
     shippingAddress: {

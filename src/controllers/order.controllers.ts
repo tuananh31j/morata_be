@@ -21,3 +21,7 @@ export const getDetailedOrder = asyncHandler(async (req: Request, res: Response,
 export const cancelOrder = asyncHandler(async (req: any, res: Response, next: NextFunction) => {
   return await orderService.cancelOrder(req, res, next);
 });
+
+export const confirmOrder = asyncHandler(async (req: any, res: Response, next: NextFunction) => {
+  return await orderService.confirmOrder(req, res, next);
+});

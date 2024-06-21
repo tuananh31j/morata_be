@@ -1,5 +1,7 @@
+import { Role } from '@/constant/allowedRoles';
 import { orderController } from '@/controllers';
 import { authenticate } from '@/middlewares/authenticateMiddleware';
+import { authorize } from '@/middlewares/authorizeMiddleware';
 import { Router } from 'express';
 
 const router = Router();
@@ -8,6 +10,7 @@ router.get('/', authenticate, orderController.getAllOrders);
 router.get('/user', authenticate, orderController.getAllOrdersByUser);
 router.get('/:id', authenticate, orderController.getDetailedOrder);
 router.post('/', authenticate, orderController.createOrder);
-router.post('/cancel', authenticate, orderController.cancelOrder);
+router.patch('/cancel', authenticate, orderController.cancelOrder);
+router.patch('/confirm', authenticate, authorize(Role.ADMIN), orderController.confirmOrder);
 
 export default router;
