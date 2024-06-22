@@ -12,5 +12,6 @@ router.get('/:id', authenticate, orderController.getDetailedOrder);
 router.post('/', authenticate, orderController.createOrder);
 router.patch('/cancel', authenticate, orderController.cancelOrder);
 router.patch('/confirm', authenticate, authorize(Role.ADMIN), orderController.confirmOrder);
+router.patch('/done', authenticate, authorize(Role.ADMIN), orderController.finishOrder);
 
 export default router;

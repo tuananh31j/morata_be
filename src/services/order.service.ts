@@ -30,7 +30,7 @@ export const getAllOrders = async (req: Request, res: Response, next: NextFuncti
   const filter: { [key: string]: any } = {};
   if (req.query.search) {
     const search = req.query.search as string;
-    filter.name = { $regex: new RegExp(search, 'i') };
+    filter._id = { $regex: new RegExp(search, 'i') };
   }
 
   if (req.query.paymentMethod) {
@@ -55,7 +55,7 @@ export const getAllOrders = async (req: Request, res: Response, next: NextFuncti
   query = { ...query, ...filter };
 
   const orders = (await Order.paginate(query, options)).docs.map((order) => {
-    return _.pick(order, ['_id', 'code', 'totalPrice', 'paymentMethod', 'isPaid', 'orderStatus', 'createdAt']);
+    return _.pick(order, ['_id', 'totalPrice', 'paymentMethod', 'isPaid', 'orderStatus', 'createdAt']);
   });
 
   return res
@@ -73,7 +73,7 @@ export const getAllOrdersByUser = async (req: Request, res: Response, next: Next
 
   if (req.query.search) {
     const search = req.query.search as string;
-    filter.name = { $regex: new RegExp(search, 'i') };
+    filter._id = { $regex: new RegExp(search, 'i') };
   }
 
   if (req.query.paymentMethod) {
@@ -99,7 +99,7 @@ export const getAllOrdersByUser = async (req: Request, res: Response, next: Next
   query = { ...query, ...filter };
 
   const orders = (await Order.paginate(query, options)).docs.map((order) => {
-    return _.pick(order, ['_id', 'code', 'totalPrice', 'paymentMethod', 'isPaid', 'orderStatus', 'createdAt']);
+    return _.pick(order, ['_id', 'totalPrice', 'paymentMethod', 'isPaid', 'orderStatus', 'createdAt']);
   });
 
   return res
@@ -163,6 +163,7 @@ export const cancelOrder = async (req: Request, res: Response, next: NextFunctio
   }
 
   foundedOrder.orderStatus = ORDER_STATUS.CANCELLED;
+  foundedOrder.description = req.body.description ?? '';
   foundedOrder.save();
 
   return res
@@ -193,4 +194,28 @@ export const confirmOrder = async (req: Request, res: Response, next: NextFuncti
   return res
     .status(StatusCodes.OK)
     .json(customResponse({ data: null, success: true, status: StatusCodes.OK, message: 'Your order is confirmed.' }));
+};
+
+// @Finish order
+export const finishOrder = async (req: Request, res: Response, next: NextFunction) => {
+  if (!req.role || req.role !== 'admin') {
+    throw new NotAcceptableError('Only admin can access.');
+  }
+
+  const foundedOrder = await Order.findOne({ _id: req.body.orderId });
+
+  if (!foundedOrder) {
+    throw new BadRequestError(`Not found order with id ${req.body.orderId}`);
+  }
+
+  if (foundedOrder.orderStatus === ORDER_STATUS.CONFIRMED) {
+    throw new BadRequestError(`Your order is done.`);
+  }
+
+  foundedOrder.orderStatus = ORDER_STATUS.DONE;
+  foundedOrder.save();
+
+  return res
+    .status(StatusCodes.OK)
+    .json(customResponse({ data: null, success: true, status: StatusCodes.OK, message: 'Your order is done.' }));
 };
