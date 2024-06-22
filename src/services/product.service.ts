@@ -65,16 +65,37 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
 };
 
 // @Get: getDetailedProduct
+
 export const getDetailedProduct = async (req: Request, res: Response, next: NextFunction) => {
+  const query: { isDeleted: boolean; categoryId: string; brandId: string; color?: string; ram?: string } = {
+    isDeleted: false,
+    categoryId: req.query.categoryId as string,
+    brandId: req.query.brandId as string,
+  };
+
+  if (req.query) {
+    if (req.query.color) {
+      query.color = req.query.color as string;
+    }
+    if (req.query.ram) {
+      query.ram = req.query.ram as string;
+    }
+
+    const product = await Product.findOne(query).lean();
+
+    if (!product) {
+      return null;
+    }
+    return product;
+  }
+
   const product = await Product.findOne({ _id: req.params.id, isDeleted: false }).lean();
 
   if (!product) {
     throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${req.params.id}`);
   }
 
-  return res
-    .status(StatusCodes.OK)
-    .json(customResponse({ data: product, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+  return product;
 };
 
 // @Get Top Latest Products

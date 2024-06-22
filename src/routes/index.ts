@@ -8,6 +8,7 @@ import orderRouter from './order.routes';
 import authRouter from './auth.routes';
 import reviewRouter from './review.routes';
 import attributeRouter from './attribute.routes';
+import statsRouter from './stats.routes';
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use('/reviews', reviewRouter);
 router.use('/carts', cartRouter);
 router.use(checkoutRouter);
 router.use('/orders', orderRouter);
+router.use('/stats', statsRouter);
 
 export default router;

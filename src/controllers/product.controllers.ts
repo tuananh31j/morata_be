@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import asyncHandler from '@/middlewares/asyncHandlerMiddleware';
 import { productService } from '../services/index';
+import { ReasonPhrases, StatusCodes } from 'http-status-codes';
+import customResponse from '@/helpers/response';
 
 // @Get: getAllCategories
 export const getAllProducts = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
@@ -9,7 +11,15 @@ export const getAllProducts = asyncHandler(async (req: Request, res: Response, n
 
 // @Get: getDetailedProduct
 export const getDetailedProduct = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  return await productService.getDetailedProduct(req, res, next);
+  const product = await productService.getDetailedProduct(req, res, next);
+  if (!product) {
+    return res
+      .status(StatusCodes.OK)
+      .json(customResponse({ data: null, message: ReasonPhrases.OK, status: StatusCodes.OK, success: true }));
+  }
+  return res
+    .status(StatusCodes.OK)
+    .json(customResponse({ data: product, message: ReasonPhrases.OK, status: StatusCodes.OK, success: true }));
 });
 
 // @Get Top Latest Products
