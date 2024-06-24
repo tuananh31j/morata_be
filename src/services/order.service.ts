@@ -149,7 +149,7 @@ export const cancelOrder = async (req: Request, res: Response, next: NextFunctio
     throw new BadRequestError(`Not found order with id ${req.body.orderId}`);
   }
 
-  if (foundedOrder.orderStatus === ORDER_STATUS.CANCELLED) {
+  if (foundedOrder.orderStatus === ORDER_STATUS.CANCELED) {
     throw new NotAcceptableError(`You cannot cancel this order because it was cancelled before. `);
   }
 
@@ -161,7 +161,7 @@ export const cancelOrder = async (req: Request, res: Response, next: NextFunctio
     foundedOrder.canceledBy = Role.ADMIN;
   }
 
-  foundedOrder.orderStatus = ORDER_STATUS.CANCELLED;
+  foundedOrder.orderStatus = ORDER_STATUS.CANCELED;
   foundedOrder.description = req.body.description ?? '';
   foundedOrder.save();
 
