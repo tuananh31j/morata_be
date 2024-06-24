@@ -11,7 +11,7 @@ const stripe = new Stripe(config.stripeConfig.secretKey);
 export const createCheckout = async (req: Request, res: Response, next: NextFunction) => {
   const lineItems = req.body.items.map((item: any) => ({
     price_data: {
-      currency: 'usd',
+      currency: req.body.currency ?? 'usd',
       product_data: {
         name: item.name,
         images: [item.image],
@@ -31,6 +31,10 @@ export const createCheckout = async (req: Request, res: Response, next: NextFunc
     invoice_creation: {
       enabled: true,
     },
+    shipping_address_collection: {
+      allowed_countries: ['VN', 'US'],
+    },
+    billing_address_collection: 'required',
     mode: 'payment',
     success_url: config.stripeConfig.urlSuccess,
     cancel_url: config.stripeConfig.urlCancel,

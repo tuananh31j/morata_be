@@ -125,7 +125,7 @@ export const getDetailedOrder = async (req: Request, res: Response, next: NextFu
 
 // @POST: Create new order
 export const createOrder = async (req: Request, res: Response, next: NextFunction) => {
-  const newOrders = new Order({
+  const order = new Order({
     ...req.body,
     userId: req.userId,
   });
@@ -134,7 +134,7 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
     if (req.body.totalPrice >= 1000) {
       return res.status(StatusCodes.NOT_ACCEPTABLE).json({ message: ReasonPhrases.NOT_ACCEPTABLE });
     }
-    await newOrders.save();
+    await order.save();
   }
 
   return res
