@@ -2,34 +2,41 @@ import { OrderSchema } from '@/interfaces/schema/order';
 import mongoose, { PaginateModel, Schema } from 'mongoose';
 import paginate from 'mongoose-paginate-v2';
 
+const OrderItemSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+    },
+    quantity: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+    price: {
+      type: Number,
+      required: true,
+    },
+    image: {
+      type: String,
+      required: true,
+    },
+  },
+  {
+    _id: false,
+    id: false,
+    versionKey: false,
+    timestamps: false,
+  },
+);
+
 const OrderSchema = new mongoose.Schema<OrderSchema>(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
     },
-    items: [
-      {
-        name: {
-          type: String,
-          required: true,
-        },
-        quantity: {
-          type: Number,
-          required: true,
-          min: 1,
-        },
-        price: {
-          type: Number,
-          required: true,
-        },
-        image: {
-          type: String,
-          required: true,
-        },
-        _id: false,
-      },
-    ],
+    items: [OrderItemSchema],
     totalPrice: {
       // total price after calculate tax fee
       type: Number,
@@ -49,9 +56,9 @@ const OrderSchema = new mongoose.Schema<OrderSchema>(
       phone: { type: String, required: true },
     },
     receiverInfo: {
-      name: { type: String },
-      email: { type: String },
-      phone: { type: String },
+      name: { type: String, default: '' },
+      email: { type: String, default: '' },
+      phone: { type: String, default: '' },
     },
 
     shippingAddress: {

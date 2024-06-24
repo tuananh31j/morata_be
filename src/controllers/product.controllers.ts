@@ -12,11 +12,11 @@ export const getAllProducts = asyncHandler(async (req: Request, res: Response, n
 // @Get: getDetailedProduct
 export const getDetailedProduct = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const product = await productService.getDetailedProduct(req, res, next);
-  if (!product) {
-    return res
-      .status(StatusCodes.OK)
-      .json(customResponse({ data: null, message: ReasonPhrases.OK, status: StatusCodes.OK, success: true }));
-  }
+  // if (!product) {
+  //   return res
+  //     .status(StatusCodes.OK)
+  //     .json(customResponse({ data: null, message: ReasonPhrases.OK, status: StatusCodes.OK, success: true }));
+  // }
   return res
     .status(StatusCodes.OK)
     .json(customResponse({ data: product, message: ReasonPhrases.OK, status: StatusCodes.OK, success: true }));

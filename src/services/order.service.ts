@@ -66,7 +66,7 @@ export const getAllOrders = async (req: Request, res: Response, next: NextFuncti
 //@GET: Get all orders by user
 
 export const getAllOrdersByUser = async (req: Request, res: Response, next: NextFunction) => {
-  let query: { isDeleted: boolean } = { isDeleted: false }; // Filter for non-deleted products
+  let query: { isDeleted: boolean; userId: string } = { isDeleted: false, userId: req.userId }; // Filter for non-deleted products
 
   // Build filter object based on request query parameters
   const filter: { [key: string]: any } = {};
@@ -89,7 +89,6 @@ export const getAllOrdersByUser = async (req: Request, res: Response, next: Next
   }
 
   const options: Options = {
-    userId: req.userId!,
     page: req.query.page ? +req.query.page : 1,
     limit: req.query.limit ? +req.query.limit : 10,
     sort: req.query.sort ? JSON.parse(req.query.sort as string) : { createdAt: -1 }, // Parse sort criteria from JSON
