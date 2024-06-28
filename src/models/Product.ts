@@ -31,7 +31,7 @@ export const ProductSchema = new Schema<IProductSchema>(
     },
     stock: {
       type: Number,
-      min: 0,
+      required: true,
       default: 0,
     },
     images: [
@@ -81,6 +81,7 @@ const variationAttributeSchema = new Schema({
     type: String,
     required: true,
   },
+  stock: { type: Number, required: true, default: 0 },
   value: {
     type: Schema.Types.Mixed,
   },

@@ -21,6 +21,7 @@ const AttributeSchema = new mongoose.Schema<Attribute>(
       trim: true,
       lowerCase: true,
     },
+
     categoryId: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,

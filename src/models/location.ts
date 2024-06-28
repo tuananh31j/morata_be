@@ -1,9 +1,16 @@
+import { LOCATION_TYPES } from '@/constant/location';
 import mongoose from 'mongoose';
 
-const ShippingAddressSchema = new mongoose.Schema({
+const LocationSchema = new mongoose.Schema({
   userId: {
     type: String,
     required: true,
+  },
+
+  type: {
+    type: String,
+    default: LOCATION_TYPES.DEFAULT,
+    enum: [LOCATION_TYPES.DEFAULT, LOCATION_TYPES.SHIPPING_ADDRESS],
   },
   address: {
     city: {
@@ -33,4 +40,4 @@ const ShippingAddressSchema = new mongoose.Schema({
   },
 });
 
-export default mongoose.model('ShippingAddress', ShippingAddressSchema);
+export default mongoose.model('Location', LocationSchema);

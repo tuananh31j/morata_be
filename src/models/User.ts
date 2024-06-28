@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import { Role } from '@/constant/allowedRoles';
 
 const UserSchema = new mongoose.Schema(
   {
@@ -24,8 +25,8 @@ const UserSchema = new mongoose.Schema(
       type: String,
     },
     address: {
-      type: String,
-      trim: true,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'location',
     },
     phone: {
       type: String,
@@ -33,8 +34,8 @@ const UserSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      default: 'user',
-      enum: ['user', 'superAdmin'],
+      default: Role.USER,
+      enum: [Role.USER, Role.ADMIN, Role.SUPER_ADMIN],
     },
   },
   {

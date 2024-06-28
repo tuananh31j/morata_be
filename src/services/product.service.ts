@@ -67,28 +67,6 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
 // @Get: getDetailedProduct
 
 export const getDetailedProduct = async (req: Request, res: Response, next: NextFunction) => {
-  const query: { isDeleted: boolean; categoryId: string; brandId: string; color?: string; ram?: string } = {
-    isDeleted: false,
-    categoryId: req.query.categoryId as string,
-    brandId: req.query.brandId as string,
-  };
-
-  if (req.query) {
-    if (req.query.color) {
-      query.color = req.query.color as string;
-    }
-    if (req.query.ram) {
-      query.ram = req.query.ram as string;
-    }
-
-    const product = await Product.findOne(query).lean();
-
-    if (!product) {
-      return null;
-    }
-    return product;
-  }
-
   const product = await Product.findOne({ _id: req.params.id, isDeleted: false }).lean();
 
   if (!product) {
@@ -184,13 +162,11 @@ export const createNewProduct = async (req: Request, res: Response, next: NextFu
   const files = req.files as { [fieldname: string]: Express.Multer.File[] };
   if (files && files['thumbnail']) {
     const thumbnailURL = await uploadFiles(files['thumbnail']);
-    console.log(thumbnailURL);
     req.body.thumbnail = thumbnailURL[0];
   }
 
   if (files && files['images']) {
     const imagesURLs = await uploadFiles(files['images']);
-    console.log(imagesURLs);
     req.body.images = imagesURLs;
   }
 
