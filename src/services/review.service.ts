@@ -19,7 +19,7 @@ export const createNewReview = async (req: Request, res: Response, next: NextFun
 };
 
 export const getAllReviewsOfProduct = async (req: Request, res: Response, next: NextFunction) => {
-  const listReviews = await Review.find({ productId: req.query.productId })
+  const listReviews = await Review.find({ productId: req.query.productId as string })
     .populate('userId', 'username avatar -_id')
     .lean();
 
