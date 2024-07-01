@@ -1,13 +1,17 @@
 import { deleteObject, getDownloadURL, getStorage, listAll, ref, uploadBytesResumable } from 'firebase/storage';
 import { getCurrentDateTime } from './datetime';
+import { addAbortSignal } from 'stream';
 
 export const uploadFiles = async (files: Express.Multer.File[], folder?: string) => {
   const dateTime = getCurrentDateTime();
   const storage = getStorage();
-  const fileURL: string[] = [];
+  const fileUrls: string[] = [];
+  const fileUrlRefs: string[] = [];
 
   for (let i = 0; i < files.length; i++) {
-    const storageRef = ref(storage, `files/${files[i]?.originalname}-${dateTime}`);
+    const storageRef = ref(storage, `files/${files[i]?.originalname}/${dateTime}`);
+    const urlRef = `files/${files[i]?.originalname}/${dateTime}`;
+    fileUrlRefs.push(urlRef);
     // Create file metadata including the content type
     const metadata = {
       contentType: files[i]?.mimetype,
@@ -16,17 +20,18 @@ export const uploadFiles = async (files: Express.Multer.File[], folder?: string)
     const snapshot = await uploadBytesResumable(storageRef, files[i]?.buffer, metadata);
     //by using uploadBytesResumable we can control the progress of uploading like pause, resume, cancel
     const downloadURL = await getDownloadURL(snapshot.ref);
-    fileURL.push(downloadURL);
+    fileUrls.push(downloadURL);
   }
 
-  return fileURL;
+  return { fileUrls, fileUrlRefs };
 };
 
 export const uploadSingleFile = async (file: any, folder?: string) => {
   const dateTime = getCurrentDateTime();
   const storage = getStorage();
 
-  const storageRef = ref(storage, `${folder}/${file.originalname}-${dateTime}`);
+  const storageRef = ref(storage, `${folder}/${file.originalname}/${dateTime}`);
+  const urlRef = `${folder}/${file.originalname}/${dateTime}`;
   const metadata = {
     contentType: file.mimetype,
   };
@@ -35,7 +40,7 @@ export const uploadSingleFile = async (file: any, folder?: string) => {
   //by using uploadBytesResumable we can control the progress of uploading like pause, resume, cancel
   const downloadURL = await getDownloadURL(snapshot.ref);
 
-  return downloadURL;
+  return { downloadURL, urlRef };
 };
 
 export const getListAllFilesStorage = async (folderName: string) => {
@@ -50,30 +55,18 @@ export const getListAllFilesStorage = async (folderName: string) => {
   }
 };
 
-const extractFilePath = (url: string) => {
-  const match = url.match(/\/o\/(.*?)\?alt=media/);
-  if (match && match[1]) {
-    return decodeURIComponent(match[1]);
-  } else {
-    throw new Error('Invalid URL format');
-  }
-};
-
-export const removeUploadedFile = async (url: string) => {
+export const removeUploadedFile = async (urlRef?: string) => {
   const storage = getStorage();
 
-  const urlRef = extractFilePath(url);
   // Create a reference to the file to delete
   const desertRef = ref(storage, urlRef);
 
-  console.log(urlRef);
-
-  // deleteObject(desertRef)
-  //   .then(() => {
-  //     // File deleted successfully
-  //     console.log(`File deleted successfully`);
-  //   })
-  //   .catch((error) => {
-  //     console.log(error);
-  //   });
+  deleteObject(desertRef)
+    .then(() => {
+      // File deleted successfully
+      console.log(`File deleted successfully`);
+    })
+    .catch((error) => {
+      console.log(error);
+    });
 };

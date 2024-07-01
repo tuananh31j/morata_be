@@ -8,7 +8,9 @@ export interface IProductSchema extends Document {
   rating: number;
   stock: number;
   images: string[];
+  imageUrlRefs: string[];
   thumbnail: string;
+  thumbnailUrlRef: string;
   sku: string;
   categoryId: Schema.Types.ObjectId;
   brandId: Schema.Types.ObjectId;

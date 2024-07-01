@@ -15,12 +15,12 @@ import statsRouter from './stats.routes';
 const router = Router();
 
 router.use('/auth', authRouter);
+router.use('/products', productRouter);
 router.use('/users', userRouter);
 router.use('/locations', locationRouter);
 router.use('/categories', categoryRouter);
 router.use('/attributes', attributeRouter);
 router.use('/brands', brandRouter);
-router.use('/products', productRouter);
 router.use('/reviews', reviewRouter);
 router.use('/carts', cartRouter);
 router.use(checkoutRouter);

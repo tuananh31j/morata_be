@@ -28,7 +28,15 @@ router.post(
   [addProductValidation],
   productController.createNewProduct,
 );
-router.patch('/:id', [authenticate, authorize(Role.ADMIN), validateObjectId], productController.updateProduct);
+router.patch(
+  '/:id',
+  [authenticate, authorize(Role.ADMIN), validateObjectId],
+  upload.fields([
+    { name: 'thumbnail', maxCount: 1 },
+    { name: 'images', maxCount: 5 },
+  ]),
+  productController.updateProduct,
+);
 router.delete('/:id', [authenticate, authorize(Role.ADMIN), validateObjectId], productController.deleteProduct);
 
 export default router;

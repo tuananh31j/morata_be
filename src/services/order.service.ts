@@ -54,13 +54,24 @@ export const getAllOrders = async (req: Request, res: Response, next: NextFuncti
 
   query = { ...query, ...filter };
 
-  const orders = (await Order.paginate(query, options)).docs.map((order) => {
+  const data = await Order.paginate(query, options);
+
+  const orders = data.docs.map((order) => {
     return _.pick(order, ['_id', 'totalPrice', 'paymentMethod', 'isPaid', 'orderStatus', 'createdAt']);
   });
 
-  return res
-    .status(StatusCodes.OK)
-    .json(customResponse({ data: orders, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+  return res.status(StatusCodes.OK).json(
+    customResponse({
+      data: {
+        orders: orders,
+        page: data.page,
+        totalPages: data.totalPages,
+      },
+      success: true,
+      status: StatusCodes.OK,
+      message: ReasonPhrases.OK,
+    }),
+  );
 };
 
 //@GET: Get all orders by user
@@ -97,13 +108,23 @@ export const getAllOrdersByUser = async (req: Request, res: Response, next: Next
 
   query = { ...query, ...filter };
 
-  const orders = (await Order.paginate(query, options)).docs.map((order) => {
+  const data = await Order.paginate(query, options);
+  const orders = data.docs.map((order) => {
     return _.pick(order, ['_id', 'totalPrice', 'paymentMethod', 'isPaid', 'orderStatus', 'createdAt']);
   });
 
-  return res
-    .status(StatusCodes.OK)
-    .json(customResponse({ data: orders, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+  return res.status(StatusCodes.OK).json(
+    customResponse({
+      data: {
+        orders: orders,
+        page: data.page,
+        totalPages: data.totalPages,
+      },
+      success: true,
+      status: StatusCodes.OK,
+      message: ReasonPhrases.OK,
+    }),
+  );
 };
 
 //@GET: Get the detailed order

@@ -39,13 +39,17 @@ export const ProductSchema = new Schema<IProductSchema>(
         type: String,
       },
     ],
+    imageUrlRefs: [],
     thumbnail: {
       type: String,
     },
-    sku: {
+    thumbnailUrlRef: {
       type: String,
-      unique: true,
     },
+    // sku: {
+    //   type: String,
+    //   unique: true,
+    // },
     categoryId: {
       type: Schema.Types.ObjectId,
       ref: 'Category',

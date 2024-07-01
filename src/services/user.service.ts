@@ -1,12 +1,12 @@
 import User from '@/models/User';
 import { removeUploadedFile, uploadSingleFile } from '@/utils/files';
 import { Request, Response } from 'express';
-import { getStorage, ref, deleteObject } from 'firebase/storage';
+import _ from 'lodash';
 
 export const getUserProfile = async (req: Request, res: Response) => {
   const profileData = await User.findById(req.userId).lean();
-  console.log(profileData);
-  return profileData;
+  const result = _.pick(profileData, ['username', 'email', 'avatar']);
+  return result;
 };
 
 export const updateUserProfile = async (req: Request, res: Response) => {
@@ -17,8 +17,9 @@ export const updateUserProfile = async (req: Request, res: Response) => {
     if (user && user.avatar) {
       await removeUploadedFile(user.avatar);
     }
-    const avatarUrl = await uploadSingleFile(file, 'avatars');
-    req.body.avatar = avatarUrl;
+    const { downloadURL, urlRef } = await uploadSingleFile(file, 'avatars');
+    req.body.avatar = downloadURL;
+    req.body.avatarRef = urlRef;
   }
 
   const profileData = await User.findByIdAndUpdate(req.userId, req.body, { new: true }).lean();
