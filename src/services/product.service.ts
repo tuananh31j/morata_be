@@ -67,6 +67,8 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
       'price',
       'discountPercentage',
       'rating',
+      'categoryId',
+      'brandId',
       'stock',
       'images',
       'thumbnail',
@@ -79,6 +81,7 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
       data: {
         products: products,
         page: data.page,
+        totalDocs: data.totalDocs,
         totalPages: data.totalPages,
       },
       success: true,

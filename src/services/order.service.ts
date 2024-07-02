@@ -65,6 +65,7 @@ export const getAllOrders = async (req: Request, res: Response, next: NextFuncti
       data: {
         orders: orders,
         page: data.page,
+        totalDocs: data.totalDocs,
         totalPages: data.totalPages,
       },
       success: true,
