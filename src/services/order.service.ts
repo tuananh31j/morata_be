@@ -119,6 +119,7 @@ export const getAllOrdersByUser = async (req: Request, res: Response, next: Next
       data: {
         orders: orders,
         page: data.page,
+        totalDocs: data.totalDocs,
         totalPages: data.totalPages,
       },
       success: true,
