@@ -76,6 +76,7 @@ export const ProductSchema = new Schema<IProductSchema>(
       default: false,
     },
     variations: Schema.Types.Mixed,
+    details: [],
   },
   { timestamps: true, versionKey: false },
 );

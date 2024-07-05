@@ -17,5 +17,6 @@ export interface IProductSchema extends Document {
   reviewIds: Schema.Types.ObjectId[];
   isAvailable: boolean;
   isDeleted: boolean;
+  details: any[];
   variations: Schema.Types.Mixed;
 }
