@@ -27,10 +27,6 @@ const UserSchema = new mongoose.Schema(
     avatarRef: {
       type: String,
     },
-    address: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'location',
-    },
     phone: {
       type: String,
       trim: true,

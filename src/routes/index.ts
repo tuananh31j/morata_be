@@ -9,7 +9,6 @@ import authRouter from './auth.routes';
 import userRouter from './user.routes';
 import locationRouter from './location.routes';
 import reviewRouter from './review.routes';
-import attributeRouter from './attribute.routes';
 import statsRouter from './stats.routes';
 
 const router = Router();
@@ -19,7 +18,6 @@ router.use('/products', productRouter);
 router.use('/users', userRouter);
 router.use('/locations', locationRouter);
 router.use('/categories', categoryRouter);
-router.use('/attributes', attributeRouter);
 router.use('/brands', brandRouter);
 router.use('/reviews', reviewRouter);
 router.use('/carts', cartRouter);

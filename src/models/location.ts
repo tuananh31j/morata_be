@@ -9,7 +9,7 @@ const LocationSchema = new mongoose.Schema({
 
   type: {
     type: String,
-    default: LOCATION_TYPES.DEFAULT,
+    default: LOCATION_TYPES.SHIPPING_ADDRESS,
     enum: [LOCATION_TYPES.DEFAULT, LOCATION_TYPES.SHIPPING_ADDRESS],
   },
   address: {

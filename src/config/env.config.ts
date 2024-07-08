@@ -44,7 +44,7 @@ const config = {
   port: envVars.PORT,
   hostname: envVars.HOSTNAME,
   mongoose: {
-    url: envVars.NODE_ENV === 'development' ? envVars.MONGODB_URL_DEV : envVars.MONGODB_URL_CLOUD,
+    url: envVars.MONGODB_URL_CLOUD,
     options: {
       dbName: 'morata',
     },

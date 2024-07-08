@@ -5,6 +5,9 @@ import { Router } from 'express';
 const router = Router();
 
 router.use(authenticate);
-router.use('', statsController.statsCommon);
+router.get('/total', statsController.totalStats);
+router.get('/daily', statsController.orderByDayStats);
+router.get('/monthly', statsController.orderByMonthStats);
+router.get('/yearly', statsController.orderByYearStats);
 
 export default router;

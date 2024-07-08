@@ -242,9 +242,12 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
     req.body.imageUrlRefs = fileUrlRefs;
   }
 
+  product.set({ ...product, ...req.body });
+  product.save();
+
   return res
     .status(StatusCodes.OK)
-    .json(customResponse({ data: product, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+    .json(customResponse({ data: null, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
 };
 
 // @Delete: deleteProduct
