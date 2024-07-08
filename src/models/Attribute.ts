@@ -1,34 +1,12 @@
 import { Attribute, AttributeValue } from '@/interfaces/schema/attribute';
-import mongoose from 'mongoose';
-
-const AttributeValue = new mongoose.Schema<AttributeValue>(
-  {
-    name: { type: String },
-    value: { type: mongoose.Schema.Types.Mixed },
-    _id: false,
-  },
-  {
-    versionKey: false,
-    timestamps: false,
-  },
-);
+import mongoose, { Schema } from 'mongoose';
 
 const AttributeSchema = new mongoose.Schema<Attribute>(
   {
-    attribute: {
-      type: String,
-      required: true,
-      trim: true,
-      lowerCase: true,
-    },
-
-    categoryId: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true,
-    },
-    details: {
-      type: [AttributeValue],
-      default: [],
+    name: String,
+    detailId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Detail',
     },
   },
   { versionKey: false, timestamps: false },

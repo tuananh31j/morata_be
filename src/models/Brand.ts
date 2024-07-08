@@ -9,14 +9,6 @@ const BrandSchema = new mongoose.Schema<IBrandSchema>(
       trim: true,
       unique: true,
     },
-    description: {
-      type: String,
-      trim: true,
-    },
-    country: {
-      type: String,
-      trim: true,
-    },
   },
   {
     timestamps: false,

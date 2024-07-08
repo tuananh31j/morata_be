@@ -1,3 +1,4 @@
+import { PRODUCT_STATUS } from '@/constant';
 import { IProductSchema } from '@/interfaces/schema/product';
 import mongoose, { PaginateModel, Schema } from 'mongoose';
 import paginate from 'mongoose-paginate-v2';
@@ -12,11 +13,7 @@ export const ProductSchema = new Schema<IProductSchema>(
     description: {
       type: String,
       trim: true,
-    },
-    price: {
-      type: Number,
       required: true,
-      min: 0,
     },
     discountPercentage: {
       type: Number,
@@ -28,11 +25,6 @@ export const ProductSchema = new Schema<IProductSchema>(
       min: 0,
       max: 5,
       default: 5,
-    },
-    stock: {
-      type: Number,
-      required: true,
-      default: 0,
     },
     images: [
       {
@@ -46,18 +38,11 @@ export const ProductSchema = new Schema<IProductSchema>(
     thumbnailUrlRef: {
       type: String,
     },
-    // sku: {
-    //   type: String,
-    //   unique: true,
-    // },
     categoryId: {
       type: Schema.Types.ObjectId,
       ref: 'Category',
     },
-    brandId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Brand',
-    },
+    parentSku: { type: String },
     reviewIds: {
       type: [
         {
@@ -67,6 +52,11 @@ export const ProductSchema = new Schema<IProductSchema>(
       ],
       default: [],
     },
+    status: {
+      type: String,
+      default: PRODUCT_STATUS.NEW,
+      enum: [PRODUCT_STATUS.NEW, PRODUCT_STATUS.USED],
+    },
     isAvailable: {
       type: Boolean,
       default: true,
@@ -75,24 +65,21 @@ export const ProductSchema = new Schema<IProductSchema>(
       type: Boolean,
       default: false,
     },
-    variations: Schema.Types.Mixed,
-    details: [],
+    details: {
+      type: [
+        {
+          type: Schema.Types.ObjectId,
+          ref: 'Detail',
+        },
+      ],
+      required: true,
+    },
+    variations: {
+      type: [{ type: Schema.Types.ObjectId, ref: 'Variation' }],
+    },
   },
   { timestamps: true, versionKey: false },
 );
-
-const variationAttributeSchema = new Schema({
-  attribute: {
-    type: String,
-    required: true,
-  },
-  stock: { type: Number, required: true, default: 0 },
-  value: {
-    type: Schema.Types.Mixed,
-  },
-});
-
-ProductSchema.add({ variations: variationAttributeSchema });
 
 ProductSchema.plugin(paginate);
 

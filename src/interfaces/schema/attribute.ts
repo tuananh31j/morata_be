@@ -2,12 +2,10 @@ import mongoose from 'mongoose';
 
 export interface AttributeValue {
   name: string;
-  value: any;
-  _id?: boolean;
+  attributeId: mongoose.Types.ObjectId;
 }
 
 export interface Attribute {
-  attribute: string;
-  categoryId: mongoose.Types.ObjectId;
-  details: AttributeValue[];
+  name: string;
+  detailId: mongoose.Types.ObjectId;
 }

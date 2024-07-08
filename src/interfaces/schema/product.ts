@@ -3,20 +3,22 @@ import { Schema, Document } from 'mongoose';
 export interface IProductSchema extends Document {
   name: string;
   description: string;
-  price: number;
-  discountPercentage: number;
-  rating: number;
-  stock: number;
-  images: string[];
-  imageUrlRefs: string[];
   thumbnail: string;
   thumbnailUrlRef: string;
-  sku: string;
+  images: string[];
+  imageUrlRefs: string[];
+
   categoryId: Schema.Types.ObjectId;
   brandId: Schema.Types.ObjectId;
+
+  details: Schema.Types.ObjectId[];
+  variations: Schema.Types.ObjectId[];
+
+  rating: number;
   reviewIds: Schema.Types.ObjectId[];
+  discountPercentage: number;
   isAvailable: boolean;
   isDeleted: boolean;
-  details: any[];
-  variations: Schema.Types.Mixed;
+  parentSku: string;
+  status: string;
 }

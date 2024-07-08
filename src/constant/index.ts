@@ -5,3 +5,8 @@ export const ORDER_STATUS = {
   SHIPPING: 'shipping',
   DONE: 'done',
 };
+
+export const PRODUCT_STATUS = {
+  NEW: 'new',
+  USED: 'used',
+};
