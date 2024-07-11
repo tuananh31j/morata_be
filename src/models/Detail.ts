@@ -2,7 +2,7 @@ import mongoose, { Schema } from 'mongoose';
 
 const DetailSchema = new mongoose.Schema(
   {
-    name: String,
+    name: { type: String, required: true, trim: true },
     categoryId: {
       type: Schema.Types.ObjectId,
       ref: 'Category',

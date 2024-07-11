@@ -3,7 +3,11 @@ import mongoose, { Schema } from 'mongoose';
 
 const AttributeSchema = new mongoose.Schema<Attribute>(
   {
-    name: String,
+    name: {
+      type: String,
+      required: true,
+      unique: true,
+    },
     detailId: {
       type: Schema.Types.ObjectId,
       ref: 'Detail',

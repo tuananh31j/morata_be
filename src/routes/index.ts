@@ -10,11 +10,17 @@ import userRouter from './user.routes';
 import locationRouter from './location.routes';
 import reviewRouter from './review.routes';
 import statsRouter from './stats.routes';
+import detailRouter from './detail.routes';
+import attributeRouter from './attribute.routes';
+import attributeValueRouter from './attributeValue.routes';
 
 const router = Router();
 
 router.use('/auth', authRouter);
 router.use('/products', productRouter);
+router.use('/details', detailRouter);
+router.use('/attributes', attributeRouter);
+router.use('/attribute-values', attributeValueRouter);
 router.use('/users', userRouter);
 router.use('/locations', locationRouter);
 router.use('/categories', categoryRouter);

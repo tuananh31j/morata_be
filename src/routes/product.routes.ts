@@ -19,6 +19,27 @@ router.get('/:id', [validateObjectId], productController.getDetailedProduct);
 
 router.post(
   '/',
+  //   authenticate,
+  //   authorize(Role.ADMIN),
+  //   upload.fields([
+  //     { name: 'thumbnail', maxCount: 1 },
+  //     { name: 'images', maxCount: 5 },
+  //   ]),
+  //   [addProductValidation],
+  //   productController.createNewProduct,
+  // );
+  // router.patch(
+  //   '/:id',
+  //   [authenticate, authorize(Role.ADMIN), validateObjectId],
+  //   upload.fields([
+  //     { name: 'thumbnail', maxCount: 1 },
+  //     { name: 'images', maxCount: 5 },
+  //   ]),
+  productController.createNewProduct,
+);
+
+router.patch(
+  '/:id',
   authenticate,
   authorize(Role.ADMIN),
   upload.fields([
@@ -37,6 +58,7 @@ router.patch(
   ]),
   productController.updateProduct,
 );
+
 router.delete('/:id', [authenticate, authorize(Role.ADMIN), validateObjectId], productController.deleteProduct);
 
 export default router;

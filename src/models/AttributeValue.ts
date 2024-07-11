@@ -14,3 +14,5 @@ const AttributeValue = new mongoose.Schema<AttributeValue>(
     timestamps: false,
   },
 );
+
+export default mongoose.model('AttributeValue', AttributeValue);

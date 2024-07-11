@@ -1,5 +1,6 @@
+import { ORDER_STATUS, PAYMENT_METHOD } from '@/constant/order';
 import { OrderSchema } from '@/interfaces/schema/order';
-import mongoose, { PaginateModel, Schema } from 'mongoose';
+import mongoose, { PaginateModel } from 'mongoose';
 import paginate from 'mongoose-paginate-v2';
 
 const OrderItemSchema = new mongoose.Schema(
@@ -73,8 +74,8 @@ const OrderSchema = new mongoose.Schema<OrderSchema>(
       type: String,
       trim: true,
       required: true,
-      enum: ['cash', 'card'],
-      default: 'cash',
+      enum: [PAYMENT_METHOD.CASH, PAYMENT_METHOD.CARD],
+      default: PAYMENT_METHOD.CASH,
     },
     isPaid: {
       type: Boolean,
@@ -91,8 +92,15 @@ const OrderSchema = new mongoose.Schema<OrderSchema>(
     orderStatus: {
       type: String,
       trim: true,
-      default: 'pending',
-      enum: ['pending', 'cancelled', 'confirmed', 'shipping', 'delivered', 'done'],
+      default: ORDER_STATUS.PENDING,
+      enum: [
+        ORDER_STATUS.PENDING,
+        ORDER_STATUS.CANCELLED,
+        ORDER_STATUS.CONFIRMED,
+        ORDER_STATUS.SHIPPING,
+        ORDER_STATUS.DELIVERED,
+        ORDER_STATUS.DONE,
+      ],
     },
   },
   {

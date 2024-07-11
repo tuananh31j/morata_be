@@ -186,26 +186,26 @@ export const getAllProductByCategory = async (req: Request, res: Response, next:
 
 // @Post: createNewProduct
 export const createNewProduct = async (req: Request, res: Response, next: NextFunction) => {
-  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-  if (files && files['thumbnail']) {
-    const { fileUrlRefs, fileUrls } = await uploadFiles(files['thumbnail']);
-    req.body.thumbnail = fileUrls[0];
-    req.body.thumbnailUrlRef = fileUrlRefs[0];
-  }
+  // const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+  // if (files && files['thumbnail']) {
+  //   const { fileUrlRefs, fileUrls } = await uploadFiles(files['thumbnail']);
+  //   req.body.thumbnail = fileUrls[0];
+  //   req.body.thumbnailUrlRef = fileUrlRefs[0];
+  // }
 
-  if (files && files['images']) {
-    const { fileUrlRefs, fileUrls } = await uploadFiles(files['images']);
-    req.body.images = fileUrls;
-    req.body.imageUrlRefs = fileUrlRefs;
-  }
+  // if (files && files['images']) {
+  //   const { fileUrlRefs, fileUrls } = await uploadFiles(files['images']);
+  //   req.body.images = fileUrls;
+  //   req.body.imageUrlRefs = fileUrlRefs;
+  // }
 
-  const newProduct = new Product({ ...req.body });
+  // const newProduct = new Product({ ...req.body });
 
-  newProduct.save();
+  // newProduct.save();
 
   return res.status(StatusCodes.CREATED).json(
     customResponse({
-      data: null,
+      data: req.body,
       success: true,
       status: StatusCodes.CREATED,
       message: ReasonPhrases.CREATED,

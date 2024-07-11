@@ -1,5 +1,5 @@
-import { ORDER_STATUS } from '@/constant';
 import { Role } from '@/constant/allowedRoles';
+import { ORDER_STATUS } from '@/constant/order';
 import { BadRequestError, NotAcceptableError, NotFoundError } from '@/error/customError';
 import customResponse from '@/helpers/response';
 import Order from '@/models/Order';
@@ -164,7 +164,7 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
     .json(customResponse({ data: null, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
 };
 
-//@POST Cancel order
+//@POST Set order status to cancelled
 export const cancelOrder = async (req: Request, res: Response, next: NextFunction) => {
   const foundedOrder = await Order.findOne({ _id: req.body.orderId });
 
@@ -172,7 +172,7 @@ export const cancelOrder = async (req: Request, res: Response, next: NextFunctio
     throw new BadRequestError(`Not found order with id ${req.body.orderId}`);
   }
 
-  if (foundedOrder.orderStatus === ORDER_STATUS.CANCELED) {
+  if (foundedOrder.orderStatus === ORDER_STATUS.CANCELLED) {
     throw new NotAcceptableError(`You cannot cancel this order because it was cancelled before. `);
   }
 
@@ -184,7 +184,7 @@ export const cancelOrder = async (req: Request, res: Response, next: NextFunctio
     foundedOrder.canceledBy = Role.ADMIN;
   }
 
-  foundedOrder.orderStatus = ORDER_STATUS.CANCELED;
+  foundedOrder.orderStatus = ORDER_STATUS.CANCELLED;
   foundedOrder.description = req.body.description ?? '';
   foundedOrder.save();
 
@@ -193,8 +193,7 @@ export const cancelOrder = async (req: Request, res: Response, next: NextFunctio
     .json(customResponse({ data: null, success: true, status: StatusCodes.OK, message: 'Your order is cancelled.' }));
 };
 
-// @Confirm order
-
+// @Set order status to confirmed
 export const confirmOrder = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.role || req.role !== 'admin') {
     throw new NotAcceptableError('Only admin can access.');
@@ -218,7 +217,32 @@ export const confirmOrder = async (req: Request, res: Response, next: NextFuncti
     .json(customResponse({ data: null, success: true, status: StatusCodes.OK, message: 'Your order is confirmed.' }));
 };
 
-// @Finish order
+// @ Set order status to delivered
+export const deliverOrder = async (req: Request, res: Response, next: NextFunction) => {
+  if (!req.role || req.role !== 'admin') {
+    throw new NotAcceptableError('Only admin can access.');
+  }
+
+  const foundedOrder = await Order.findOne({ _id: req.body.orderId });
+
+  if (!foundedOrder) {
+    throw new BadRequestError(`Not found order with id ${req.body.orderId}`);
+  }
+
+  if (foundedOrder.orderStatus === ORDER_STATUS.DELIVERED) {
+    throw new BadRequestError(`Your order is delivered.`);
+  }
+
+  foundedOrder.orderStatus = ORDER_STATUS.DELIVERED;
+
+  foundedOrder.save();
+
+  return res
+    .status(StatusCodes.OK)
+    .json(customResponse({ data: null, success: true, status: StatusCodes.OK, message: 'This order is delivered.' }));
+};
+
+// @Set order status to done
 export const finishOrder = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.role || req.role !== 'admin') {
     throw new NotAcceptableError('Only admin can access.');
