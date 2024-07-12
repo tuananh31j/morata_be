@@ -65,18 +65,6 @@ export const ProductSchema = new Schema<IProductSchema>(
       type: Boolean,
       default: false,
     },
-    details: {
-      type: [
-        {
-          type: Schema.Types.ObjectId,
-          ref: 'Detail',
-        },
-      ],
-      required: true,
-    },
-    variations: {
-      type: [{ type: Schema.Types.ObjectId, ref: 'Variation' }],
-    },
   },
   { timestamps: true, versionKey: false },
 );

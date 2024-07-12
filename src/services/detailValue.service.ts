@@ -1,6 +1,6 @@
 import { BadRequestError } from '@/error/customError';
-import Attribute from '@/models/Attribute';
 import Detail from '@/models/Detail';
+import DetailValue from '@/models/DetailValue';
 import { Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 
@@ -11,7 +11,7 @@ export const createNewAttribute = async (req: Request, res: Response) => {
     throw new BadRequestError(`${ReasonPhrases.BAD_REQUEST} detail with id: ${(req.body as any).detailId}`);
   }
 
-  const attribute = await Attribute.create(req.body);
+  const attribute = await DetailValue.create(req.body);
 
   return res.status(StatusCodes.CREATED).json({
     data: attribute,
@@ -21,8 +21,8 @@ export const createNewAttribute = async (req: Request, res: Response) => {
   });
 };
 
-export const updateAttribute = async (req: Request, res: Response) => {
-  const attribute = await Attribute.findById(req.params.id).lean();
+export const updateDetailValue = async (req: Request, res: Response) => {
+  const attribute = await DetailValue.findById(req.params.id).lean();
 
   if (!attribute) {
     throw new BadRequestError(`${ReasonPhrases.BAD_REQUEST} attribute with id: ${req.params.id}`);
@@ -34,7 +34,7 @@ export const updateAttribute = async (req: Request, res: Response) => {
     throw new BadRequestError(`${ReasonPhrases.BAD_REQUEST} detail with id: ${(req.body as any).detailId}`);
   }
 
-  const updatedAttribute = await Attribute.findByIdAndUpdate(req.params.id, req.body, { new: true });
+  const updatedAttribute = await DetailValue.findByIdAndUpdate(req.params.id, req.body, { new: true });
 
   return res.status(StatusCodes.OK).json({
     data: updatedAttribute,
@@ -44,8 +44,8 @@ export const updateAttribute = async (req: Request, res: Response) => {
   });
 };
 
-export const getAllAttributesByDetail = async (req: Request, res: Response) => {
-  const attributes = await Attribute.find({ detailId: req.params.detailId }).lean();
+export const getAllDetailValueByDetailId = async (req: Request, res: Response) => {
+  const attributes = await DetailValue.find({ detailId: req.params.detailId }).lean();
 
   return res.status(StatusCodes.OK).json({
     data: attributes,
