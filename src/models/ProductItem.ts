@@ -1,8 +1,10 @@
-import { ref } from 'joi';
-import { max } from 'lodash';
-import mongoose, { Schema } from 'mongoose';
+import { PRODUCT_STATUS } from '@/constant';
+import { IProductItemSchema } from '@/interfaces/schema/productItem';
+import { string } from 'joi';
+import mongoose, { PaginateModel, Schema } from 'mongoose';
+import paginate from 'mongoose-paginate-v2';
 
-const ProductItemSchema = new mongoose.Schema(
+const ProductItemSchema = new mongoose.Schema<IProductItemSchema>(
   {
     productId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -13,7 +15,7 @@ const ProductItemSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    quantity: {
+    stock: {
       type: Number,
       required: true,
     },
@@ -21,32 +23,39 @@ const ProductItemSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    reviewIds: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'Review',
-      },
-    ],
     rating: {
       type: Number,
       min: 0,
       max: 5,
       default: 5,
     },
+    status: {
+      type: String,
+      default: PRODUCT_STATUS.NEW,
+      enum: [PRODUCT_STATUS.NEW, PRODUCT_STATUS.USED],
+    },
+    reviewIds: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Review',
+      },
+    ],
     details: {
-      type: [
-        {
-          type: Schema.Types.ObjectId,
-          ref: 'Detail',
-        },
-      ],
+      type: [{ attribute: String, value: String }],
       required: true,
     },
     variations: {
-      type: [{ type: Schema.Types.ObjectId, ref: 'Variation' }],
+      type: [{ variant: String, value: String }],
     },
   },
   { timestamps: true, versionKey: false },
 );
 
-export default mongoose.model('ProductItem', ProductItemSchema);
+ProductItemSchema.plugin(paginate);
+
+const ProductItem: PaginateModel<IProductItemSchema> = mongoose.model<
+  IProductItemSchema,
+  PaginateModel<IProductItemSchema>
+>('Product', ProductItemSchema);
+
+export default ProductItem;

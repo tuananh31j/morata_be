@@ -1,6 +1,7 @@
 import { NotFoundError } from '@/error/customError';
 import customResponse from '@/helpers/response';
 import Product from '@/models/Product';
+import ProductItem from '@/models/ProductItem';
 import { removeUploadedFile, uploadFiles } from '@/utils/files';
 import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
@@ -20,8 +21,8 @@ type Options = {
   rating?: { min: number; max: number }; // Filter by rating range (optional)
 };
 
-// @Get: getAllProducts
-export const getAllProducts = async (req: Request, res: Response, next: NextFunction) => {
+// @Get: Get All Products in Filter Page
+export const getAllProductsFilterPage = async (req: Request, res: Response, next: NextFunction) => {
   let query: { isDeleted: boolean } = { isDeleted: false }; // Filter for non-deleted products
 
   // Build filter object based on request query parameters
@@ -59,13 +60,13 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
     lean: true,
   };
 
-  const data = await Product.paginate(query, options);
+  const data = await ProductItem.paginate(query, options);
   const products = data.docs.map((item) => {
     return _.pick(item, [
       '_id',
       'name',
       'price',
-      'discountPercentage',
+      'discount',
       'rating',
       'categoryId',
       'brandId',
@@ -92,7 +93,6 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
 };
 
 // @Get: getDetailedProduct
-
 export const getDetailedProduct = async (req: Request, res: Response, next: NextFunction) => {
   const product = await Product.findOne({ _id: req.params.id, isDeleted: false }).lean();
 

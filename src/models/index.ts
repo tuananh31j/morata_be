@@ -9,4 +9,3 @@ export * from './User';
 export * from './Token';
 export * from './Location';
 export * from './Detail';
-export * from './DetailValue';

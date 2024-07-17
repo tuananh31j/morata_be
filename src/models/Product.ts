@@ -1,4 +1,3 @@
-import { PRODUCT_STATUS } from '@/constant';
 import { IProductSchema } from '@/interfaces/schema/product';
 import mongoose, { PaginateModel, Schema } from 'mongoose';
 import paginate from 'mongoose-paginate-v2';
@@ -15,16 +14,14 @@ export const ProductSchema = new Schema<IProductSchema>(
       trim: true,
       required: true,
     },
-    discountPercentage: {
+    discount: {
       type: Number,
       min: 0,
       default: 0,
     },
-    rating: {
+    price:{
       type: Number,
-      min: 0,
-      max: 5,
-      default: 5,
+      required: true,
     },
     images: [
       {
@@ -43,20 +40,7 @@ export const ProductSchema = new Schema<IProductSchema>(
       ref: 'Category',
     },
     parentSku: { type: String },
-    reviewIds: {
-      type: [
-        {
-          type: Schema.Types.ObjectId,
-          ref: 'Review',
-        },
-      ],
-      default: [],
-    },
-    status: {
-      type: String,
-      default: PRODUCT_STATUS.NEW,
-      enum: [PRODUCT_STATUS.NEW, PRODUCT_STATUS.USED],
-    },
+
     isAvailable: {
       type: Boolean,
       default: true,

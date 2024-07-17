@@ -6,13 +6,7 @@ import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 
 export const getAllDetailsByCategory = async (req: Request, res: Response) => {
   const details = await Detail.find({ categoryId: req.params.categoryId }).lean();
-
-  return res.status(StatusCodes.OK).json({
-    data: details,
-    success: true,
-    status: StatusCodes.OK,
-    message: ReasonPhrases.OK,
-  });
+  return details;
 };
 
 export const createNewDetail = async (req: Request, res: Response) => {
@@ -23,12 +17,15 @@ export const createNewDetail = async (req: Request, res: Response) => {
 
   const detail = await Detail.create(req.body);
 
-  return res.status(StatusCodes.CREATED).json({
-    data: detail,
-    success: true,
-    status: StatusCodes.CREATED,
-    message: ReasonPhrases.CREATED,
-  });
+  return detail;
+};
+
+export const getDetailById = async (req: Request, res: Response) => {
+  const detail = await Detail.findById(req.params.id).lean();
+  if (!detail) {
+    throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} detail with id: ${req.params.id}`);
+  }
+  return detail;
 };
 
 export const updateDetail = async (req: Request, res: Response) => {
@@ -48,10 +45,29 @@ export const updateDetail = async (req: Request, res: Response) => {
     throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} detail with id: ${req.params.id}`);
   }
 
-  return res.status(StatusCodes.OK).json({
-    data: updatedDetail,
-    success: true,
-    status: StatusCodes.OK,
-    message: ReasonPhrases.OK,
-  });
+  return updatedDetail;
+};
+
+export const addValueToDetail = async (req: Request, res: Response) => {
+  const detail = await Detail.findById(req.body.id).lean();
+  if (!detail) {
+    throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} detail with id: ${req.params.id}`);
+  }
+
+  const newDetail = await Detail.findByIdAndUpdate(req.body.id, { $push: { values: req.body.value } }, { new: true });
+
+  if (!newDetail) {
+    throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} detail with id: ${req.body.id}`);
+  }
+
+  return newDetail;
+};
+
+export const removeValueFromDetail = async (req: Request, res: Response) => {
+  const detail = await Detail.findById(req.body.id).lean();
+  if (!detail) {
+    throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} detail with id: ${req.params.id}`);
+  }
+  const newDetail = await Detail.findByIdAndUpdate(req.body.id, { $pull: { values: req.body.value } }, { new: true });
+  return newDetail;
 };

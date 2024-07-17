@@ -11,4 +11,3 @@ export * as tokenService from './token.service';
 export * as userService from './user.service';
 export * as statsService from './stats.service';
 export * as detailService from './detail.service';
-export * as detailValueService from './detailValue.service';
