@@ -9,56 +9,56 @@ import { Role } from '@/constant/allowedRoles';
 
 const router = Router();
 
-router.get('/all', productController.getAllProducts);
-router.get('/latest', productController.getTopLatestProducts);
-router.get('/deals', productController.getTopDealsOfTheDay);
-router.get('/reviews', productController.getTopReviewsProducts);
-router.get('/related', productController.getTopRelatedProducts);
-router.get('/byCate/:cateId', productController.getAllProductByCategory);
-router.get('/:id', [validateObjectId], productController.getDetailedProduct);
+router.get('/all', productController.getAllProductsFilterPage);
+// router.get('/latest', productController.getTopLatestProducts);
+// router.get('/deals', productController.getTopDealsOfTheDay);
+// router.get('/reviews', productController.getTopReviewsProducts);
+// router.get('/related', productController.getTopRelatedProducts);
+// router.get('/byCate/:cateId', productController.getAllProductByCategory);
+// router.get('/:id', [validateObjectId], productController.getDetailedProduct);
 
-router.post(
-  '/',
-  //   authenticate,
-  //   authorize(Role.ADMIN),
-  //   upload.fields([
-  //     { name: 'thumbnail', maxCount: 1 },
-  //     { name: 'images', maxCount: 5 },
-  //   ]),
-  //   [addProductValidation],
-  //   productController.createNewProduct,
-  // );
-  // router.patch(
-  //   '/:id',
-  //   [authenticate, authorize(Role.ADMIN), validateObjectId],
-  //   upload.fields([
-  //     { name: 'thumbnail', maxCount: 1 },
-  //     { name: 'images', maxCount: 5 },
-  //   ]),
-  productController.createNewProduct,
-);
+// router.post(
+//   '/',
+//     authenticate,
+//     authorize(Role.ADMIN),
+//     upload.fields([
+//       { name: 'thumbnail', maxCount: 1 },
+//       { name: 'images', maxCount: 5 },
+//     ]),
+//     [addProductValidation],
+//     productController.createNewProduct,
+//   );
+//   router.patch(
+//     '/:id',
+//     [authenticate, authorize(Role.ADMIN), validateObjectId],
+//     upload.fields([
+//       { name: 'thumbnail', maxCount: 1 },
+//       { name: 'images', maxCount: 5 },
+//     ]),
+//   productController.createNewProduct,
+// );
 
-router.patch(
-  '/:id',
-  authenticate,
-  authorize(Role.ADMIN),
-  upload.fields([
-    { name: 'thumbnail', maxCount: 1 },
-    { name: 'images', maxCount: 5 },
-  ]),
-  [addProductValidation],
-  productController.createNewProduct,
-);
-router.patch(
-  '/:id',
-  [authenticate, authorize(Role.ADMIN), validateObjectId],
-  upload.fields([
-    { name: 'thumbnail', maxCount: 1 },
-    { name: 'images', maxCount: 5 },
-  ]),
-  productController.updateProduct,
-);
+// router.patch(
+//   '/:id',
+//   authenticate,
+//   authorize(Role.ADMIN),
+//   upload.fields([
+//     { name: 'thumbnail', maxCount: 1 },
+//     { name: 'images', maxCount: 5 },
+//   ]),
+//   [addProductValidation],
+//   productController.createNewProduct,
+// );
+// router.patch(
+//   '/:id',
+//   [authenticate, authorize(Role.ADMIN), validateObjectId],
+//   upload.fields([
+//     { name: 'thumbnail', maxCount: 1 },
+//     { name: 'images', maxCount: 5 },
+//   ]),
+//   productController.updateProduct,
+// );
 
-router.delete('/:id', [authenticate, authorize(Role.ADMIN), validateObjectId], productController.deleteProduct);
+// router.delete('/:id', [authenticate, authorize(Role.ADMIN), validateObjectId], productController.deleteProduct);
 
 export default router;
