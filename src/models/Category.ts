@@ -1,7 +1,7 @@
 import { ICategorySchema } from '@/interfaces/schema/category';
 import mongoose from 'mongoose';
 
-const CategorySchema = new mongoose.Schema<ICategorySchema>(
+const CategorySchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -9,6 +9,12 @@ const CategorySchema = new mongoose.Schema<ICategorySchema>(
       trim: true,
       unique: true,
     },
+    attributeIds: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Attribute',
+      },
+    ],
   },
   {
     timestamps: false,

@@ -1,15 +1,22 @@
-import { Attribute, AttributeValue } from '@/interfaces/schema/attribute';
 import mongoose, { Schema } from 'mongoose';
 
-const AttributeSchema = new mongoose.Schema<Attribute>(
+const AttributeSchema = new mongoose.Schema(
   {
-    name: String,
-    detailId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Detail',
+    name: {
+      type: String,
+      unique: true,
     },
+    type: { type: String, enum: ['manual', 'options'] },
+    values: [
+      {
+        type: String || Number,
+        default: [],
+      },
+    ],
   },
   { versionKey: false, timestamps: false },
 );
 
-export default mongoose.model('Attribute', AttributeSchema);
+const Attribute = mongoose.model('Attribute', AttributeSchema);
+
+export default Attribute;

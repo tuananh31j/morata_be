@@ -3,7 +3,7 @@ import { IProductSchema } from '@/interfaces/schema/product';
 import mongoose, { PaginateModel, Schema } from 'mongoose';
 import paginate from 'mongoose-paginate-v2';
 
-export const ProductSchema = new Schema<IProductSchema>(
+export const ProductSchema = new Schema(
   {
     name: {
       type: String,
@@ -20,12 +20,6 @@ export const ProductSchema = new Schema<IProductSchema>(
       min: 0,
       default: 0,
     },
-    rating: {
-      type: Number,
-      min: 0,
-      max: 5,
-      default: 5,
-    },
     images: [
       {
         type: String,
@@ -38,20 +32,8 @@ export const ProductSchema = new Schema<IProductSchema>(
     thumbnailUrlRef: {
       type: String,
     },
-    categoryId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Category',
-    },
     parentSku: { type: String },
-    reviewIds: {
-      type: [
-        {
-          type: Schema.Types.ObjectId,
-          ref: 'Review',
-        },
-      ],
-      default: [],
-    },
+
     status: {
       type: String,
       default: PRODUCT_STATUS.NEW,
@@ -65,17 +47,29 @@ export const ProductSchema = new Schema<IProductSchema>(
       type: Boolean,
       default: false,
     },
-    details: {
+    attributes: [
+      {
+        type: Schema.Types.Mixed,
+      },
+    ],
+
+    // @ref
+    brandId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Brand',
+    },
+    reviewIds: {
       type: [
         {
           type: Schema.Types.ObjectId,
-          ref: 'Detail',
+          ref: 'Review',
         },
       ],
-      required: true,
+      default: [],
     },
-    variations: {
-      type: [{ type: Schema.Types.ObjectId, ref: 'Variation' }],
+    categoryId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Category',
     },
   },
   { timestamps: true, versionKey: false },

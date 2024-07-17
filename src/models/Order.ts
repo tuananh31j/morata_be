@@ -1,3 +1,6 @@
+import { ORDER_STATUS } from '@/constant';
+import { ROLE } from '@/constant/allowedRoles';
+import { PAYMENT_METHODS } from '@/constant/paymentMethod';
 import { OrderSchema } from '@/interfaces/schema/order';
 import mongoose, { PaginateModel, Schema } from 'mongoose';
 import paginate from 'mongoose-paginate-v2';
@@ -73,8 +76,8 @@ const OrderSchema = new mongoose.Schema<OrderSchema>(
       type: String,
       trim: true,
       required: true,
-      enum: ['cash', 'card'],
-      default: 'cash',
+      enum: Object.values(PAYMENT_METHODS),
+      default: PAYMENT_METHODS.CASH,
     },
     isPaid: {
       type: Boolean,
@@ -82,8 +85,8 @@ const OrderSchema = new mongoose.Schema<OrderSchema>(
     },
     canceledBy: {
       type: String,
-      default: 'user',
-      enum: ['user', 'admin'],
+      default: ROLE.USER,
+      enum: Object.values(ROLE),
     },
     description: {
       type: String,
@@ -91,8 +94,8 @@ const OrderSchema = new mongoose.Schema<OrderSchema>(
     orderStatus: {
       type: String,
       trim: true,
-      default: 'pending',
-      enum: ['pending', 'cancelled', 'confirmed', 'shipping', 'delivered', 'done'],
+      default: ORDER_STATUS.PENDING,
+      enum: Object.values(ORDER_STATUS),
     },
   },
   {

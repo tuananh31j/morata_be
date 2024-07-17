@@ -1,5 +1,5 @@
 import { ORDER_STATUS } from '@/constant';
-import { Role } from '@/constant/allowedRoles';
+import { ROLE } from '@/constant/allowedRoles';
 import { BadRequestError, NotAcceptableError, NotFoundError } from '@/error/customError';
 import customResponse from '@/helpers/response';
 import Order from '@/models/Order';
@@ -180,8 +180,8 @@ export const cancelOrder = async (req: Request, res: Response, next: NextFunctio
     throw new NotAcceptableError(`Your order is shipping , you can not cancel.`);
   }
 
-  if (req.role === Role.ADMIN) {
-    foundedOrder.canceledBy = Role.ADMIN;
+  if (req.role === ROLE.ADMIN) {
+    foundedOrder.canceledBy = ROLE.ADMIN;
   }
 
   foundedOrder.orderStatus = ORDER_STATUS.CANCELED;

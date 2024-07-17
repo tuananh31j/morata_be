@@ -1,5 +1,6 @@
 import { NotFoundError } from '@/error/customError';
 import customResponse from '@/helpers/response';
+import Attribute from '@/models/Attribute';
 import Category from '@/models/Category';
 import Product from '@/models/Product';
 import { getListAllFilesStorage } from '@/utils/files';
@@ -83,7 +84,17 @@ export const getDetailedCategory = async (req: Request, res: Response, next: Nex
 
 // @Post: createNewCategory
 export const createNewCategory = async (req: Request, res: Response, next: NextFunction) => {
-  const category = await Category.create({ ...req.body });
+  const attributeIds = req.body.attributeIds as string[];
+  const name = req.body.name as string;
+
+  if (req.body.newAttributes) {
+    const newAttributes = req.body.newAttributes as { name: string; values: string[] | number[] }[];
+    const data = await Attribute.insertMany(newAttributes);
+    attributeIds.push(...data.map((item) => item._id as unknown as string));
+  }
+  const category = await Category.create({ name, attributeIds });
+
+  console.log(req.body);
 
   return res
     .status(StatusCodes.CREATED)

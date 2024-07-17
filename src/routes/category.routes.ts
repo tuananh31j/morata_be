@@ -4,7 +4,7 @@ import { validateObjectId } from '@/validation';
 import { createCategoryValidation, updateCategoryValidation } from '@/validation/category';
 import { authenticate } from '@/middlewares/authenticateMiddleware';
 import { authorize } from '@/middlewares/authorizeMiddleware';
-import { Role } from '@/constant/allowedRoles';
+import { ROLE } from '@/constant/allowedRoles';
 
 const router = Router();
 
@@ -15,14 +15,14 @@ router.post(
   '/',
   authenticate,
   authenticate,
-  authorize(Role.ADMIN),
+  authorize(ROLE.ADMIN),
   [createCategoryValidation],
   categoryController.createNewCategory,
 );
 router.patch(
   '/:id',
   authenticate,
-  authorize(Role.ADMIN),
+  authorize(ROLE.ADMIN),
   [validateObjectId, updateCategoryValidation],
   categoryController.updateCateGory,
 );

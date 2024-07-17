@@ -23,7 +23,7 @@ type Options = {
 // @Get: getAllProducts
 export const getAllProducts = async (req: Request, res: Response, next: NextFunction) => {
   let query: { isDeleted: boolean } = { isDeleted: false }; // Filter for non-deleted products
-
+  console.log(req.query);
   // Build filter object based on request query parameters
   const filter: { [key: string]: any } = {};
   if (req.query.search) {
@@ -39,6 +39,7 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
     filter.isAvailable = Boolean(JSON.parse(req.query.isAvailable as string)); // Parse boolean value
   }
   if (req.query.brandId) {
+    console.log(req.query.brandId);
     filter.brandId = req.query.brandId; // Filter by brand ID
   }
   if (req.query.categoryId) {
@@ -252,7 +253,11 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
 
 // @Delete: deleteProduct
 export const deleteProduct = async (req: Request, res: Response, next: NextFunction) => {
-  const product = await Product.findOneAndUpdate({ _id: req.params.id, isDeleted: true }, { new: true });
+  const product = await Product.findOneAndUpdate(
+    { _id: req.params.id, isDeleted: false },
+    { isDeleted: false },
+    { new: true },
+  );
   if (!product) {
     throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${req.params.id}`);
   }

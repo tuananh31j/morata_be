@@ -4,7 +4,7 @@ import { validateObjectId } from '@/validation';
 import { createBrandValidation, updateBrandValidation } from '@/validation/brand';
 import { authenticate } from '@/middlewares/authenticateMiddleware';
 import { authorize } from '@/middlewares/authorizeMiddleware';
-import { Role } from '@/constant/allowedRoles';
+import { ROLE } from '@/constant/allowedRoles';
 
 const router = Router();
 
@@ -14,7 +14,7 @@ router.post(
   '/',
   authenticate,
   authenticate,
-  authorize(Role.ADMIN),
+  authorize(ROLE.ADMIN),
   [createBrandValidation],
   brandController.createNewBrand,
 );
@@ -22,7 +22,7 @@ router.patch(
   '/:id',
   authenticate,
   authenticate,
-  authorize(Role.ADMIN),
+  authorize(ROLE.ADMIN),
   [validateObjectId, updateBrandValidation],
   brandController.updateBrand,
 );

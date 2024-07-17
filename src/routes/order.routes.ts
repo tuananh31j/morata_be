@@ -1,4 +1,4 @@
-import { Role } from '@/constant/allowedRoles';
+import { ROLE } from '@/constant/allowedRoles';
 import { orderController } from '@/controllers';
 import { authenticate } from '@/middlewares/authenticateMiddleware';
 import { authorize } from '@/middlewares/authorizeMiddleware';
@@ -11,7 +11,7 @@ router.get('/user', authenticate, orderController.getAllOrdersByUser);
 router.get('/:id', authenticate, orderController.getDetailedOrder);
 router.post('/', authenticate, orderController.createOrder);
 router.patch('/cancel', authenticate, orderController.cancelOrder);
-router.patch('/confirm', authenticate, authorize(Role.ADMIN), orderController.confirmOrder);
-router.patch('/done', authenticate, authorize(Role.ADMIN), orderController.finishOrder);
+router.patch('/confirm', authenticate, authorize(ROLE.ADMIN), orderController.confirmOrder);
+router.patch('/done', authenticate, authorize(ROLE.ADMIN), orderController.finishOrder);
 
 export default router;

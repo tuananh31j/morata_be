@@ -10,6 +10,7 @@ import userRouter from './user.routes';
 import locationRouter from './location.routes';
 import reviewRouter from './review.routes';
 import statsRouter from './stats.routes';
+import attributeRouter from './attribute.routes';
 
 const router = Router();
 
@@ -24,5 +25,6 @@ router.use('/carts', cartRouter);
 router.use(checkoutRouter);
 router.use('/orders', orderRouter);
 router.use('/stats', statsRouter);
+router.use('/attributes', attributeRouter);
 
 export default router;
