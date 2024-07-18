@@ -19,7 +19,7 @@ export const ProductSchema = new Schema<IProductSchema>(
       min: 0,
       default: 0,
     },
-    price:{
+    basePrice: {
       type: Number,
       required: true,
     },
@@ -38,6 +38,7 @@ export const ProductSchema = new Schema<IProductSchema>(
     categoryId: {
       type: Schema.Types.ObjectId,
       ref: 'Category',
+      required: true,
     },
     parentSku: { type: String },
 

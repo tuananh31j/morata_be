@@ -1,11 +1,11 @@
 import customResponse from '@/helpers/response';
+import ProductItem from '@/models/ProductItem';
 import Review from '@/models/Review';
-import Product from '@/models/Product';
 import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 
 export const createNewReview = async (req: Request, res: Response, next: NextFunction) => {
-  const product = await Product.findById(req.body.productId);
+  const product = await ProductItem.findById(req.body.productId);
   const newReview = new Review({ ...req.body });
   product?.reviewIds.push(newReview._id as any);
   await product?.save();

@@ -9,5 +9,7 @@ export interface IProductItemSchema extends Document {
   status: string;
   reviewIds: Schema.Types.ObjectId[];
   details: Schema.Types.ObjectId[];
-  variations: Schema.Types.ObjectId[];
+  variants: Schema.Types.ObjectId[];
+  isDeleted: boolean;
+  isAvailable: boolean;
 }

@@ -1,6 +1,5 @@
 import { PRODUCT_STATUS } from '@/constant';
 import { IProductItemSchema } from '@/interfaces/schema/productItem';
-import { string } from 'joi';
 import mongoose, { PaginateModel, Schema } from 'mongoose';
 import paginate from 'mongoose-paginate-v2';
 
@@ -41,11 +40,19 @@ const ProductItemSchema = new mongoose.Schema<IProductItemSchema>(
       },
     ],
     details: {
-      type: [{ attribute: String, value: String }],
+      type: [{ key: String, value: String }],
       required: true,
     },
-    variations: {
-      type: [{ variant: String, value: String }],
+    variants: {
+      type: [{ key: String, value: String }],
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    isAvailable: {
+      type: Boolean,
+      default: true,
     },
   },
   { timestamps: true, versionKey: false },
@@ -56,6 +63,6 @@ ProductItemSchema.plugin(paginate);
 const ProductItem: PaginateModel<IProductItemSchema> = mongoose.model<
   IProductItemSchema,
   PaginateModel<IProductItemSchema>
->('Product', ProductItemSchema);
+>('ProductItem', ProductItemSchema);
 
 export default ProductItem;

@@ -3,7 +3,7 @@ import { Schema, Document } from 'mongoose';
 export interface IProductSchema extends Document {
   name: string;
   description: string;
-  price: number;
+  basePrice: number;
   thumbnail: string;
   thumbnailUrlRef: string;
   images: string[];
