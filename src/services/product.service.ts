@@ -1,10 +1,12 @@
 import { NotFoundError } from '@/error/customError';
 import customResponse from '@/helpers/response';
 import Product from '@/models/Product';
+import ProductItem from '@/models/ProductItem';
 import { removeUploadedFile, uploadFiles } from '@/utils/files';
 import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import _ from 'lodash';
+import mongoose from 'mongoose';
 
 type Options = {
   page: number;
@@ -199,14 +201,20 @@ export const createNewProduct = async (req: Request, res: Response, next: NextFu
     req.body.images = fileUrls;
     req.body.imageUrlRefs = fileUrlRefs;
   }
+  const attributes = JSON.parse(req.body.attributes);
 
-  const newProduct = new Product({ ...req.body });
+  const newProduct = await Product.create({ ...req.body, attributes });
 
-  newProduct.save();
+  const variations = JSON.parse(req.body.variations).map(
+    (item: { price: number; stock: number; sku: string; color: string }) => {
+      return { productId: newProduct._id as mongoose.Schema.Types.ObjectId, ...item };
+    },
+  );
+  await ProductItem.insertMany(variations);
 
   return res.status(StatusCodes.CREATED).json(
     customResponse({
-      data: null,
+      data: newProduct,
       success: true,
       status: StatusCodes.CREATED,
       message: ReasonPhrases.CREATED,

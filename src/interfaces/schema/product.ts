@@ -11,10 +11,10 @@ export interface IProductSchema extends Document {
   categoryId: Schema.Types.ObjectId;
   brandId: Schema.Types.ObjectId;
 
-  details: Schema.Types.ObjectId[];
+  attributes: { key: string; value: string }[];
+
   variations: Schema.Types.ObjectId[];
 
-  rating: number;
   reviewIds: Schema.Types.ObjectId[];
   discountPercentage: number;
   isAvailable: boolean;

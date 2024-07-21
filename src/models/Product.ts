@@ -13,11 +13,11 @@ export const ProductSchema = new Schema(
     description: {
       type: String,
       trim: true,
-      required: true,
     },
-    discountPercentage: {
+    discount: {
       type: Number,
       min: 0,
+      max: 99,
       default: 0,
     },
     images: [
@@ -49,15 +49,12 @@ export const ProductSchema = new Schema(
     },
     attributes: [
       {
-        type: Schema.Types.Mixed,
+        type: { key: String, value: String },
+        required: true,
       },
     ],
 
     // @ref
-    brandId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Brand',
-    },
     reviewIds: {
       type: [
         {
@@ -66,6 +63,11 @@ export const ProductSchema = new Schema(
         },
       ],
       default: [],
+    },
+
+    brandId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Brand',
     },
     categoryId: {
       type: Schema.Types.ObjectId,
