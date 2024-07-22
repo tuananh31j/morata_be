@@ -4,84 +4,98 @@ import mongoose, { PaginateModel, Schema } from 'mongoose';
 import paginate from 'mongoose-paginate-v2';
 
 export const ProductSchema = new Schema(
-  {
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    description: {
-      type: String,
-      trim: true,
-    },
-    discount: {
-      type: Number,
-      min: 0,
-      max: 99,
-      default: 0,
-    },
-    images: [
-      {
-        type: String,
-      },
-    ],
-    imageUrlRefs: [],
-    thumbnail: {
-      type: String,
-    },
-    thumbnailUrlRef: {
-      type: String,
-    },
-    parentSku: { type: String },
-
-    status: {
-      type: String,
-      default: PRODUCT_STATUS.NEW,
-      enum: [PRODUCT_STATUS.NEW, PRODUCT_STATUS.USED],
-    },
-    isAvailable: {
-      type: Boolean,
-      default: true,
-    },
-    isDeleted: {
-      type: Boolean,
-      default: false,
-    },
-    attributes: [
-      {
-        type: { key: String, value: String },
-        required: true,
-      },
-    ],
-
-    // @ref
-    reviewIds: {
-      type: [
-        {
-          type: Schema.Types.ObjectId,
-          ref: 'Review',
+    {
+        name: {
+            type: String,
+            required: true,
+            trim: true,
         },
-      ],
-      default: [],
-    },
+        description: {
+            type: String,
+            trim: true,
+        },
+        discount: {
+            type: Number,
+            min: 0,
+            max: 99,
+            default: 0,
+        },
+        images: [
+            {
+                type: String,
+            },
+        ],
+        imageUrlRefs: [],
+        thumbnail: {
+            type: String,
+        },
+        thumbnailUrlRef: {
+            type: String,
+        },
+        parentSku: { type: String },
 
-    brandId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Brand',
+        status: {
+            type: String,
+            default: PRODUCT_STATUS.NEW,
+            enum: [PRODUCT_STATUS.NEW, PRODUCT_STATUS.USED],
+        },
+        isAvailable: {
+            type: Boolean,
+            default: true,
+        },
+        isDeleted: {
+            type: Boolean,
+            default: false,
+        },
+        attributes: [
+            {
+                type: { key: String, value: String },
+                // required: true,
+            },
+        ],
+        rating: { type: Number, default: 0 },
+        reviewCount: {
+            type: Number,
+            default: 0,
+        },
+        // @ref
+        variationIds: {
+            type: [
+                {
+                    type: Schema.Types.ObjectId,
+                    ref: 'ProductVariation',
+                },
+            ],
+            default: [],
+        },
+
+        brandId: {
+            type: Schema.Types.ObjectId,
+            ref: 'Brand',
+        },
+        categoryId: {
+            type: Schema.Types.ObjectId,
+            ref: 'Category',
+        },
     },
-    categoryId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Category',
-    },
-  },
-  { timestamps: true, versionKey: false },
+    { timestamps: true, versionKey: false },
 );
 
 ProductSchema.plugin(paginate);
 
+// ProductSchema.virtual('reviewCount').get(function () {
+//   if (!Array.isArray(this.reviewIds)) {
+//     return 0;
+//   }
+//   return this.reviewIds.length;
+// });
+
+ProductSchema.set('toJSON', { virtuals: true });
+ProductSchema.set('toObject', { virtuals: true });
+
 const Product: PaginateModel<IProductSchema> = mongoose.model<IProductSchema, PaginateModel<IProductSchema>>(
-  'Product',
-  ProductSchema,
+    'Product',
+    ProductSchema,
 );
 
 export default Product;

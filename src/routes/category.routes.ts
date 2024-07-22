@@ -12,19 +12,19 @@ router.get('/all', categoryController.getAllCategories);
 router.get('/popular', categoryController.getPopularCategories);
 router.get('/:id', [validateObjectId], categoryController.getDetailedCategory);
 router.post(
-  '/',
-  authenticate,
-  authenticate,
-  authorize(ROLE.ADMIN),
-  [createCategoryValidation],
-  categoryController.createNewCategory,
+    '/',
+    authenticate,
+    authenticate,
+    authorize(ROLE.ADMIN),
+    [createCategoryValidation],
+    categoryController.createNewCategory,
 );
 router.patch(
-  '/:id',
-  authenticate,
-  authorize(ROLE.ADMIN),
-  [validateObjectId, updateCategoryValidation],
-  categoryController.updateCateGory,
+    '/:id',
+    authenticate,
+    authorize(ROLE.ADMIN),
+    [validateObjectId, updateCategoryValidation],
+    categoryController.updateCateGory,
 );
 
 export default router;

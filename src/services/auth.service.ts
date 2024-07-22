@@ -11,69 +11,72 @@ import _ from 'lodash';
 
 // @Register
 export const register = async (req: Request, res: Response, next: NextFunction) => {
-  const foundedUser = await User.findOne({ email: req.body.email });
-  if (foundedUser) {
-    throw new DuplicateError('This email is taken.');
-  }
+    const foundedUser = await User.findOne({ email: req.body.email });
+    if (foundedUser) {
+        throw new DuplicateError('This email is taken.');
+    }
 
-  const newUser = await User.create({ ...req.body });
+    const newUser = await User.create({ ...req.body });
 
-  return res
-    .status(StatusCodes.CREATED)
-    .json(
-      customResponse({ data: newUser, success: true, status: StatusCodes.CREATED, message: ReasonPhrases.CREATED }),
+    return res.status(StatusCodes.CREATED).json(
+        customResponse({
+            data: newUser,
+            success: true,
+            status: StatusCodes.CREATED,
+            message: ReasonPhrases.CREATED,
+        }),
     );
 };
 
 // @Login
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
-  const foundedUser = await User.findOne({ email: req.body.email });
+    const foundedUser = await User.findOne({ email: req.body.email });
 
-  if (!foundedUser) {
-    throw new BadRequestError('Incorrect email or password');
-  }
+    if (!foundedUser) {
+        throw new BadRequestError('Incorrect email or password');
+    }
 
-  const isMatchedPassword = await bcrypt.compare(req.body.password, foundedUser?.password);
+    const isMatchedPassword = await bcrypt.compare(req.body.password, foundedUser?.password);
 
-  if (!isMatchedPassword) {
-    throw new BadRequestError('Incorrect email or password');
-  }
+    if (!isMatchedPassword) {
+        throw new BadRequestError('Incorrect email or password');
+    }
 
-  const user = _.pick(foundedUser, ['_id', 'username', 'email', 'role']);
-  return user;
+    const user = _.pick(foundedUser, ['_id', 'username', 'email', 'role']);
+    return user;
 };
 
 export const refresh = async (req: Request, res: Response, next: NextFunction) => {
-  const cookie = req.cookies;
+    const cookie = req.cookies;
 
-  if (!cookie.jwt) {
-    throw new NotAcceptableError('Not Acceptable: Invalid token refresh.');
-  }
-  const token = await verifyToken(cookie.jwt, config.jwt.refreshTokenKey, tokenTypes.REFRESH);
+    if (!cookie.jwt) {
+        throw new NotAcceptableError('Not Acceptable: Invalid token refresh.');
+    }
+    const token = await verifyToken(cookie.jwt, config.jwt.refreshTokenKey, tokenTypes.REFRESH);
 
-  const user = await User.findById(token.userId);
-  if (!user) {
-    throw new NotAcceptableError('Not Acceptable: Invalid token refresh.');
-  }
+    const user = await User.findById(token.userId);
+    if (!user) {
+        throw new NotAcceptableError('Not Acceptable: Invalid token refresh.');
+    }
 
-  const accessToken = generateToken(user, config.jwt.accessTokenKey, config.jwt.accessExpiration);
+    const accessToken = generateToken(user, config.jwt.accessTokenKey, config.jwt.accessExpiration);
 
-  return { accessToken };
+    return { accessToken };
 };
 
 // @Logout
 export const logout = async (req: Request, res: Response, next: NextFunction) => {
-  const cookie = req.cookies;
-  if (!cookie.jwt) {
-    throw new NotAcceptableError('Not Acceptable: Invalid Token');
-  }
-  const token = await verifyToken(cookie.jwt, config.jwt.refreshTokenKey, tokenTypes.REFRESH);
-  await token.deleteOne();
+    const cookie = req.cookies;
+    if (!cookie.jwt) {
+        throw new NotAcceptableError('Not Acceptable: Invalid Token');
+    }
+    const token = await verifyToken(cookie.jwt, config.jwt.refreshTokenKey, tokenTypes.REFRESH);
+    await token.deleteOne();
 
-  res.clearCookie('jwt', { maxAge: 0, sameSite: 'none', httpOnly: true, secure: true });
+    res.clearCookie('jwt', { maxAge: 0, sameSite: 'none', httpOnly: true, secure: true });
 
-  return res
-    .status(StatusCodes.RESET_CONTENT)
-    .json(customResponse({ data: null, message: 'logged out', success: true, status: StatusCodes.NO_CONTENT }));
+    return res
+        .status(StatusCodes.RESET_CONTENT)
+        .json(customResponse({ data: null, message: 'logged out', success: true, status: StatusCodes.NO_CONTENT }));
 };

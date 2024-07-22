@@ -8,236 +8,240 @@ import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import _ from 'lodash';
 
 type Options = {
-  userId?: string;
-  page: number;
-  limit: number;
-  sort?: { [key: string]: number };
-  lean: boolean;
+    userId?: string;
+    page: number;
+    limit: number;
+    sort?: { [key: string]: number };
+    lean: boolean;
 
-  //Filter properties
-  search?: string;
-  paymentMethod?: string;
-  isPaid?: boolean;
-  orderStatus?: string;
+    //Filter properties
+    search?: string;
+    paymentMethod?: string;
+    isPaid?: boolean;
+    orderStatus?: string;
 };
 
 // @GET:  Get all orders
 
 export const getAllOrders = async (req: Request, res: Response, next: NextFunction) => {
-  let query: { isDeleted: boolean } = { isDeleted: false }; // Filter for non-deleted products
+    let query: { isDeleted: boolean } = { isDeleted: false }; // Filter for non-deleted products
 
-  // Build filter object based on request query parameters
-  const filter: { [key: string]: any } = {};
-  if (req.query.search) {
-    const search = req.query.search as string;
-    filter._id = { $regex: new RegExp(search, 'i') };
-  }
+    // Build filter object based on request query parameters
+    const filter: { [key: string]: any } = {};
+    if (req.query.search) {
+        const search = req.query.search as string;
+        filter._id = { $regex: new RegExp(search, 'i') };
+    }
 
-  if (req.query.paymentMethod) {
-    filter.paymentMethod = req.query.paymentMethod;
-  }
+    if (req.query.paymentMethod) {
+        filter.paymentMethod = req.query.paymentMethod;
+    }
 
-  if (req.query.isPaid) {
-    filter.isPaid = req.query.isPaid;
-  }
+    if (req.query.isPaid) {
+        filter.isPaid = req.query.isPaid;
+    }
 
-  if (req.query.orderStatus) {
-    filter.orderStatus = req.query.orderStatus;
-  }
+    if (req.query.orderStatus) {
+        filter.orderStatus = req.query.orderStatus;
+    }
 
-  const options: Options = {
-    page: req.query.page ? +req.query.page : 1,
-    limit: req.query.limit ? +req.query.limit : 10,
-    sort: req.query.sort ? JSON.parse(req.query.sort as string) : { createdAt: -1 }, // Parse sort criteria from JSON
-    lean: true,
-  };
+    const options: Options = {
+        page: req.query.page ? +req.query.page : 1,
+        limit: req.query.limit ? +req.query.limit : 10,
+        sort: req.query.sort ? JSON.parse(req.query.sort as string) : { createdAt: -1 }, // Parse sort criteria from JSON
+        lean: true,
+    };
 
-  query = { ...query, ...filter };
+    query = { ...query, ...filter };
 
-  const data = await Order.paginate(query, options);
+    const data = await Order.paginate(query, options);
 
-  const orders = data.docs.map((order) => {
-    return _.pick(order, ['_id', 'totalPrice', 'paymentMethod', 'isPaid', 'orderStatus', 'createdAt']);
-  });
+    const orders = data.docs.map((order) => {
+        return _.pick(order, ['_id', 'totalPrice', 'paymentMethod', 'isPaid', 'orderStatus', 'createdAt']);
+    });
 
-  return res.status(StatusCodes.OK).json(
-    customResponse({
-      data: {
-        orders: orders,
-        page: data.page,
-        totalDocs: data.totalDocs,
-        totalPages: data.totalPages,
-      },
-      success: true,
-      status: StatusCodes.OK,
-      message: ReasonPhrases.OK,
-    }),
-  );
+    return res.status(StatusCodes.OK).json(
+        customResponse({
+            data: {
+                orders: orders,
+                page: data.page,
+                totalDocs: data.totalDocs,
+                totalPages: data.totalPages,
+            },
+            success: true,
+            status: StatusCodes.OK,
+            message: ReasonPhrases.OK,
+        }),
+    );
 };
 
 //@GET: Get all orders by user
 
 export const getAllOrdersByUser = async (req: Request, res: Response, next: NextFunction) => {
-  let query: { isDeleted: boolean; userId: string } = { isDeleted: false, userId: req.userId }; // Filter for non-deleted products
+    let query: { isDeleted: boolean; userId: string } = { isDeleted: false, userId: req.userId }; // Filter for non-deleted products
 
-  // Build filter object based on request query parameters
-  const filter: { [key: string]: any } = {};
+    // Build filter object based on request query parameters
+    const filter: { [key: string]: any } = {};
 
-  if (req.query.search) {
-    const search = req.query.search as string;
-    filter._id = { $regex: new RegExp(search, 'i') };
-  }
+    if (req.query.search) {
+        const search = req.query.search as string;
+        filter._id = { $regex: new RegExp(search, 'i') };
+    }
 
-  if (req.query.paymentMethod) {
-    filter.paymentMethod = req.query.paymentMethod;
-  }
+    if (req.query.paymentMethod) {
+        filter.paymentMethod = req.query.paymentMethod;
+    }
 
-  if (req.query.isPaid) {
-    filter.isPaid = req.query.isPaid;
-  }
+    if (req.query.isPaid) {
+        filter.isPaid = req.query.isPaid;
+    }
 
-  if (req.query.orderStatus) {
-    filter.orderStatus = req.query.orderStatus;
-  }
+    if (req.query.orderStatus) {
+        filter.orderStatus = req.query.orderStatus;
+    }
 
-  const options: Options = {
-    page: req.query.page ? +req.query.page : 1,
-    limit: req.query.limit ? +req.query.limit : 10,
-    sort: req.query.sort ? JSON.parse(req.query.sort as string) : { createdAt: -1 }, // Parse sort criteria from JSON
-    lean: true,
-  };
+    const options: Options = {
+        page: req.query.page ? +req.query.page : 1,
+        limit: req.query.limit ? +req.query.limit : 10,
+        sort: req.query.sort ? JSON.parse(req.query.sort as string) : { createdAt: -1 }, // Parse sort criteria from JSON
+        lean: true,
+    };
 
-  query = { ...query, ...filter };
+    query = { ...query, ...filter };
 
-  const data = await Order.paginate(query, options);
-  const orders = data.docs.map((order) => {
-    return _.pick(order, ['_id', 'totalPrice', 'paymentMethod', 'isPaid', 'orderStatus', 'createdAt']);
-  });
+    const data = await Order.paginate(query, options);
+    const orders = data.docs.map((order) => {
+        return _.pick(order, ['_id', 'totalPrice', 'paymentMethod', 'isPaid', 'orderStatus', 'createdAt']);
+    });
 
-  return res.status(StatusCodes.OK).json(
-    customResponse({
-      data: {
-        orders: orders,
-        page: data.page,
-        totalDocs: data.totalDocs,
-        totalPages: data.totalPages,
-      },
-      success: true,
-      status: StatusCodes.OK,
-      message: ReasonPhrases.OK,
-    }),
-  );
+    return res.status(StatusCodes.OK).json(
+        customResponse({
+            data: {
+                orders: orders,
+                page: data.page,
+                totalDocs: data.totalDocs,
+                totalPages: data.totalPages,
+            },
+            success: true,
+            status: StatusCodes.OK,
+            message: ReasonPhrases.OK,
+        }),
+    );
 };
 
 //@GET: Get the detailed order
 
 export const getDetailedOrder = async (req: Request, res: Response, next: NextFunction) => {
-  const order = await Order.findById(req.params.id).lean();
+    const order = await Order.findById(req.params.id).lean();
 
-  if (!order) {
-    throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} order with id: ${req.params.id}`);
-  }
+    if (!order) {
+        throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} order with id: ${req.params.id}`);
+    }
 
-  const result = _.omit(order, ['_id', 'canceledBy', 'updatedAt']);
+    const result = _.omit(order, ['_id', 'canceledBy', 'updatedAt']);
 
-  return res
-    .status(StatusCodes.OK)
-    .json(customResponse({ data: result, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+    return res
+        .status(StatusCodes.OK)
+        .json(customResponse({ data: result, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
 };
 
 // @POST: Create new order
 export const createOrder = async (req: Request, res: Response, next: NextFunction) => {
-  const order = new Order({
-    ...req.body,
-    userId: req.userId,
-  });
+    const order = new Order({
+        ...req.body,
+        userId: req.userId,
+    });
 
-  if (req.body.paymentMethod === 'cash') {
-    if (req.body.totalPrice >= 1000) {
-      return res.status(StatusCodes.NOT_ACCEPTABLE).json({ message: ReasonPhrases.NOT_ACCEPTABLE });
+    if (req.body.paymentMethod === 'cash') {
+        if (req.body.totalPrice >= 1000) {
+            return res.status(StatusCodes.NOT_ACCEPTABLE).json({ message: ReasonPhrases.NOT_ACCEPTABLE });
+        }
+        await order.save();
     }
-    await order.save();
-  }
 
-  return res
-    .status(StatusCodes.OK)
-    .json(customResponse({ data: null, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+    return res
+        .status(StatusCodes.OK)
+        .json(customResponse({ data: null, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
 };
 
 //@POST Cancel order
 export const cancelOrder = async (req: Request, res: Response, next: NextFunction) => {
-  const foundedOrder = await Order.findOne({ _id: req.body.orderId });
+    const foundedOrder = await Order.findOne({ _id: req.body.orderId });
 
-  if (!foundedOrder) {
-    throw new BadRequestError(`Not found order with id ${req.body.orderId}`);
-  }
+    if (!foundedOrder) {
+        throw new BadRequestError(`Not found order with id ${req.body.orderId}`);
+    }
 
-  if (foundedOrder.orderStatus === ORDER_STATUS.CANCELED) {
-    throw new NotAcceptableError(`You cannot cancel this order because it was cancelled before. `);
-  }
+    if (foundedOrder.orderStatus === ORDER_STATUS.CANCELED) {
+        throw new NotAcceptableError(`You cannot cancel this order because it was cancelled before. `);
+    }
 
-  if (foundedOrder.orderStatus === ORDER_STATUS.SHIPPING) {
-    throw new NotAcceptableError(`Your order is shipping , you can not cancel.`);
-  }
+    if (foundedOrder.orderStatus === ORDER_STATUS.SHIPPING) {
+        throw new NotAcceptableError(`Your order is shipping , you can not cancel.`);
+    }
 
-  if (req.role === ROLE.ADMIN) {
-    foundedOrder.canceledBy = ROLE.ADMIN;
-  }
+    if (req.role === ROLE.ADMIN) {
+        foundedOrder.canceledBy = ROLE.ADMIN;
+    }
 
-  foundedOrder.orderStatus = ORDER_STATUS.CANCELED;
-  foundedOrder.description = req.body.description ?? '';
-  foundedOrder.save();
+    foundedOrder.orderStatus = ORDER_STATUS.CANCELED;
+    foundedOrder.description = req.body.description ?? '';
+    foundedOrder.save();
 
-  return res
-    .status(StatusCodes.OK)
-    .json(customResponse({ data: null, success: true, status: StatusCodes.OK, message: 'Your order is cancelled.' }));
+    return res
+        .status(StatusCodes.OK)
+        .json(
+            customResponse({ data: null, success: true, status: StatusCodes.OK, message: 'Your order is cancelled.' }),
+        );
 };
 
 // @Confirm order
 
 export const confirmOrder = async (req: Request, res: Response, next: NextFunction) => {
-  if (!req.role || req.role !== 'admin') {
-    throw new NotAcceptableError('Only admin can access.');
-  }
+    if (!req.role || req.role !== 'admin') {
+        throw new NotAcceptableError('Only admin can access.');
+    }
 
-  const foundedOrder = await Order.findOne({ _id: req.body.orderId });
+    const foundedOrder = await Order.findOne({ _id: req.body.orderId });
 
-  if (!foundedOrder) {
-    throw new BadRequestError(`Not found order with id ${req.body.orderId}`);
-  }
+    if (!foundedOrder) {
+        throw new BadRequestError(`Not found order with id ${req.body.orderId}`);
+    }
 
-  if (foundedOrder.orderStatus === ORDER_STATUS.CONFIRMED) {
-    throw new BadRequestError(`Your order is confirmed.`);
-  }
+    if (foundedOrder.orderStatus === ORDER_STATUS.CONFIRMED) {
+        throw new BadRequestError(`Your order is confirmed.`);
+    }
 
-  foundedOrder.orderStatus = ORDER_STATUS.CONFIRMED;
-  foundedOrder.save();
+    foundedOrder.orderStatus = ORDER_STATUS.CONFIRMED;
+    foundedOrder.save();
 
-  return res
-    .status(StatusCodes.OK)
-    .json(customResponse({ data: null, success: true, status: StatusCodes.OK, message: 'Your order is confirmed.' }));
+    return res
+        .status(StatusCodes.OK)
+        .json(
+            customResponse({ data: null, success: true, status: StatusCodes.OK, message: 'Your order is confirmed.' }),
+        );
 };
 
 // @Finish order
 export const finishOrder = async (req: Request, res: Response, next: NextFunction) => {
-  if (!req.role || req.role !== 'admin') {
-    throw new NotAcceptableError('Only admin can access.');
-  }
+    if (!req.role || req.role !== 'admin') {
+        throw new NotAcceptableError('Only admin can access.');
+    }
 
-  const foundedOrder = await Order.findOne({ _id: req.body.orderId });
+    const foundedOrder = await Order.findOne({ _id: req.body.orderId });
 
-  if (!foundedOrder) {
-    throw new BadRequestError(`Not found order with id ${req.body.orderId}`);
-  }
+    if (!foundedOrder) {
+        throw new BadRequestError(`Not found order with id ${req.body.orderId}`);
+    }
 
-  if (foundedOrder.orderStatus === ORDER_STATUS.CONFIRMED) {
-    throw new BadRequestError(`Your order is done.`);
-  }
+    if (foundedOrder.orderStatus === ORDER_STATUS.CONFIRMED) {
+        throw new BadRequestError(`Your order is done.`);
+    }
 
-  foundedOrder.orderStatus = ORDER_STATUS.DONE;
-  foundedOrder.save();
+    foundedOrder.orderStatus = ORDER_STATUS.DONE;
+    foundedOrder.save();
 
-  return res
-    .status(StatusCodes.OK)
-    .json(customResponse({ data: null, success: true, status: StatusCodes.OK, message: 'Your order is done.' }));
+    return res
+        .status(StatusCodes.OK)
+        .json(customResponse({ data: null, success: true, status: StatusCodes.OK, message: 'Your order is done.' }));
 };

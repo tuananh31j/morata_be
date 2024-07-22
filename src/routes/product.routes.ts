@@ -18,24 +18,25 @@ router.get('/byCate/:cateId', productController.getAllProductByCategory);
 router.get('/:id', [validateObjectId], productController.getDetailedProduct);
 
 router.post(
-  '/',
-  authenticate,
-  authorize(ROLE.ADMIN),
-  upload.fields([
-    { name: 'thumbnail', maxCount: 1 },
-    { name: 'images', maxCount: 5 },
-  ]),
-  [addProductValidation],
-  productController.createNewProduct,
+    '/',
+    authenticate,
+    authorize(ROLE.ADMIN),
+    upload.fields([
+        { name: 'thumbnail', maxCount: 1 },
+        { name: 'images', maxCount: 5 },
+        { name: 'variationImages', maxCount: 5 },
+    ]),
+    // [addProductValidation],
+    productController.createNewProduct,
 );
 router.patch(
-  '/:id',
-  [authenticate, authorize(ROLE.ADMIN), validateObjectId],
-  upload.fields([
-    { name: 'thumbnail', maxCount: 1 },
-    { name: 'images', maxCount: 5 },
-  ]),
-  productController.updateProduct,
+    '/:id',
+    [authenticate, authorize(ROLE.ADMIN), validateObjectId],
+    upload.fields([
+        { name: 'thumbnail', maxCount: 1 },
+        { name: 'images', maxCount: 5 },
+    ]),
+    productController.updateProduct,
 );
 router.delete('/:id', [authenticate, authorize(ROLE.ADMIN), validateObjectId], productController.deleteProduct);
 

@@ -7,33 +7,33 @@ const HOSTNAME = config.hostname;
 
 let server: any;
 connectDB().then(() => {
-  server = app.listen(PORT, `${HOSTNAME}`, () => {
-    console.log(`Listening to port ${PORT}`);
-  });
+    server = app.listen(PORT, `${HOSTNAME}`, () => {
+        console.log(`Listening to port ${PORT}`);
+    });
 });
 
 const exitHandler = () => {
-  if (server) {
-    server.close(() => {
-      console.log('Server closed');
-      process.exit(1);
-    });
-  } else {
-    process.exit(1);
-  }
+    if (server) {
+        server.close(() => {
+            console.log('Server closed');
+            process.exit(1);
+        });
+    } else {
+        process.exit(1);
+    }
 };
 
 const unexpectedErrorHandler = (error: string) => {
-  console.log(error);
-  exitHandler();
+    console.log(error);
+    exitHandler();
 };
 
 process.on('uncaughtException', unexpectedErrorHandler);
 process.on('unhandledRejection', unexpectedErrorHandler);
 
 process.on('SIGTERM', () => {
-  console.log('SIGTERM received');
-  if (server) {
-    server.close();
-  }
+    console.log('SIGTERM received');
+    if (server) {
+        server.close();
+    }
 });

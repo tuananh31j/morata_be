@@ -29,9 +29,9 @@ app.use(cookieParser());
 app.post('/webhook', express.raw({ type: 'application/json' }), checkoutController.handleSessionEvents);
 
 app.use(
-  express.json({
-    limit: '5mb',
-  }),
+    express.json({
+        limit: '5mb',
+    }),
 );
 app.use(express.urlencoded({ extended: true }));
 

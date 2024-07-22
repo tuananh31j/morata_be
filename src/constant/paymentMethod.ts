@@ -1,4 +1,4 @@
 export const PAYMENT_METHODS = {
-  CARD: 'card',
-  CASH: 'cash',
+    CARD: 'card',
+    CASH: 'cash',
 };

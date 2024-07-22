@@ -2,24 +2,24 @@ import { ICategorySchema } from '@/interfaces/schema/category';
 import mongoose from 'mongoose';
 
 const CategorySchema = new mongoose.Schema(
-  {
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-      unique: true,
+    {
+        name: {
+            type: String,
+            required: true,
+            trim: true,
+            unique: true,
+        },
+        attributeIds: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Attribute',
+            },
+        ],
     },
-    attributeIds: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Attribute',
-      },
-    ],
-  },
-  {
-    timestamps: false,
-    versionKey: false,
-  },
+    {
+        timestamps: false,
+        versionKey: false,
+    },
 );
 
 const Category = mongoose.model<ICategorySchema>('Category', CategorySchema);

@@ -11,20 +11,20 @@ const router = Router();
 router.get('/all', brandController.getAllBrands);
 router.get('/:id', [validateObjectId], brandController.getDetailedBrand);
 router.post(
-  '/',
-  authenticate,
-  authenticate,
-  authorize(ROLE.ADMIN),
-  [createBrandValidation],
-  brandController.createNewBrand,
+    '/',
+    authenticate,
+    authenticate,
+    authorize(ROLE.ADMIN),
+    [createBrandValidation],
+    brandController.createNewBrand,
 );
 router.patch(
-  '/:id',
-  authenticate,
-  authenticate,
-  authorize(ROLE.ADMIN),
-  [validateObjectId, updateBrandValidation],
-  brandController.updateBrand,
+    '/:id',
+    authenticate,
+    authenticate,
+    authorize(ROLE.ADMIN),
+    [validateObjectId, updateBrandValidation],
+    brandController.updateBrand,
 );
 
 export default router;

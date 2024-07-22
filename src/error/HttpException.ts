@@ -1,8 +1,8 @@
 export class HttpException extends Error {
-  public message: string;
+    public message: string;
 
-  constructor(message: string) {
-    super(message);
-    this.message = message;
-  }
+    constructor(message: string) {
+        super(message);
+        this.message = message;
+    }
 }

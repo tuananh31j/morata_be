@@ -7,43 +7,45 @@ import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 
 // @Get: getAllBrand
 export const getAllBrands = async (req: Request, res: Response, next: NextFunction) => {
-  const brands = await Brand.find({}).lean();
-  return res
-    .status(StatusCodes.OK)
-    .json(customResponse({ data: brands, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+    const brands = await Brand.find({}).lean();
+    return res
+        .status(StatusCodes.OK)
+        .json(customResponse({ data: brands, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
 };
 
 // @Get: getDetailedBrand
 export const getDetailedBrand = async (req: Request, res: Response, next: NextFunction) => {
-  const brand = await Brand.findById(req.params.id).lean();
+    const brand = await Brand.findById(req.params.id).lean();
 
-  if (!brand) {
-    throw new NotFoundError(`${ReasonPhrases.NOT_FOUND}/ID: ${req.params.id}`);
-  }
+    if (!brand) {
+        throw new NotFoundError(`${ReasonPhrases.NOT_FOUND}/ID: ${req.params.id}`);
+    }
 
-  return res
-    .status(StatusCodes.OK)
-    .json(customResponse({ data: brand, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+    return res
+        .status(StatusCodes.OK)
+        .json(customResponse({ data: brand, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
 };
 
 // @Post: createNewBrand
 export const createNewBrand = async (req: Request, res: Response, next: NextFunction) => {
-  const brand = await Brand.create({ ...req.body });
+    const brand = await Brand.create({ ...req.body });
 
-  return res
-    .status(StatusCodes.CREATED)
-    .json(customResponse({ data: brand, success: true, status: StatusCodes.CREATED, message: ReasonPhrases.CREATED }));
+    return res
+        .status(StatusCodes.CREATED)
+        .json(
+            customResponse({ data: brand, success: true, status: StatusCodes.CREATED, message: ReasonPhrases.CREATED }),
+        );
 };
 
 // @Patch: updateBrand
 export const updateCateGory = async (req: Request, res: Response, next: NextFunction) => {
-  const brand = await Brand.findByIdAndUpdate(req.params.id, { ...req.body }, { new: true });
+    const brand = await Brand.findByIdAndUpdate(req.params.id, { ...req.body }, { new: true });
 
-  if (!brand) {
-    throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} brand with id: ${req.params.id}`);
-  }
+    if (!brand) {
+        throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} brand with id: ${req.params.id}`);
+    }
 
-  return res
-    .status(StatusCodes.OK)
-    .json(customResponse({ data: brand, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+    return res
+        .status(StatusCodes.OK)
+        .json(customResponse({ data: brand, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
 };
