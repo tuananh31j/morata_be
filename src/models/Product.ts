@@ -83,13 +83,6 @@ export const ProductSchema = new Schema(
 
 ProductSchema.plugin(paginate);
 
-// ProductSchema.virtual('reviewCount').get(function () {
-//   if (!Array.isArray(this.reviewIds)) {
-//     return 0;
-//   }
-//   return this.reviewIds.length;
-// });
-
 ProductSchema.set('toJSON', { virtuals: true });
 ProductSchema.set('toObject', { virtuals: true });
 

@@ -12,14 +12,9 @@ export const addToCart = asyncHandler(async (req: Request, res: Response, next: 
     return await cartService.addToCart(req, res, next);
 });
 
-// @Patch: increaseCartItemQuantity
-export const increaseCartItemQuantity = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    return await cartService.increaseCartItemQuantity(req, res, next);
-});
-
-// @Patch: decreaseCartItemQuantity
-export const decreaseCartItemQuantity = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    return await cartService.decreaseCartItemQuantity(req, res, next);
+// @Patch: updateCartItemQuantity
+export const updateCartItemQuantity = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    return await cartService.updateCartItemQuantity(req, res, next);
 });
 
 // @Patch: removeCartItem

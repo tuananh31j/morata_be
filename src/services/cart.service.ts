@@ -1,16 +1,14 @@
 import { BadRequestError, NotFoundError } from '@/error/customError';
 import customResponse from '@/helpers/response';
 import Cart from '@/models/Cart';
-import Product from '@/models/Product';
+import ProductVariation from '@/models/ProductVariation';
 import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import _ from 'lodash';
 
 // @Get cart by user
 export const getCartByUser = async (req: Request, res: Response, next: NextFunction) => {
-    const cart = await Cart.findOne({ userId: req.params.id })
-        .populate('items.productId', 'name price thumbnail discountPercentage')
-        .lean();
+    const cart = await Cart.findOne({ userId: req.params.id }).populate('items.productId');
     if (!cart) {
         throw new NotFoundError('Not found cart or cart is not exist.');
     }
@@ -22,38 +20,44 @@ export const getCartByUser = async (req: Request, res: Response, next: NextFunct
 
 // @Add to cart
 export const addToCart = async (req: Request, res: Response, next: NextFunction) => {
-    const product = await Product.findById(req.body.productId);
+    let updatedCart = null;
+    const product = await ProductVariation.findById(req.body.productId).select({ stock: 1 }).lean();
+    const currentCart = await Cart.findOne({ userId: req.body.userId })
+        .select({ items: 1 })
+        .lean<{ items: { productId: string; quantity: number }[] }>();
+
     if (!product) {
         throw new BadRequestError(`Not found product with id ${req.body.productId}`);
     }
+
     if (req.body.quantity < 1) {
         throw new BadRequestError(`Quantity must be at least 1`);
     }
-
-    // Find the cart for the user or create a new one
-    let cart = await Cart.findOne({ userId: req.body.userId });
-    if (!cart) {
-        cart = new Cart({ userId: req.body.userId, items: [] });
+    if (req.body.quantity > product.stock!) {
+        req.body.quantity = product.stock;
     }
 
-    // Check if the product already exists in the cart
-    const existingItemIndex = cart.items.findIndex((item) => item.productId.equals(req.body.productId));
-    if (existingItemIndex !== -1) {
-        // Update the quantity if the product is already in the cart
-        cart.items[existingItemIndex].quantity += req.body.quantity;
-    } else {
-        // Add the new product to the cart
-        cart.items.push({ productId: req.body.productId, quantity: req.body.quantity });
+    if (currentCart && currentCart.items.length > 0) {
+        const currentQuantity = currentCart.items.find((item) => item.productId == req.body.productId)?.quantity || 0;
+        const newQuantity = currentQuantity + req.body.quantity;
+        updatedCart = await Cart.findOneAndUpdate(
+            { userId: req.body.userId, 'items.productId': req.body.productId },
+            { $set: { 'items.$.quantity': newQuantity > product.stock! ? product.stock! : newQuantity } },
+            { new: true, upsert: false },
+        );
     }
 
-    // Save the cart
-    await cart.save();
-
-    const cartData = _.pick(cart, ['userId', 'items']);
+    if (!updatedCart) {
+        updatedCart = await Cart.findOneAndUpdate(
+            { userId: req.body.userId },
+            { $push: { items: { productId: req.body.productId, quantity: req.body.quantity } } },
+            { new: true, upsert: true },
+        );
+    }
 
     return res.status(StatusCodes.OK).json(
         customResponse({
-            data: cartData,
+            data: updatedCart,
             success: true,
             status: StatusCodes.CREATED,
             message: ReasonPhrases.CREATED,
@@ -63,29 +67,24 @@ export const addToCart = async (req: Request, res: Response, next: NextFunction)
 
 // @Remove one cart item
 export const removeCartItem = async (req: Request, res: Response, next: NextFunction) => {
-    const cart: any = await Cart.findOne({ userId: req.body.userId });
-    if (!cart) {
+    const updatedCart = await Cart.findOneAndUpdate(
+        { userId: req.body.userId },
+        { $pull: { items: { productId: req.body.productId } } },
+        { new: true },
+    );
+    if (!updatedCart) {
         throw new BadRequestError(`Not found cart with userId: ${req.body.userId}`);
     }
-    const cartItems = cart.items.filter((item: any) => item.productId._id.toString() !== req.body.productId);
-    cart.items = [...cartItems];
-    await cart.save();
-
     return res
         .status(StatusCodes.OK)
-        .json(customResponse({ data: cart, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+        .json(customResponse({ data: updatedCart, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
 };
 
 // @Remove all cart items
 export const removeAllCartItems = async (req: Request, res: Response, next: NextFunction) => {
-    const cart: any = await Cart.findOne({ userId: req.body.userId });
+    const cart = await Cart.findOneAndUpdate({ userId: req.body.userId }, { items: [] }, { new: true }).lean();
 
-    if (!cart) {
-        throw new BadRequestError(`Not found cart with userId: ${req.body.userId}`);
-    }
-
-    cart.items = [];
-    await cart.save();
+    if (!cart) throw new BadRequestError(`Not found cart with userId: ${req.body.userId}`);
 
     return res.status(StatusCodes.NO_CONTENT).json(
         customResponse({
@@ -97,48 +96,28 @@ export const removeAllCartItems = async (req: Request, res: Response, next: Next
     );
 };
 
-// @Increase  cart item quantity
-export const increaseCartItemQuantity = async (req: Request, res: Response, next: NextFunction) => {
-    const cart = await Cart.findOne({ userId: req.body.userId });
+// @Update  cart item quantity
+export const updateCartItemQuantity = async (req: Request, res: Response, next: NextFunction) => {
+    const product = await ProductVariation.findById(req.body.productId).select({ stock: 1 }).lean();
+    if (!product) throw new BadRequestError(`Not found product with Id: ${req.body.productId}`);
 
-    if (!cart) {
-        throw new BadRequestError(`Not found cart with userId: ${req.body.userId}`);
+    if (req.body.quantity < 1) throw new BadRequestError(`Quantity must be at least 1`);
+    if (req.body.quantity > product.stock!) {
+        req.body.quantity = product.stock;
     }
-
-    const cartItem = cart.items.find((item) => item.productId.toString() === req.body.productId);
-    if (!cartItem) {
-        throw new BadRequestError(`Not found product with Id: ${req.body.productId} inside this cart`);
-    }
-
-    cartItem.quantity++;
-
-    await cart.save();
+    const updatedQuantity = await Cart.findOneAndUpdate(
+        { userId: req.body.userId, 'items.productId': req.body.productId },
+        { $set: { 'items.$.quantity': req.body.quantity } },
+        { new: true },
+    );
+    if (!updatedQuantity)
+        throw new BadRequestError(
+            `Not found product with Id: ${req.body.productId} inside this cart or cart not found`,
+        );
 
     return res
         .status(StatusCodes.OK)
-        .json(customResponse({ data: cart, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
-};
-
-// @Decrease cart item quantity
-export const decreaseCartItemQuantity = async (req: Request, res: Response, next: NextFunction) => {
-    const cart = await Cart.findOne({ userId: req.body.userId });
-
-    if (!cart) {
-        throw new BadRequestError(`Not found cart with userId: ${req.body.userId}`);
-    }
-
-    const cartItem = cart.items.find((item) => item.productId.toString() === req.body.productId);
-    if (!cartItem) {
-        throw new BadRequestError(`Not found product with Id: ${req.body.productId}`);
-    }
-
-    if (cartItem.quantity > 1) {
-        cartItem.quantity--;
-    }
-
-    await cart.save();
-
-    return res
-        .status(StatusCodes.OK)
-        .json(customResponse({ data: cart, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+        .json(
+            customResponse({ data: updatedQuantity, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }),
+        );
 };

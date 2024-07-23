@@ -1,8 +1,13 @@
 import mongoose, { Schema } from 'mongoose';
 
-const AttributeSchema = new mongoose.Schema(
+const attributeSchema = new mongoose.Schema(
     {
         name: {
+            type: String,
+            unique: true,
+            require: true,
+        },
+        attributeKey: {
             type: String,
             unique: true,
         },
@@ -17,6 +22,10 @@ const AttributeSchema = new mongoose.Schema(
     { versionKey: false, timestamps: false },
 );
 
-const Attribute = mongoose.model('Attribute', AttributeSchema);
+attributeSchema.pre('save', async function (next) {
+    this.attributeKey = this.name!.toLowerCase().replace(/ /g, '_');
+    next();
+});
+const Attribute = mongoose.model('Attribute', attributeSchema);
 
 export default Attribute;

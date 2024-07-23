@@ -33,7 +33,7 @@ const OrderItemSchema = new mongoose.Schema(
     },
 );
 
-const OrderSchema = new mongoose.Schema<OrderSchema>(
+const OrderSchema = new mongoose.Schema(
     {
         userId: {
             type: mongoose.Schema.Types.ObjectId,
@@ -52,11 +52,6 @@ const OrderSchema = new mongoose.Schema<OrderSchema>(
         shippingFee: {
             type: Number,
             default: 0,
-        },
-        customerInfo: {
-            name: { type: String, required: true },
-            email: { type: String, required: true },
-            phone: { type: String, required: true },
         },
         receiverInfo: {
             name: { type: String, default: '' },
@@ -83,12 +78,7 @@ const OrderSchema = new mongoose.Schema<OrderSchema>(
             type: Boolean,
             default: false,
         },
-        canceledBy: {
-            type: String,
-            default: ROLE.USER,
-            enum: Object.values(ROLE),
-        },
-        description: {
+        note: {
             type: String,
         },
         orderStatus: {

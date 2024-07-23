@@ -12,7 +12,7 @@ import mongoose from 'mongoose';
 
 const populateVariation = {
     path: 'variationIds',
-    select: 'price image sku color productId',
+    select: 'price image sku color productId stock',
     model: 'ProductVariation',
 };
 type PopulateOptions = {
@@ -116,7 +116,8 @@ export const getDetailedProduct = async (req: Request, res: Response, next: Next
 
 // @Get Top Latest Products
 export const getTopLatestProducts = async (req: Request, res: Response, next: NextFunction) => {
-    const topLatestProducts = await Product.find({ isDeleted: false }, queryClientFields)
+    const topLatestProducts = await Product.find({ isDeleted: false })
+        .select(queryClientFields)
         .sort({ createdAt: -1 })
         .limit(10)
         .populate(populateVariation);
@@ -132,7 +133,8 @@ export const getTopLatestProducts = async (req: Request, res: Response, next: Ne
 
 // @Get Top Deals Of The Day
 export const getTopDealsOfTheDay = async (req: Request, res: Response, next: NextFunction) => {
-    const topDealsProducts = await Product.find({ isDeleted: false }, queryClientFields)
+    const topDealsProducts = await Product.find({ isDeleted: false })
+        .select(queryClientFields)
         .sort({ discountPercentage: 1 })
         .limit(2)
         .populate(populateVariation);

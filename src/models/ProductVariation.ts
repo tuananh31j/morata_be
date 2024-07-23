@@ -27,7 +27,7 @@ const productVariationSchema = new mongoose.Schema(
 );
 
 productVariationSchema.post('save', async function (doc) {
-    const test = await mongoose
+    await mongoose
         .model('Product')
         .findByIdAndUpdate(doc.productId, { $push: { variationIds: doc._id } }, { new: true });
 });

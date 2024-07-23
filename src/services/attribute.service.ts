@@ -17,7 +17,8 @@ export const getAttributesByCategory = async (req: Request, res: Response, next:
 
 // @Get: create attibute
 export const createAttibute = async (req: Request, res: Response, next: NextFunction) => {
-    const newAttributes = await Attribute.create(req.body);
+    const newAttributes = new Attribute(req.body);
+    await newAttributes.save();
     return res.status(StatusCodes.OK).json(
         customResponse({
             data: newAttributes,
@@ -34,6 +35,7 @@ export const getAllAttributes = async (req: Request, res: Response, next: NextFu
         {},
         {
             name: 1,
+            attributeKey: 1,
             values: 1,
             type: 1,
         },
