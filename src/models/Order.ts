@@ -54,9 +54,9 @@ const OrderSchema = new mongoose.Schema(
             default: 0,
         },
         receiverInfo: {
-            name: { type: String, default: '' },
-            email: { type: String, default: '' },
-            phone: { type: String, default: '' },
+            name: { type: String },
+            email: { type: String },
+            phone: { type: String },
         },
 
         shippingAddress: {

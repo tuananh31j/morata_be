@@ -3,12 +3,19 @@ import { BadRequestError } from '@/error/customError';
 import { OrderSchema } from '@/interfaces/schema/order';
 import Order from '@/models/Order';
 import { NextFunction, Request, Response } from 'express';
+import moment from 'moment';
 import Stripe from 'stripe';
+import querystring from 'qs';
+import crypto from 'crypto';
+import { buildSigned, createVpnUrl } from '@/utils/vnpayGenerator';
+import exp from 'constants';
+import { PAYMENT_METHODS } from '@/constant/paymentMethod';
+import { ORDER_STATUS } from '@/constant';
 
 const stripe = new Stripe(config.stripeConfig.secretKey);
 
 // create a new checkout
-export const createCheckout = async (req: Request, res: Response, next: NextFunction) => {
+export const createCheckoutStripe = async (req: Request, res: Response, next: NextFunction) => {
     const lineItems = req.body.items.map((item: any) => ({
         price_data: {
             currency: req.body.currency ?? 'usd',
@@ -76,7 +83,7 @@ const createOrder = async (session: Stripe.Checkout.Session) => {
                 totalPrice: session.amount_total,
                 paymentMethod: session.payment_method_types[0],
                 shippingAddress: session.customer_details?.address,
-                customerInfo: {
+                receiverInfo: {
                     name: session.customer_details?.name,
                     email: session.customer_details?.email,
                     phone: session.customer_details?.phone,
@@ -93,7 +100,7 @@ const createOrder = async (session: Stripe.Checkout.Session) => {
     }
 };
 
-export const handleSessionEvents = async (req: Request, res: Response, next: NextFunction) => {
+export const handleSessionEventsStripe = async (req: Request, res: Response, next: NextFunction) => {
     const payload = req.body;
 
     const sig: any = req.headers['stripe-signature'];
@@ -134,4 +141,86 @@ export const handleSessionEvents = async (req: Request, res: Response, next: Nex
     }
 
     return res.status(200).json({ received: true });
+};
+
+export const createPaymentUrlWithVNpay = async (req: Request, res: Response, next: NextFunction) => {
+    const ipAddr = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const bankCode = '';
+    const locale = 'en';
+    const totalPrice = req.body.totalPrice;
+    const paymentMethod = PAYMENT_METHODS.CARD;
+    const datacache = { ...req.body, paymentMethod };
+    const order = await Order.create(datacache);
+
+    const vnpUrl = createVpnUrl({
+        ipAddr,
+        bankCode,
+        locale,
+        amount: totalPrice,
+        vnPayReturnUrl: config.vnpayConfig.vnp_ReturnUrl,
+        orderId: order._id.toString(),
+    });
+    res.status(200).json({ checkout: vnpUrl });
+};
+
+export const vnpayReturn = async (req: Request, res: Response, next: NextFunction) => {
+    const vnp_Params = req.query;
+    console.log(vnp_Params);
+    const secureHash = vnp_Params['vnp_SecureHash'];
+    const signed = buildSigned(vnp_Params);
+
+    if (secureHash === signed) {
+        const data = await Order.findByIdAndUpdate(vnp_Params['vnp_TxnRef'], {
+            isPaid: true,
+            orderStatus: ORDER_STATUS.CONFIRMED,
+        });
+        res.status(200).json({ code: vnp_Params['vnp_ResponseCode'], message: 'Success', data });
+    } else {
+        res.status(400).json({ code: '97' });
+    }
+};
+
+export const vnpayIpn = async (req: Request, res: Response, next: NextFunction) => {
+    const vnp_Params = req.query;
+    const secureHash = vnp_Params['vnp_SecureHash'];
+    const rspCode = vnp_Params['vnp_ResponseCode'];
+
+    const signed = buildSigned(vnp_Params);
+    const paymentStatus = '0';
+
+    const checkOrderId = true;
+    const checkAmount = true;
+    if (secureHash === signed) {
+        if (checkOrderId) {
+            if (checkAmount) {
+                if (paymentStatus == '0') {
+                    if (rspCode == '00') {
+                        await Order.findByIdAndUpdate(vnp_Params['vnp_TxnRef'], {
+                            isPaid: true,
+                            orderStatus: ORDER_STATUS.CONFIRMED,
+                        });
+
+                        res.status(200).json({ code: '00', message: 'Success' });
+                    } else {
+                        await Order.findByIdAndUpdate(vnp_Params['vnp_TxnRef'], {
+                            isPaid: true,
+                            orderStatus: ORDER_STATUS.CONFIRMED,
+                        });
+                        res.status(200).json({ code: rspCode, message: 'Fail' });
+                    }
+                } else {
+                    res.status(200).json({
+                        code: '02',
+                        message: 'This order has been updated to the payment status',
+                    });
+                }
+            } else {
+                res.status(200).json({ code: '04', message: 'Amount invalid' });
+            }
+        } else {
+            res.status(200).json({ code: '01', message: 'Order not found' });
+        }
+    } else {
+        res.status(200).json({ code: '97', message: 'Checksum failed' });
+    }
 };

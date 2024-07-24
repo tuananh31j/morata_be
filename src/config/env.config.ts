@@ -8,6 +8,7 @@ const envVarsSchema = Joi.object()
         HOSTNAME: Joi.string().default('0.0.0.0'),
         MONGODB_URL_DEV: Joi.string().description('Local Mongo DB'),
         MONGODB_URL_CLOUD: Joi.string().description('Cloud Mongo DB'),
+
         FIREBASE_API_KEY: Joi.string().description('Firebase Api Key'),
         FIREBASE_AUTH_DOMAIN: Joi.string().description('Firebase Auth Domain'),
         FIREBASE_PROJECT_ID: Joi.string().description('Firebase Project Id'),
@@ -15,6 +16,7 @@ const envVarsSchema = Joi.object()
         FIREBASE_MESSAGING_SENDER_ID: Joi.string().description('Firebase Messaging Sender Id'),
         FIREBASE_APP_ID: Joi.string().description('Firebase App Id'),
         FIREBASE_MEASUREMENT_ID: Joi.string().description('Firebase Measurement Id'),
+
         STRIPE_PUBLIC_KEY: Joi.string().description('Stripe Public Key'),
         STRIPE_SECRET_KEY: Joi.string().description('Stripe Secrete Key'),
         STRIPE_API_KEY: Joi.string().description('Stripe Api Key'),
@@ -22,6 +24,13 @@ const envVarsSchema = Joi.object()
         STRIPE_URL_CANCEL: Joi.string().description('Stripe url cancel.'),
         STRIPE_WEBHOOK_ENDPOINT_SECRET: Joi.string().description('Stripe webhook endpoint secret.'),
         CLIENT_DOMAIN: Joi.string().description('Client domain'),
+
+        VNP_TMNCODE: Joi.string().description('Terminal ID VNpay Key'),
+        VNP_HASHSECRET: Joi.string().description('Secret VNpay Key'),
+        VNP_URL: Joi.string().description('UI VNpay Url'),
+        VNP_API: Joi.string().description('API VNpay'),
+        VNP_RETURNURL: Joi.string().description('Callback after payment'),
+
         JWT_ACCESS_TOKEN_KEY: Joi.string().required().description('JWT Access Token Key'),
         JWT_REFRESH_TOKEN_KEY: Joi.string().required().description('JWT Refresh Token Key'),
         JWT_ACCESS_EXPIRATION: Joi.string().default('15m').description('minutes after which access tokens expire'),
@@ -67,6 +76,14 @@ const config = {
         messagingSenderId: envVars.FIREBASE_MESSAGING_SENDER_ID,
         appId: envVars.FIREBASE_APP_ID,
         measurementId: envVars.FIREBASE_MEASUREMENT_ID,
+    },
+    vnpayConfig: {
+        vnpTmnCode: envVars.VNP_TMNCODE,
+        vnp_HashSecret: envVars.VNP_HASHSECRET,
+        vnp_Url: envVars.VNP_URL,
+        vnp_Api: envVars.VNP_API,
+        vnp_ReturnUrl: envVars.VNP_RETURNURL,
+        urlSuccess: envVars.STRIPE_URL_SUCCESS,
     },
     stripeConfig: {
         publicKey: envVars.STRIPE_PUBLIC_KEY,

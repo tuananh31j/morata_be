@@ -81,7 +81,7 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
 
     const data = await Product.paginate(query, options);
     const products = data.docs.map((item) => {
-        return _.pick(item, Object.keys(queryClientFields));
+        return _.pick(item, ['_id', ...Object.keys(queryClientFields)]);
     });
 
     return res.status(StatusCodes.OK).json(

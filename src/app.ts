@@ -32,7 +32,7 @@ app.use(compression());
 app.use(cookieParser());
 
 // webhook
-app.post('/webhook', express.raw({ type: 'application/json' }), checkoutController.handleSessionEvents);
+app.post('/webhook', express.raw({ type: 'application/json' }), checkoutController.handleSessionEventsStripe);
 
 app.use(
     express.json({
