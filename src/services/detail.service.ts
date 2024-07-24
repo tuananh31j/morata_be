@@ -2,7 +2,7 @@ import { NotFoundError } from '@/error/customError';
 import Category from '@/models/Category';
 import Detail from '@/models/Detail';
 import { Request, Response } from 'express';
-import { ReasonPhrases, StatusCodes } from 'http-status-codes';
+import { ReasonPhrases } from 'http-status-codes';
 
 export const getAllDetailsByCategory = async (req: Request, res: Response) => {
   const details = await Detail.find({ categoryId: req.params.categoryId }).lean();
