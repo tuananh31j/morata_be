@@ -13,9 +13,6 @@ RUN npm install
 # Bundle app source inside Docker image
 COPY . .
 
-# Copy env.sh content to .env
-RUN sh -c 'cat env.sh > .env'
-
 # Your app binds to port 3000, so use the EXPOSE instruction to have it mapped by the docker daemon
 EXPOSE 5000
 
