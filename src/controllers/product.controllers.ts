@@ -3,6 +3,7 @@ import asyncHandler from '@/middlewares/asyncHandlerMiddleware';
 import { productService } from '../services/index';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import customResponse from '@/helpers/response';
+import _ from 'lodash';
 
 // @Get: getAllCategories
 export const getAllProducts = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {

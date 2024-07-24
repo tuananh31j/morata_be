@@ -1,7 +1,7 @@
 import { ORDER_STATUS } from '@/constant';
 import mongoose from 'mongoose';
 
-const orderHistorySchema = new mongoose.Schema(
+const orderStatusLogsScheme = new mongoose.Schema(
     {
         userId: {
             type: mongoose.Schema.Types.ObjectId,
@@ -28,6 +28,6 @@ const orderHistorySchema = new mongoose.Schema(
     },
 );
 
-const OrderHistory = mongoose.model('OrderHistory', orderHistorySchema);
+const OrderStatusLogs = mongoose.model('OrderStatusLogs', orderStatusLogsScheme);
 
-export default OrderHistory;
+export default OrderStatusLogs;

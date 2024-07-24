@@ -13,7 +13,7 @@ export interface IProductSchema extends Document {
 
     attributes: { key: string; value: string }[];
 
-    variations: Schema.Types.ObjectId[];
+    variationIds: Schema.Types.ObjectId[];
 
     reviewIds: Schema.Types.ObjectId[];
     discountPercentage: number;

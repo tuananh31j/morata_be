@@ -8,7 +8,6 @@ import { removeUploadedFile, uploadFiles } from '@/utils/files';
 import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import _ from 'lodash';
-import mongoose from 'mongoose';
 
 const populateVariation = {
     path: 'variationIds',
@@ -100,7 +99,6 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
 };
 
 // @Get: getDetailedProduct
-
 export const getDetailedProduct = async (req: Request, res: Response, next: NextFunction) => {
     const product = await Product.findOne(
         { _id: req.params.id, isDeleted: false },

@@ -1,16 +1,11 @@
 import config from '@/config/env.config';
 import { BadRequestError } from '@/error/customError';
-import { OrderSchema } from '@/interfaces/schema/order';
 import Order from '@/models/Order';
 import { NextFunction, Request, Response } from 'express';
-import moment from 'moment';
 import Stripe from 'stripe';
-import querystring from 'qs';
-import crypto from 'crypto';
 import { buildSigned, createVpnUrl } from '@/utils/vnpayGenerator';
-import exp from 'constants';
-import { PAYMENT_METHODS } from '@/constant/paymentMethod';
 import { ORDER_STATUS } from '@/constant';
+import { PAYMENT_METHOD } from '@/constant/order';
 
 const stripe = new Stripe(config.stripeConfig.secretKey);
 
@@ -148,7 +143,7 @@ export const createPaymentUrlWithVNpay = async (req: Request, res: Response, nex
     const bankCode = '';
     const locale = 'en';
     const totalPrice = req.body.totalPrice;
-    const paymentMethod = PAYMENT_METHODS.CARD;
+    const paymentMethod = PAYMENT_METHOD.CARD;
     const datacache = { ...req.body, paymentMethod };
     const order = await Order.create(datacache);
 

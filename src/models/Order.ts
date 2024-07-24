@@ -1,8 +1,6 @@
-import { ORDER_STATUS } from '@/constant';
-import { ROLE } from '@/constant/allowedRoles';
-import { PAYMENT_METHODS } from '@/constant/paymentMethod';
+import { ORDER_STATUS, PAYMENT_METHOD } from '@/constant/order';
 import { OrderSchema } from '@/interfaces/schema/order';
-import mongoose, { PaginateModel, Schema } from 'mongoose';
+import mongoose, { PaginateModel } from 'mongoose';
 import paginate from 'mongoose-paginate-v2';
 
 const OrderItemSchema = new mongoose.Schema(
@@ -71,8 +69,8 @@ const OrderSchema = new mongoose.Schema(
             type: String,
             trim: true,
             required: true,
-            enum: Object.values(PAYMENT_METHODS),
-            default: PAYMENT_METHODS.CASH,
+            enum: Object.values(PAYMENT_METHOD),
+            default: PAYMENT_METHOD.CASH,
         },
         isPaid: {
             type: Boolean,
