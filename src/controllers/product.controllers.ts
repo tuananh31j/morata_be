@@ -43,6 +43,18 @@ export const getTopRelatedProducts = asyncHandler(async (req: Request, res: Resp
 export const getAllProductByCategory = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     return await productService.getAllProductByCategory(req, res, next);
 });
+// @Get all product for admin
+export const getAllProductAdmin = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    return await productService.getAllProductAdmin(req, res, next);
+});
+// @Get all product active
+export const getProductsActive = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    return await productService.getProductsActive(req, res, next);
+});
+// @Get all product hidden
+export const getProductsHidden = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    return await productService.getProductsHidden(req, res, next);
+});
 
 // @Post: createNewProduct
 export const createNewProduct = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {

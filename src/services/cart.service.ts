@@ -8,7 +8,13 @@ import _ from 'lodash';
 
 // @Get cart by user
 export const getCartByUser = async (req: Request, res: Response, next: NextFunction) => {
-    const cart = await Cart.findOne({ userId: req.params.id }).populate('items.productId');
+    const cart = await Cart.findOne({ userId: req.params.id }).populate({
+        path: 'items.productId',
+        populate: {
+            path: 'productId',
+            select: { name: 1 },
+        },
+    });
     if (!cart) {
         throw new NotFoundError('Not found cart or cart is not exist.');
     }

@@ -4,8 +4,8 @@ import Order from '@/models/Order';
 import { NextFunction, Request, Response } from 'express';
 import Stripe from 'stripe';
 import { buildSigned, createVpnUrl } from '@/utils/vnpayGenerator';
-import { ORDER_STATUS } from '@/constant';
-import { PAYMENT_METHOD } from '@/constant/order';
+import { ORDER_STATUS, PAYMENT_METHOD } from '@/constant/order';
+import generateOrderStatusLog from '@/utils/generateOrderStatusLog';
 
 const stripe = new Stripe(config.stripeConfig.secretKey);
 
@@ -167,7 +167,13 @@ export const vnpayReturn = async (req: Request, res: Response, next: NextFunctio
     if (secureHash === signed) {
         const data = await Order.findByIdAndUpdate(vnp_Params['vnp_TxnRef'], {
             isPaid: true,
-            orderStatus: ORDER_STATUS.CONFIRMED,
+            currentOrderStatus: ORDER_STATUS.CONFIRMED,
+            paymentMethod: PAYMENT_METHOD.CARD,
+            orderStatusLogs: generateOrderStatusLog({
+                statusChangedBy: req.userId,
+                orderStatus: ORDER_STATUS.CONFIRMED,
+                reason: 'User paid by VNPay',
+            }),
         });
         res.status(200).json({ code: vnp_Params['vnp_ResponseCode'], message: 'Success', data });
     } else {
@@ -192,7 +198,13 @@ export const vnpayIpn = async (req: Request, res: Response, next: NextFunction) 
                     if (rspCode == '00') {
                         await Order.findByIdAndUpdate(vnp_Params['vnp_TxnRef'], {
                             isPaid: true,
-                            orderStatus: ORDER_STATUS.CONFIRMED,
+                            currentOrderStatus: ORDER_STATUS.CONFIRMED,
+                            paymentMethod: PAYMENT_METHOD.CARD,
+                            OrderStatusLogs: generateOrderStatusLog({
+                                statusChangedBy: req.userId,
+                                orderStatus: ORDER_STATUS.CONFIRMED,
+                                reason: 'User paid by VNPay',
+                            }),
                         });
 
                         res.status(200).json({ code: '00', message: 'Success' });

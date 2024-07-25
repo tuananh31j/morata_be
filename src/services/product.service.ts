@@ -1,5 +1,6 @@
 import { queryClientFields } from '@/constant/queryField/product';
 import { NotFoundError } from '@/error/customError';
+import APIQuery from '@/helpers/apiQuery';
 import customResponse from '@/helpers/response';
 import Product from '@/models/Product';
 import ProductVariation from '@/models/ProductVariation';
@@ -13,83 +14,29 @@ const populateVariation = {
     path: 'variationIds',
     select: 'price image sku color productId stock',
     model: 'ProductVariation',
-};
-type PopulateOptions = {
-    path: string;
-    select?: string; // Specify which fields to include or exclude
-    match?: Record<string, any>; // Additional criteria for filtering populated documents
-    model?: string;
-    options?: {
-        sort?: Record<string, number>; // Sorting options for the populated documents
-        limit?: number; // Limit the number of populated documents
-    };
+    options: { sort: '-stock' },
 };
 
-type Options = {
-    page: number;
-    limit: number;
-    sort?: Record<string, number>;
-    lean?: boolean;
-    search?: string; // Filter by name (optional)
-    price?: { min: number; max: number }; // Filter by price range (optional)
-    isAvailable?: boolean; // Filter by availability (optional)
-    brandId?: string; // Filter by brand (optional)
-    categoryId?: string; // Filter by category (optional)
-    rating?: { min: number; max: number }; // Filter by rating range (optional)
-    populate?: PopulateOptions | PopulateOptions[]; // Populate options
-};
+const clientRequiredFields = { isDeleted: false, isAvailable: true };
 
 // @Get: getAllProducts
 export const getAllProducts = async (req: Request, res: Response, next: NextFunction) => {
-    let query: { isDeleted: boolean } = { isDeleted: false }; // Filter for non-deleted products
-    // Build filter object based on request query parameters
-    const filter: { [key: string]: any } = {};
-    if (req.query.search) {
-        const search = req.query.search as string;
-        filter.name = { $regex: new RegExp(search, 'i') };
-    }
-
-    if (req.query.price) {
-        const priceRange = JSON.parse(req.query.price as string); // Assuming price is provided as JSON string
-        filter.price = { $gte: priceRange.min, $lte: priceRange.max }; // Filter by price range
-    }
-    if (req.query.isAvailable) {
-        filter.isAvailable = Boolean(JSON.parse(req.query.isAvailable as string)); // Parse boolean value
-    }
-    if (req.query.brandId) {
-        console.log(req.query.brandId);
-        filter.brandId = req.query.brandId; // Filter by brand ID
-    }
-    if (req.query.categoryId) {
-        filter.categoryId = req.query.categoryId; // Filter by category ID
-    }
-    if (req.query.rating) {
-        const ratingRange = JSON.parse(req.query.rating as string);
-        filter.rating = { $gte: ratingRange.min, $lte: ratingRange.max }; // Filter by rating range
-    }
-
-    // Combine filter with base query
-    query = { ...query, ...filter };
-
-    const options: Options = {
-        page: req.query.page ? +req.query.page : 1,
-        limit: req.query.limit ? +req.query.limit : 10,
-        sort: req.query.sort ? JSON.parse(req.query.sort as string) : { createdAt: -1 }, // Parse sort criteria from JSON
-        populate: populateVariation,
-    };
-
-    const data = await Product.paginate(query, options);
-    const products = data.docs.map((item) => {
-        return _.pick(item, ['_id', ...Object.keys(queryClientFields)]);
-    });
-
+    const page = req.query.page ? +req.query.page : 1;
+    const features = new APIQuery(
+        Product.find({ clientRequiredFields }).select(queryClientFields).populate(populateVariation),
+        req.query,
+    );
+    features.filter().sort().limitFields().search().paginate();
+    const data = await features.query;
+    const totalDocs = await features.count();
+    const totalPages = Math.ceil(Number(totalDocs) / page);
     return res.status(StatusCodes.OK).json(
         customResponse({
             data: {
-                products: products,
-                page: data.page,
-                totalDocs: data.totalDocs,
-                totalPages: data.totalPages,
+                products: data,
+                page: page,
+                totalDocs: totalDocs,
+                totalPages: totalPages,
             },
             success: true,
             status: StatusCodes.OK,
@@ -101,8 +48,8 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
 // @Get: getDetailedProduct
 export const getDetailedProduct = async (req: Request, res: Response, next: NextFunction) => {
     const product = await Product.findOne(
-        { _id: req.params.id, isDeleted: false },
-        { imageUrlRefs: 0, thumbnailUrlRef: 0, variationIds: 0 },
+        { _id: req.params.id, ...clientRequiredFields },
+        { imageUrlRefs: 0, thumbnailUrlRef: 0 },
     ).populate(populateVariation);
 
     if (!product) {
@@ -114,7 +61,7 @@ export const getDetailedProduct = async (req: Request, res: Response, next: Next
 
 // @Get Top Latest Products
 export const getTopLatestProducts = async (req: Request, res: Response, next: NextFunction) => {
-    const topLatestProducts = await Product.find({ isDeleted: false })
+    const topLatestProducts = await Product.find(clientRequiredFields)
         .select(queryClientFields)
         .sort({ createdAt: -1 })
         .limit(10)
@@ -131,7 +78,7 @@ export const getTopLatestProducts = async (req: Request, res: Response, next: Ne
 
 // @Get Top Deals Of The Day
 export const getTopDealsOfTheDay = async (req: Request, res: Response, next: NextFunction) => {
-    const topDealsProducts = await Product.find({ isDeleted: false })
+    const topDealsProducts = await Product.find(clientRequiredFields)
         .select(queryClientFields)
         .sort({ discountPercentage: 1 })
         .limit(2)
@@ -148,7 +95,7 @@ export const getTopDealsOfTheDay = async (req: Request, res: Response, next: Nex
 
 // @Get Top Reviews
 export const getTopReviewsProducts = async (req: Request, res: Response, next: NextFunction) => {
-    const topReviewsProducts = await Product.find({ isDeleted: false })
+    const topReviewsProducts = await Product.find(clientRequiredFields)
         .populate(populateVariation)
         .select(queryClientFields)
         .sort({ reviewCount: -1 })
@@ -167,7 +114,7 @@ export const getTopReviewsProducts = async (req: Request, res: Response, next: N
 export const getTopRelatedProducts = async (req: Request, res: Response, next: NextFunction) => {
     const topRelativeProducts = await Product.find({
         categoryId: req.query.cateId,
-        isDeleted: false,
+        ...clientRequiredFields,
     })
         .select(queryClientFields)
         .populate(populateVariation)
@@ -186,13 +133,87 @@ export const getTopRelatedProducts = async (req: Request, res: Response, next: N
 
 // @Get all products by category
 export const getAllProductByCategory = async (req: Request, res: Response, next: NextFunction) => {
-    const products = await Product.find({ categoryId: req.params.cateId, isDeleted: false })
+    const products = await Product.find({ categoryId: req.params.cateId, ...clientRequiredFields })
         .select(queryClientFields)
         .populate(populateVariation);
 
     return res
         .status(StatusCodes.OK)
         .json(customResponse({ data: products, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+};
+
+// @Get all products for admin
+export const getAllProductAdmin = async (req: Request, res: Response, next: NextFunction) => {
+    const page = req.query.page ? +req.query.page : 1;
+    const features = new APIQuery(Product.find({ isDeleted: false }).populate(populateVariation), req.query);
+    features.filter().sort().limitFields().search().paginate();
+
+    const data = await features.query;
+    const totalDocs = await features.count();
+    const totalPages = Math.ceil(Number(totalDocs) / page);
+    return res.status(StatusCodes.OK).json(
+        customResponse({
+            data: {
+                products: data,
+                page: page,
+                totalDocs: totalDocs,
+                totalPages: totalPages,
+            },
+            success: true,
+            status: StatusCodes.OK,
+            message: ReasonPhrases.OK,
+        }),
+    );
+};
+
+// @Get hidden products for admin
+export const getProductsHidden = async (req: Request, res: Response, next: NextFunction) => {
+    const page = req.query.page ? +req.query.page : 1;
+    const features = new APIQuery(
+        Product.find({ isDeleted: false, isHide: true }).populate(populateVariation),
+        req.query,
+    );
+    features.filter().sort().limitFields().search().paginate();
+
+    const data = await features.query;
+    const totalDocs = await features.count();
+    const totalPages = Math.ceil(Number(totalDocs) / page);
+    return res.status(StatusCodes.OK).json(
+        customResponse({
+            data: {
+                products: data,
+                page: page,
+                totalDocs: totalDocs,
+                totalPages: totalPages,
+            },
+            success: true,
+            status: StatusCodes.OK,
+            message: ReasonPhrases.OK,
+        }),
+    );
+};
+// @Get active products for admin
+export const getProductsActive = async (req: Request, res: Response, next: NextFunction) => {
+    const page = req.query.page ? +req.query.page : 1;
+    const features = new APIQuery(Product.find({ isDeleted: false }).populate(populateVariation), req.query);
+    features.filter().sort().limitFields().search().paginate();
+
+    const data = await features.query;
+    const totalDocs = await features.count();
+    const totalPages = Math.ceil(Number(totalDocs) / page);
+    return res.status(StatusCodes.OK).json(
+        customResponse({
+            data: {
+                products: data,
+                page: page,
+                totalDocs: totalDocs,
+                totalPages: totalPages,
+            },
+            success: true,
+            status: StatusCodes.OK,
+            message: ReasonPhrases.OK,
+        }),
+    );
 };
 
 // @Post: createNewProduct

@@ -17,6 +17,11 @@ router.get('/related', productController.getTopRelatedProducts);
 router.get('/byCate/:cateId', productController.getAllProductByCategory);
 router.get('/:id', [validateObjectId], productController.getDetailedProduct);
 
+// @admin
+router.get('/portal/all', authenticate, authorize(ROLE.ADMIN), productController.getAllProductAdmin);
+router.get('/portal/active', authenticate, authorize(ROLE.ADMIN), productController.getProductsActive);
+router.get('/portal/hidden', authenticate, authorize(ROLE.ADMIN), productController.getProductsHidden);
+
 router.post(
     '/',
     authenticate,

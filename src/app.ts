@@ -12,6 +12,7 @@ import { checkoutController } from './controllers';
 import errorHandler from './middlewares/errorHandlerMiddleware';
 import notFoundHandler from './middlewares/notFoundHandlerMiddleware';
 import router from './routes';
+import ProductVariation from './models/ProductVariation';
 // import crypto from 'crypto';
 // import axios from 'axios';
 
@@ -43,6 +44,11 @@ app.use(express.urlencoded({ extended: true }));
 
 // routes
 app.use('/api/v1', router);
+
+app.put('/test/:id', async (req, res) => {
+    await ProductVariation.findByIdAndUpdate(req.params.id, req.body);
+    res.send('ok');
+});
 
 //error middleware
 app.use(notFoundHandler);

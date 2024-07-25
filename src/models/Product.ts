@@ -47,6 +47,10 @@ export const ProductSchema = new Schema(
             type: Boolean,
             default: false,
         },
+        isHide: {
+            type: Boolean,
+            default: false,
+        },
         attributes: [
             {
                 type: { key: String, value: String },
@@ -81,14 +85,9 @@ export const ProductSchema = new Schema(
     { timestamps: true, versionKey: false },
 );
 
-ProductSchema.plugin(paginate);
-
 ProductSchema.set('toJSON', { virtuals: true });
 ProductSchema.set('toObject', { virtuals: true });
 
-const Product: PaginateModel<IProductSchema> = mongoose.model<IProductSchema, PaginateModel<IProductSchema>>(
-    'Product',
-    ProductSchema,
-);
+const Product = mongoose.model<IProductSchema>('Product', ProductSchema);
 
 export default Product;
