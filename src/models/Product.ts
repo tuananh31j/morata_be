@@ -1,7 +1,6 @@
 import { PRODUCT_STATUS } from '@/constant';
 import { IProductSchema } from '@/interfaces/schema/product';
-import mongoose, { PaginateModel, Schema } from 'mongoose';
-import paginate from 'mongoose-paginate-v2';
+import mongoose, { Schema } from 'mongoose';
 
 export const ProductSchema = new Schema(
     {
@@ -85,9 +84,16 @@ export const ProductSchema = new Schema(
     { timestamps: true, versionKey: false },
 );
 
-ProductSchema.set('toJSON', { virtuals: true });
-ProductSchema.set('toObject', { virtuals: true });
+ProductSchema.virtual('price').get(async function () {
+    const ProductVariation = mongoose.model('ProductVariation');
+    const variations = await ProductVariation.find({ _id: { $in: this.variationIds } }).sort({ price: 1 });
+    if (variations.length === 0) return 0;
+    return variations[0].price;
+});
 
+// Đảm bảo trường ảo được bao gồm trong kết quả trả về
+ProductSchema.set('toObject', { virtuals: true });
+ProductSchema.set('toJSON', { virtuals: true });
 const Product = mongoose.model<IProductSchema>('Product', ProductSchema);
 
 export default Product;

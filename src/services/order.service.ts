@@ -6,6 +6,7 @@ import Order from '@/models/Order';
 import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import generateOrderStatusLog from '@/utils/generateOrderStatusLog';
+import { ROLE } from '@/constant/allowedRoles';
 
 // @GET:  Get all orders
 export const getAllOrders = async (req: Request, res: Response, next: NextFunction) => {
@@ -110,10 +111,11 @@ export const cancelOrder = async (req: Request, res: Response, next: NextFunctio
             $set: { currentOrderStatus: ORDER_STATUS.CANCELLED },
         },
     );
-    console.log(foundedOrder);
 
     if (!foundedOrder) {
-        throw new BadRequestError(`Not found order with id ${req.body.orderId} or status is not pending.`);
+        throw new BadRequestError(
+            `Not found order with id ${req.body.orderId} or status is not ${ORDER_STATUS.PENDING}.`,
+        );
     }
 
     return res
@@ -125,22 +127,31 @@ export const cancelOrder = async (req: Request, res: Response, next: NextFunctio
 
 // @Set order status to confirmed
 export const confirmOrder = async (req: Request, res: Response, next: NextFunction) => {
-    if (!req.role || req.role !== 'admin') {
+    if (!req.role || req.role !== ROLE.ADMIN) {
         throw new NotAcceptableError('Only admin can access.');
     }
 
-    const foundedOrder = await Order.findOne({ _id: req.body.orderId });
-
+    const foundedOrder = await Order.findOneAndUpdate(
+        {
+            _id: req.body.orderId,
+            currentOrderStatus: ORDER_STATUS.PENDING,
+        },
+        {
+            $push: {
+                OrderStatusLogs: generateOrderStatusLog({
+                    statusChangedBy: req.userId,
+                    orderStatus: ORDER_STATUS.CONFIRMED,
+                    reason: req.body.reason,
+                }),
+            },
+            $set: { currentOrderStatus: ORDER_STATUS.CONFIRMED },
+        },
+    );
     if (!foundedOrder) {
-        throw new BadRequestError(`Not found order with id ${req.body.orderId}`);
+        throw new BadRequestError(
+            `Not found order with id ${req.body.orderId} or status is not ${ORDER_STATUS.PENDING}.`,
+        );
     }
-
-    if (foundedOrder.currentOrderStatus === ORDER_STATUS.CONFIRMED) {
-        throw new BadRequestError(`Your order is confirmed.`);
-    }
-
-    foundedOrder.currentOrderStatus = ORDER_STATUS.CONFIRMED;
-    foundedOrder.save();
 
     return res
         .status(StatusCodes.OK)
@@ -150,52 +161,112 @@ export const confirmOrder = async (req: Request, res: Response, next: NextFuncti
 };
 
 // @ Set order status to delivered
-export const deliverOrder = async (req: Request, res: Response, next: NextFunction) => {
-    if (!req.role || req.role !== 'admin') {
+export const shippingOrder = async (req: Request, res: Response, next: NextFunction) => {
+    if (!req.role || req.role !== ROLE.ADMIN) {
         throw new NotAcceptableError('Only admin can access.');
     }
 
-    const foundedOrder = await Order.findOne({ _id: req.body.orderId });
+    const foundedOrder = await Order.findOneAndUpdate(
+        {
+            _id: req.body.orderId,
+            currentOrderStatus: ORDER_STATUS.CONFIRMED,
+        },
+        {
+            $push: {
+                OrderStatusLogs: generateOrderStatusLog({
+                    statusChangedBy: req.userId,
+                    orderStatus: ORDER_STATUS.SHIPPING,
+                    reason: req.body.reason,
+                }),
+            },
+            $set: { currentOrderStatus: ORDER_STATUS.SHIPPING },
+        },
+    );
 
     if (!foundedOrder) {
-        throw new BadRequestError(`Not found order with id ${req.body.orderId}`);
+        throw new BadRequestError(
+            `Not found order with id ${req.body.orderId} or status is not ${ORDER_STATUS.CONFIRMED}.`,
+        );
     }
-
-    if (foundedOrder.currentOrderStatus === ORDER_STATUS.DELIVERED) {
-        throw new BadRequestError(`Your order is delivered.`);
-    }
-
-    foundedOrder.currentOrderStatus = ORDER_STATUS.DELIVERED;
-
-    foundedOrder.save();
 
     return res
         .status(StatusCodes.OK)
         .json(
-            customResponse({ data: null, success: true, status: StatusCodes.OK, message: 'This order is delivered.' }),
+            customResponse({ data: null, success: true, status: StatusCodes.OK, message: 'This order is shipping.' }),
         );
+};
+
+// @Set order status to delivered
+export const deliverOrder = async (req: Request, res: Response, next: NextFunction) => {
+    if (!req.role || req.role !== ROLE.ADMIN) {
+        throw new NotAcceptableError('Only admin can access.');
+    }
+
+    const foundedOrder = await Order.findOneAndUpdate(
+        {
+            _id: req.body.orderId,
+            currentOrderStatus: ORDER_STATUS.SHIPPING,
+        },
+        {
+            $push: {
+                OrderStatusLogs: generateOrderStatusLog({
+                    statusChangedBy: req.userId,
+                    orderStatus: ORDER_STATUS.DELIVERED,
+                    reason: req.body.reason,
+                }),
+            },
+            $set: { currentOrderStatus: ORDER_STATUS.DELIVERED },
+        },
+    );
+
+    if (!foundedOrder) {
+        throw new BadRequestError(
+            `Not found order with id ${req.body.orderId} or status is not ${ORDER_STATUS.SHIPPING}.`,
+        );
+    }
+
+    return res.status(StatusCodes.OK).json(
+        customResponse({
+            data: null,
+            success: true,
+            status: StatusCodes.OK,
+            message: `This order is ${ORDER_STATUS.DELIVERED}.`,
+        }),
+    );
 };
 
 // @Set order status to done
 export const finishOrder = async (req: Request, res: Response, next: NextFunction) => {
-    if (!req.role || req.role !== 'admin') {
-        throw new NotAcceptableError('Only admin can access.');
-    }
-
-    const foundedOrder = await Order.findOne({ _id: req.body.orderId });
+    const foundedOrder = await Order.findOneAndUpdate(
+        {
+            _id: req.body.orderId,
+            currentOrderStatus: ORDER_STATUS.DELIVERED,
+            userId: req.userId,
+        },
+        {
+            $push: {
+                OrderStatusLogs: generateOrderStatusLog({
+                    statusChangedBy: req.userId,
+                    orderStatus: ORDER_STATUS.DONE,
+                    reason: req.body.reason,
+                }),
+            },
+            $set: { currentOrderStatus: ORDER_STATUS.DONE },
+        },
+    );
 
     if (!foundedOrder) {
-        throw new BadRequestError(`Not found order with id ${req.body.orderId}`);
+        throw new BadRequestError(
+            `Not found order with id ${req.body.orderId} or status is not ${ORDER_STATUS.CONFIRMED}.`,
+        );
     }
 
-    if (foundedOrder.currentOrderStatus === ORDER_STATUS.CONFIRMED) {
-        throw new BadRequestError(`Your order is done.`);
-    }
-
-    foundedOrder.currentOrderStatus = ORDER_STATUS.DONE;
-    foundedOrder.save();
-
-    return res
-        .status(StatusCodes.OK)
-        .json(customResponse({ data: null, success: true, status: StatusCodes.OK, message: 'Your order is done.' }));
+    return res.status(StatusCodes.OK).json(
+        customResponse({
+            data: null,
+            success: true,
+            status: StatusCodes.OK,
+            message: `This order is ${ORDER_STATUS.DONE}.`,
+        }),
+    );
 };

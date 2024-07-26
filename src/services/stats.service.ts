@@ -136,3 +136,5 @@ export const orderByYearStats = async (req: Request, res: Response, next: NextFu
     ]);
     return data;
 };
+
+export const findTop5Buyers = async (req: Request, res: Response, next: NextFunction) => {};

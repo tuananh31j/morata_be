@@ -23,7 +23,7 @@ export const cancelOrder = asyncHandler(async (req: any, res: Response, next: Ne
 });
 
 export const deliverOrder = asyncHandler(async (req: any, res: Response, next: NextFunction) => {
-  return await orderService.deliverOrder(req, res, next);
+    return await orderService.deliverOrder(req, res, next);
 });
 export const confirmOrder = asyncHandler(async (req: any, res: Response, next: NextFunction) => {
     return await orderService.confirmOrder(req, res, next);

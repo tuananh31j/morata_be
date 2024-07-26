@@ -60,13 +60,7 @@ class APIQuery<T extends Document> {
     search(): APIQuery<T> {
         if (this.queryString.search) {
             const search = this.queryString.search;
-            this.query = this.query.find({
-                $or: [
-                    { name: { $regex: search, $options: 'i' } },
-                    { sku: { $regex: search, $options: 'i' } },
-                    { _id: search.match(/^[0-9a-fA-F]{24}$/) ? search : null },
-                ],
-            });
+            this.query = this.query.find({ name: { $regex: search, $options: 'i' } });
         }
         return this;
     }

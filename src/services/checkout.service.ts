@@ -6,6 +6,7 @@ import Stripe from 'stripe';
 import { buildSigned, createVpnUrl } from '@/utils/vnpayGenerator';
 import { ORDER_STATUS, PAYMENT_METHOD } from '@/constant/order';
 import generateOrderStatusLog from '@/utils/generateOrderStatusLog';
+import User from '@/models/User';
 
 const stripe = new Stripe(config.stripeConfig.secretKey);
 
@@ -72,12 +73,19 @@ const createOrder = async (session: Stripe.Checkout.Session) => {
 
         // Create a new order
         if (session) {
+            const userId = session.metadata && session.metadata?.userId;
+            const userData = await User.findOne({ _id: userId });
             const newOrder = new Order({
                 userId: session.metadata && session.metadata?.userId, // Assuming you have userId in metadata
                 items: dataItems,
                 totalPrice: session.amount_total,
                 paymentMethod: session.payment_method_types[0],
                 shippingAddress: session.customer_details?.address,
+                customerInfo: {
+                    name: userData?.username,
+                    email: userData?.email,
+                    phone: userData?.phone ? userData?.phone : '',
+                },
                 receiverInfo: {
                     name: session.customer_details?.name,
                     email: session.customer_details?.email,
@@ -85,11 +93,8 @@ const createOrder = async (session: Stripe.Checkout.Session) => {
                 },
                 isPaid: session.payment_status === 'paid',
             });
-
-            await newOrder.save();
+            console.log('Order saved successfully');
         }
-
-        console.log('Order saved successfully');
     } catch (error) {
         console.error('Error processing checkout.session.completed event:', error);
     }
@@ -200,6 +205,7 @@ export const vnpayIpn = async (req: Request, res: Response, next: NextFunction) 
                             isPaid: true,
                             currentOrderStatus: ORDER_STATUS.CONFIRMED,
                             paymentMethod: PAYMENT_METHOD.CARD,
+
                             OrderStatusLogs: generateOrderStatusLog({
                                 statusChangedBy: req.userId,
                                 orderStatus: ORDER_STATUS.CONFIRMED,

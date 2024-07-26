@@ -14,7 +14,12 @@ const populateVariation = {
     path: 'variationIds',
     select: 'price image sku color productId stock',
     model: 'ProductVariation',
-    options: { sort: '-stock' },
+    options: { sort: 'price' },
+};
+const populateCategory = {
+    path: 'categoryId',
+    select: 'name',
+    model: 'Category',
 };
 
 const clientRequiredFields = { isDeleted: false, isAvailable: true };
@@ -145,7 +150,10 @@ export const getAllProductByCategory = async (req: Request, res: Response, next:
 // @Get all products for admin
 export const getAllProductAdmin = async (req: Request, res: Response, next: NextFunction) => {
     const page = req.query.page ? +req.query.page : 1;
-    const features = new APIQuery(Product.find({ isDeleted: false }).populate(populateVariation), req.query);
+    const features = new APIQuery(
+        Product.find({ isDeleted: false }).populate(populateVariation).populate(populateCategory),
+        req.query,
+    );
     features.filter().sort().limitFields().search().paginate();
 
     const data = await features.query;
