@@ -88,7 +88,7 @@ ProductSchema.virtual('price').get(async function () {
     const ProductVariation = mongoose.model('ProductVariation');
     const variations = await ProductVariation.find({ _id: { $in: this.variationIds } }).sort({ price: 1 });
     if (variations.length === 0) return 0;
-    return variations[0].price;
+    return variations;
 });
 
 // Đảm bảo trường ảo được bao gồm trong kết quả trả về

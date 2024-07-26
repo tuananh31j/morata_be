@@ -7,6 +7,7 @@ import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import generateOrderStatusLog from '@/utils/generateOrderStatusLog';
 import { ROLE } from '@/constant/allowedRoles';
+import { OrderSchema } from '@/interfaces/schema/order';
 
 // @GET:  Get all orders
 export const getAllOrders = async (req: Request, res: Response, next: NextFunction) => {
@@ -16,6 +17,17 @@ export const getAllOrders = async (req: Request, res: Response, next: NextFuncti
     features.filter().sort().limitFields().search().paginate();
 
     const data = await features.query;
+    const orders = data.map((order: OrderSchema) => ({
+        _id: order._id,
+        orderCode: order._id,
+        name: order.receiverInfo?.name || 'N/A',
+        totalPrice: order.totalPrice,
+        paymentMethod: order.paymentMethod,
+        isPaid: order.isPaid,
+        currentOrderStatus: order.currentOrderStatus,
+        createdAt: order.createdAt,
+        items: order.items,
+    }));
 
     const totalDocs = await features.count();
     const totalPages = Math.ceil(totalDocs / page);
@@ -23,7 +35,7 @@ export const getAllOrders = async (req: Request, res: Response, next: NextFuncti
     return res.status(StatusCodes.OK).json(
         customResponse({
             data: {
-                orders: data,
+                orders: orders,
                 page: page,
                 totalDocs: totalDocs,
                 totalPages: totalPages,
@@ -102,7 +114,7 @@ export const cancelOrder = async (req: Request, res: Response, next: NextFunctio
         },
         {
             $push: {
-                OrderStatusLogs: generateOrderStatusLog({
+                orderStatusLogs: generateOrderStatusLog({
                     statusChangedBy: req.userId,
                     orderStatus: ORDER_STATUS.CANCELLED,
                     reason: req.body.reason,
@@ -138,7 +150,7 @@ export const confirmOrder = async (req: Request, res: Response, next: NextFuncti
         },
         {
             $push: {
-                OrderStatusLogs: generateOrderStatusLog({
+                orderStatusLogs: generateOrderStatusLog({
                     statusChangedBy: req.userId,
                     orderStatus: ORDER_STATUS.CONFIRMED,
                     reason: req.body.reason,
@@ -173,7 +185,7 @@ export const shippingOrder = async (req: Request, res: Response, next: NextFunct
         },
         {
             $push: {
-                OrderStatusLogs: generateOrderStatusLog({
+                orderStatusLogs: generateOrderStatusLog({
                     statusChangedBy: req.userId,
                     orderStatus: ORDER_STATUS.SHIPPING,
                     reason: req.body.reason,
@@ -209,7 +221,7 @@ export const deliverOrder = async (req: Request, res: Response, next: NextFuncti
         },
         {
             $push: {
-                OrderStatusLogs: generateOrderStatusLog({
+                orderStatusLogs: generateOrderStatusLog({
                     statusChangedBy: req.userId,
                     orderStatus: ORDER_STATUS.DELIVERED,
                     reason: req.body.reason,
@@ -245,10 +257,10 @@ export const finishOrder = async (req: Request, res: Response, next: NextFunctio
         },
         {
             $push: {
-                OrderStatusLogs: generateOrderStatusLog({
+                orderStatusLogs: generateOrderStatusLog({
                     statusChangedBy: req.userId,
                     orderStatus: ORDER_STATUS.DONE,
-                    reason: req.body.reason,
+                    reason: req.body.reason || '',
                 }),
             },
             $set: { currentOrderStatus: ORDER_STATUS.DONE },
@@ -257,7 +269,7 @@ export const finishOrder = async (req: Request, res: Response, next: NextFunctio
 
     if (!foundedOrder) {
         throw new BadRequestError(
-            `Not found order with id ${req.body.orderId} or status is not ${ORDER_STATUS.CONFIRMED}.`,
+            `Not found order with id ${req.body.orderId} or status is not ${ORDER_STATUS.DELIVERED}.`,
         );
     }
 

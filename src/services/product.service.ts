@@ -21,6 +21,11 @@ const populateCategory = {
     select: 'name',
     model: 'Category',
 };
+const populateBrand = {
+    path: 'categoryId',
+    select: 'name',
+    model: 'Category',
+};
 
 const clientRequiredFields = { isDeleted: false, isAvailable: true };
 
@@ -55,7 +60,10 @@ export const getDetailedProduct = async (req: Request, res: Response, next: Next
     const product = await Product.findOne(
         { _id: req.params.id, ...clientRequiredFields },
         { imageUrlRefs: 0, thumbnailUrlRef: 0 },
-    ).populate(populateVariation);
+    )
+        .populate(populateVariation)
+        .populate(populateCategory)
+        .populate(populateBrand);
 
     if (!product) {
         throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${req.params.id}`);

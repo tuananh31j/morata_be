@@ -8,4 +8,5 @@ export const queryClientFields = {
     categoryId: 1,
     brandId: 1,
     variationIds: 1,
+    price: -1,
 };

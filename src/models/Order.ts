@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 
 const orderSchema = new mongoose.Schema(
     {
+        name: String,
         userId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
@@ -76,6 +77,7 @@ const orderSchema = new mongoose.Schema(
         },
         note: {
             type: String,
+            default: '',
         },
         currentOrderStatus: {
             type: String,
@@ -118,6 +120,7 @@ orderSchema.pre('save', async function (next) {
             orderStatus: ORDER_STATUS.PENDING,
             createdAt: this.createdAt,
         };
+        this.name = this.receiverInfo?.name;
         this.orderStatusLogs.push(statusLog);
     }
     next();

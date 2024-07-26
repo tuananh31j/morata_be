@@ -35,4 +35,6 @@ export interface OrderSchema extends Document {
     isPaid: boolean;
     note: string;
     currentOrderStatus: string;
+    createdAt: string;
+    updatedAt: string;
 }

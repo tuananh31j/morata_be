@@ -1,4 +1,4 @@
-import { Query, Document } from 'mongoose';
+import mongoose, { Query, Document } from 'mongoose';
 
 interface QueryString {
     [key: string]: any;
@@ -59,8 +59,15 @@ class APIQuery<T extends Document> {
     }
     search(): APIQuery<T> {
         if (this.queryString.search) {
-            const search = this.queryString.search;
-            this.query = this.query.find({ name: { $regex: search, $options: 'i' } });
+            const isId = mongoose.Types.ObjectId.isValid(this.queryString.search);
+            if (isId) {
+                const search = this.queryString.search;
+                this.query = this.query.find({ _id: search });
+            } else {
+                const search = this.queryString.search;
+                this.query = this.query.find({ name: { $regex: search, $options: 'i' } });
+                console.log(search, ',,,,,,,,,,,,,,,,,,,,,,');
+            }
         }
         return this;
     }

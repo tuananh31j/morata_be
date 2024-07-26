@@ -6,13 +6,14 @@ import { Router } from 'express';
 
 const router = Router();
 
-router.get('/', authenticate, orderController.getAllOrders);
+router.get('/', authenticate, authorize(ROLE.ADMIN), orderController.getAllOrders);
 router.get('/user', authenticate, orderController.getAllOrdersByUser);
 router.get('/:id', authenticate, orderController.getDetailedOrder);
 router.post('/', authenticate, orderController.createOrder);
-router.post('/cancel', authenticate, orderController.cancelOrder);
+router.patch('/cancel', authenticate, orderController.cancelOrder);
+router.patch('/ship', authenticate, orderController.shippingOrder);
 router.patch('/delivered', authenticate, orderController.deliverOrder);
 router.patch('/confirm', authenticate, authorize(ROLE.ADMIN), orderController.confirmOrder);
-router.patch('/done', authenticate, authorize(ROLE.ADMIN), orderController.finishOrder);
+router.patch('/done', authenticate, orderController.finishOrder);
 
 export default router;
