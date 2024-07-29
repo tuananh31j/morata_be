@@ -31,8 +31,14 @@ router.post(
         { name: 'images', maxCount: 5 },
         { name: 'variationImages', maxCount: 5 },
     ]),
-    // [addProductValidation],
     productController.createNewProduct,
+);
+router.post(
+    '/variation',
+    authenticate,
+    authorize(ROLE.ADMIN),
+    upload.fields([{ name: 'image', maxCount: 1 }]),
+    productController.addNewVariationToProduct,
 );
 router.patch(
     '/:id',
@@ -42,6 +48,12 @@ router.patch(
         { name: 'images', maxCount: 5 },
     ]),
     productController.updateProduct,
+);
+router.patch(
+    '/variation/:variationId',
+    [authenticate, authorize(ROLE.ADMIN), validateObjectId],
+    upload.fields([{ name: 'image', maxCount: 1 }]),
+    productController.updateProductVariation,
 );
 router.delete('/:id', [authenticate, authorize(ROLE.ADMIN), validateObjectId], productController.deleteProduct);
 

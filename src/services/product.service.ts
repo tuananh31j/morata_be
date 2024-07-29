@@ -28,22 +28,27 @@ const populateBrand = {
 };
 
 const clientRequiredFields = { isDeleted: false, isAvailable: true };
+// match: {
+//   price: { $gte: 50, $lte: 100 },
+// }
 
 // @Get: getAllProducts
 export const getAllProducts = async (req: Request, res: Response, next: NextFunction) => {
     const page = req.query.page ? +req.query.page : 1;
     const features = new APIQuery(
-        Product.find({ clientRequiredFields }).select(queryClientFields).populate(populateVariation),
+        Product.find({ ...clientRequiredFields })
+            .select(queryClientFields)
+            .populate(populateVariation),
         req.query,
     );
     features.filter().sort().limitFields().search().paginate();
-    const data = await features.query;
-    const totalDocs = await features.count();
+    const [data, totalDocs] = await Promise.all([features.query, features.count()]);
     const totalPages = Math.ceil(Number(totalDocs) / page);
     return res.status(StatusCodes.OK).json(
         customResponse({
             data: {
                 products: data,
+                length: data.length,
                 page: page,
                 totalDocs: totalDocs,
                 totalPages: totalPages,
@@ -65,9 +70,7 @@ export const getDetailedProduct = async (req: Request, res: Response, next: Next
         .populate(populateCategory)
         .populate(populateBrand);
 
-    if (!product) {
-        throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${req.params.id}`);
-    }
+    if (!product) throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${req.params.id}`);
 
     return product;
 };
@@ -164,8 +167,7 @@ export const getAllProductAdmin = async (req: Request, res: Response, next: Next
     );
     features.filter().sort().limitFields().search().paginate();
 
-    const data = await features.query;
-    const totalDocs = await features.count();
+    const [data, totalDocs] = await Promise.all([features.query, features.count()]);
     const totalPages = Math.ceil(Number(totalDocs) / page);
     return res.status(StatusCodes.OK).json(
         customResponse({
@@ -191,8 +193,7 @@ export const getProductsHidden = async (req: Request, res: Response, next: NextF
     );
     features.filter().sort().limitFields().search().paginate();
 
-    const data = await features.query;
-    const totalDocs = await features.count();
+    const [data, totalDocs] = await Promise.all([features.query, features.count()]);
     const totalPages = Math.ceil(Number(totalDocs) / page);
     return res.status(StatusCodes.OK).json(
         customResponse({
@@ -214,8 +215,7 @@ export const getProductsActive = async (req: Request, res: Response, next: NextF
     const features = new APIQuery(Product.find({ isDeleted: false }).populate(populateVariation), req.query);
     features.filter().sort().limitFields().search().paginate();
 
-    const data = await features.query;
-    const totalDocs = await features.count();
+    const [data, totalDocs] = await Promise.all([features.query, features.count()]);
     const totalPages = Math.ceil(Number(totalDocs) / page);
     return res.status(StatusCodes.OK).json(
         customResponse({
@@ -295,19 +295,18 @@ export const createNewProduct = async (req: Request, res: Response, next: NextFu
 // @Patch: updateProduct
 export const updateProduct = async (req: Request, res: Response, next: NextFunction) => {
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-    const product = await Product.findById(req.params.id).lean();
-    if (!product) {
-        throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${req.params.id}`);
-    }
+    const product = await Product.findById(req.params.id);
+    if (!product) throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${req.params.id}`);
 
     if (files && files['thumbnail']) {
-        if (product.thumbnailUrlRef) {
-            await removeUploadedFile(product.thumbnailUrlRef);
-        }
+        if (product.thumbnailUrlRef) await removeUploadedFile(product.thumbnailUrlRef);
 
         const { fileUrlRefs, fileUrls } = await uploadFiles(files['thumbnail']);
         req.body.thumbnail = fileUrls[0];
         req.body.thumbnailUrlRef = fileUrlRefs[0];
+    }
+    if (req.body.attributes) {
+        req.body.attributes = JSON.parse(req.body.attributes);
     }
 
     if (files && files['images']) {
@@ -321,12 +320,66 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
         req.body.imageUrlRefs = fileUrlRefs;
     }
 
-    product.set({ ...product, ...req.body });
-    product.save();
+    await product.set({ ...req.body });
+    await product.save();
 
     return res
         .status(StatusCodes.OK)
-        .json(customResponse({ data: null, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+        .json(customResponse({ data: product, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+};
+
+// @Patch: updateProduct variation
+export const updateProductVariation = async (req: Request, res: Response, next: NextFunction) => {
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+    const productVariation = await ProductVariation.findById(req.params.variationId);
+    if (!productVariation)
+        throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product variation with id: ${req.params.variationId}`);
+
+    if (files && files['image']) {
+        if (productVariation.imageUrlRef) await removeUploadedFile(productVariation.imageUrlRef);
+
+        const { fileUrlRefs, fileUrls } = await uploadFiles(files['image']);
+        req.body.image = fileUrls[0];
+        req.body.imageUrlRef = fileUrlRefs[0];
+    }
+
+    productVariation.set({ ...productVariation, ...req.body });
+    productVariation.save();
+
+    return res.status(StatusCodes.OK).json(
+        customResponse({
+            data: productVariation,
+            success: true,
+            status: StatusCodes.OK,
+            message: ReasonPhrases.OK,
+        }),
+    );
+};
+
+// @Post: updateProduct variation
+export const addNewVariationToProduct = async (req: Request, res: Response, next: NextFunction) => {
+    const productId = req.body.productId;
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+    const product = await Product.findById(productId);
+    if (!product) throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${productId}`);
+
+    if (files && files['image']) {
+        const { fileUrlRefs, fileUrls } = await uploadFiles(files['image']);
+        req.body.image = fileUrls[0];
+        req.body.imageUrlRef = fileUrlRefs[0];
+    }
+
+    const newVariation = await ProductVariation.create({ ...req.body, productId });
+    product.set({ variationIds: [...product.variationIds, newVariation._id] });
+    product.save();
+    return res.status(StatusCodes.OK).json(
+        customResponse({
+            data: product,
+            success: true,
+            status: StatusCodes.OK,
+            message: ReasonPhrases.OK,
+        }),
+    );
 };
 
 // @Delete: deleteProduct

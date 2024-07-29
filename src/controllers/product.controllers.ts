@@ -60,10 +60,19 @@ export const getProductsHidden = asyncHandler(async (req: Request, res: Response
 export const createNewProduct = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     return await productService.createNewProduct(req, res, next);
 });
+// @Post: createNewVariationToProduct
+export const addNewVariationToProduct = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    return await productService.addNewVariationToProduct(req, res, next);
+});
 
 // @Patch: updateProduct
 export const updateProduct = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     return await productService.updateProduct(req, res, next);
+});
+
+// @Patch: updateProductVariation
+export const updateProductVariation = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    return await productService.updateProductVariation(req, res, next);
 });
 
 // @Delete: deleteProduct

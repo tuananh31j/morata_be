@@ -4,7 +4,6 @@ import Cart from '@/models/Cart';
 import ProductVariation from '@/models/ProductVariation';
 import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
-import _ from 'lodash';
 
 // @Get cart by user
 export const getCartByUser = async (req: Request, res: Response, next: NextFunction) => {
@@ -15,9 +14,7 @@ export const getCartByUser = async (req: Request, res: Response, next: NextFunct
             select: { name: 1 },
         },
     });
-    if (!cart) {
-        throw new NotFoundError('Not found cart or cart is not exist.');
-    }
+    if (!cart) throw new NotFoundError('Not found cart or cart is not exist.');
 
     return res
         .status(StatusCodes.OK)
@@ -27,25 +24,20 @@ export const getCartByUser = async (req: Request, res: Response, next: NextFunct
 // @Add to cart
 export const addToCart = async (req: Request, res: Response, next: NextFunction) => {
     let updatedCart = null;
-    const product = await ProductVariation.findById(req.body.productVariation).select({ stock: 1 }).lean();
-    const currentCart = await Cart.findOne({ userId: req.body.userId })
-        .select({ items: 1 })
-        .lean<{ items: { productVariation: string; quantity: number }[] }>();
+    const [product, currentCart] = await Promise.all([
+        ProductVariation.findById(req.body.productVariation).select({ stock: 1 }).lean(),
+        Cart.findOne({ userId: req.body.userId })
+            .select({ items: 1 })
+            .lean<{ items: { productVariation: string; quantity: number }[] }>(),
+    ]);
 
-    if (!product) {
-        throw new BadRequestError(`Not found product with id ${req.body.productId}`);
-    }
-
-    if (req.body.quantity < 1) {
-        throw new BadRequestError(`Quantity must be at least 1`);
-    }
-    if (req.body.quantity > product.stock!) {
-        req.body.quantity = product.stock;
-    }
+    if (!product) throw new BadRequestError(`Not found product with id ${req.body.productVariation}`);
+    if (req.body.quantity < 1) throw new BadRequestError(`Quantity must be at least 1`);
+    if (req.body.quantity > product.stock!) req.body.quantity = product.stock;
 
     if (currentCart && currentCart.items.length > 0) {
-        const currentQuantity =
-            currentCart.items.find((item) => item.productVariation == req.body.productVariation)?.quantity || 0;
+        const productInThisCart = currentCart.items.find((item) => item.productVariation == req.body.productVariation);
+        const currentQuantity = productInThisCart?.quantity || 0;
         const newQuantity = currentQuantity + req.body.quantity;
         updatedCart = await Cart.findOneAndUpdate(
             { userId: req.body.userId, 'items.productVariation': req.body.productVariation },
@@ -79,9 +71,7 @@ export const removeCartItem = async (req: Request, res: Response, next: NextFunc
         { $pull: { items: { productVariation: req.body.productVariation } } },
         { new: true },
     );
-    if (!updatedCart) {
-        throw new BadRequestError(`Not found cart with userId: ${req.body.userId}`);
-    }
+    if (!updatedCart) throw new BadRequestError(`Not found cart with userId: ${req.body.userId}`);
     return res
         .status(StatusCodes.OK)
         .json(customResponse({ data: updatedCart, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
@@ -109,9 +99,8 @@ export const updateCartItemQuantity = async (req: Request, res: Response, next: 
     if (!product) throw new BadRequestError(`Not found product with Id: ${req.body.productVariation}`);
 
     if (req.body.quantity < 1) throw new BadRequestError(`Quantity must be at least 1`);
-    if (req.body.quantity > product.stock!) {
-        req.body.quantity = product.stock;
-    }
+    if (req.body.quantity > product.stock!) req.body.quantity = product.stock;
+
     const updatedQuantity = await Cart.findOneAndUpdate(
         { userId: req.body.userId, 'items.productVariation': req.body.productVariation },
         { $set: { 'items.$.quantity': req.body.quantity } },
