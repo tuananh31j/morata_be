@@ -52,8 +52,8 @@ export const ProductSchema = new Schema(
         },
         attributes: [
             {
-                type: { key: String, value: String },
-                // required: true,
+                type: { key: String, name: String, value: String },
+                _id: false,
             },
         ],
         rating: { type: Number, default: 0 },
@@ -67,6 +67,7 @@ export const ProductSchema = new Schema(
                 {
                     type: Schema.Types.ObjectId,
                     ref: 'ProductVariation',
+                    _id: false,
                 },
             ],
             default: [],

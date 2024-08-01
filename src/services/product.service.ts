@@ -261,14 +261,16 @@ export const createNewProduct = async (req: Request, res: Response, next: NextFu
         });
     }
 
+    console.log(JSON.parse(req.body.variationsString), 'variationObjs', req.body.variationsString);
     const attributes = JSON.parse(req.body.attributes);
+    const kk = JSON.parse(req.body.variationsString);
     delete req.body.variationImages;
     delete req.body.variationsString;
 
     // @add product
-    const newProduct = await Product.create({ ...req.body, attributes });
+    const newProduct = new Product({ ...req.body, attributes });
 
-    // @add variations to product
+    // @generate variations
     const variations = variationObjs.map((item: IVariationPlayload) => {
         return { productId: newProduct._id, ...item };
     });
@@ -276,15 +278,12 @@ export const createNewProduct = async (req: Request, res: Response, next: NextFu
     // @add variation ids to product
     const newVariations = await ProductVariation.insertMany(variations);
     const variationIds = newVariations.map((variation) => variation._id);
-    await Product.findByIdAndUpdate(
-        newProduct._id,
-        { $push: { variationIds: { $each: variationIds } } },
-        { new: true },
-    );
+    newProduct.set({ variationIds: variationIds });
+    newProduct.save();
 
     return res.status(StatusCodes.CREATED).json(
         customResponse({
-            data: null,
+            data: { newProduct, kk, variationObjs, variations },
             success: true,
             status: StatusCodes.CREATED,
             message: ReasonPhrases.CREATED,
@@ -296,6 +295,7 @@ export const createNewProduct = async (req: Request, res: Response, next: NextFu
 export const updateProduct = async (req: Request, res: Response, next: NextFunction) => {
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
     const product = await Product.findById(req.params.id);
+    const imageDelete = req.body.imageDelete;
     if (!product) throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${req.params.id}`);
 
     if (files && files['thumbnail']) {

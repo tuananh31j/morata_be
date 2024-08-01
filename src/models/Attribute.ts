@@ -1,4 +1,5 @@
-import mongoose, { Schema } from 'mongoose';
+import { AttributeType } from '@/constant/attributeType';
+import mongoose from 'mongoose';
 
 const attributeSchema = new mongoose.Schema(
     {
@@ -11,7 +12,9 @@ const attributeSchema = new mongoose.Schema(
             type: String,
             unique: true,
         },
-        type: { type: String, enum: ['manual', 'options'] },
+        isVariant: { type: Boolean, default: false },
+        isRequired: { type: Boolean, default: false },
+        type: { type: String, enum: Object.values(AttributeType), default: AttributeType.Manual },
         values: [
             {
                 type: String || Number,

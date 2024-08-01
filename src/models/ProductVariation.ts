@@ -13,9 +13,12 @@ const productVariationSchema = new mongoose.Schema(
         sku: {
             type: String,
         },
-        color: {
-            type: String,
-        },
+        variantAttributes: [
+            {
+                type: { key: String, name: String, value: String },
+                _id: false,
+            },
+        ],
         // @ref
         productId: {
             type: mongoose.Schema.Types.ObjectId,
