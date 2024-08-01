@@ -1,44 +1,72 @@
+import { ROLE } from '@/constant/allowedRoles';
 import { ORDER_STATUS } from '@/constant/order';
 import { BadRequestError, NotAcceptableError, NotFoundError } from '@/error/customError';
-import APIQuery from '@/helpers/apiQuery';
 import customResponse from '@/helpers/response';
 import Order from '@/models/Order';
 import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
-import generateOrderStatusLog from '@/utils/generateOrderStatusLog';
-import { ROLE } from '@/constant/allowedRoles';
-import { OrderSchema } from '@/interfaces/schema/order';
+import _ from 'lodash';
+
+type Options = {
+    userId?: string;
+    page: number;
+    limit: number;
+    sort?: { [key: string]: number };
+    lean: boolean;
+
+    //Filter properties
+    search?: string;
+    paymentMethod?: string;
+    isPaid?: boolean;
+    orderStatus?: string;
+};
 
 // @GET:  Get all orders
+
 export const getAllOrders = async (req: Request, res: Response, next: NextFunction) => {
-    const page = Number(req.query.page) || 1;
+    let query: { isDeleted: boolean } = { isDeleted: false }; // Filter for non-deleted products
 
-    const features = new APIQuery(Order.find(), req.query);
-    features.filter().sort().limitFields().search().paginate();
+    // Build filter object based on request query parameters
+    const filter: { [key: string]: any } = {};
+    if (req.query.search) {
+        const search = req.query.search as string;
+        filter._id = { $regex: new RegExp(search, 'i') };
+    }
 
-    const data = await features.query;
-    const orders = data.map((order: OrderSchema) => ({
-        _id: order._id,
-        orderCode: order._id,
-        name: order.receiverInfo?.name || 'N/A',
-        totalPrice: order.totalPrice,
-        paymentMethod: order.paymentMethod,
-        isPaid: order.isPaid,
-        currentOrderStatus: order.currentOrderStatus,
-        createdAt: order.createdAt,
-        items: order.items,
-    }));
+    if (req.query.paymentMethod) {
+        filter.paymentMethod = req.query.paymentMethod;
+    }
 
-    const totalDocs = await features.count();
-    const totalPages = Math.ceil(totalDocs / page);
+    if (req.query.isPaid) {
+        filter.isPaid = req.query.isPaid;
+    }
+
+    if (req.query.orderStatus) {
+        filter.orderStatus = req.query.orderStatus;
+    }
+
+    const options: Options = {
+        page: req.query.page ? +req.query.page : 1,
+        limit: req.query.limit ? +req.query.limit : 10,
+        sort: req.query.sort ? JSON.parse(req.query.sort as string) : { createdAt: -1 }, // Parse sort criteria from JSON
+        lean: true,
+    };
+
+    query = { ...query, ...filter };
+
+    const data = await Order.paginate(query, options);
+
+    const orders = data.docs.map((order) => {
+        return _.pick(order, ['_id', 'totalPrice', 'paymentMethod', 'isPaid', 'orderStatus', 'createdAt']);
+    });
 
     return res.status(StatusCodes.OK).json(
         customResponse({
             data: {
                 orders: orders,
-                page: page,
-                totalDocs: totalDocs,
-                totalPages: totalPages,
+                page: data.page,
+                totalDocs: data.totalDocs,
+                totalPages: data.totalPages,
             },
             success: true,
             status: StatusCodes.OK,
@@ -48,25 +76,51 @@ export const getAllOrders = async (req: Request, res: Response, next: NextFuncti
 };
 
 //@GET: Get all orders by user
+
 export const getAllOrdersByUser = async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.userId;
-    const page = Number(req.query.page) || 1;
+    let query: { isDeleted: boolean; userId: string } = { isDeleted: false, userId: req.userId }; // Filter for non-deleted products
 
-    const features = new APIQuery(Order.find({ userId }).select(['-customerInfo', '-updatedAt']), req.query);
-    features.filter().sort().limitFields().search().paginate();
+    // Build filter object based on request query parameters
+    const filter: { [key: string]: any } = {};
 
-    const data = await features.query;
+    if (req.query.search) {
+        const search = req.query.search as string;
+        filter._id = { $regex: new RegExp(search, 'i') };
+    }
 
-    const totalDocs = await features.count();
-    const totalPages = Math.ceil(totalDocs / page);
+    if (req.query.paymentMethod) {
+        filter.paymentMethod = req.query.paymentMethod;
+    }
+
+    if (req.query.isPaid) {
+        filter.isPaid = req.query.isPaid;
+    }
+
+    if (req.query.orderStatus) {
+        filter.orderStatus = req.query.orderStatus;
+    }
+
+    const options: Options = {
+        page: req.query.page ? +req.query.page : 1,
+        limit: req.query.limit ? +req.query.limit : 10,
+        sort: req.query.sort ? JSON.parse(req.query.sort as string) : { createdAt: -1 }, // Parse sort criteria from JSON
+        lean: true,
+    };
+
+    query = { ...query, ...filter };
+
+    const data = await Order.paginate(query, options);
+    const orders = data.docs.map((order) => {
+        return _.pick(order, ['_id', 'totalPrice', 'paymentMethod', 'isPaid', 'orderStatus', 'createdAt']);
+    });
 
     return res.status(StatusCodes.OK).json(
         customResponse({
             data: {
-                orders: data,
-                page: page,
-                totalDocs: totalDocs,
-                totalPages: totalPages,
+                orders: orders,
+                page: data.page,
+                totalDocs: data.totalDocs,
+                totalPages: data.totalPages,
             },
             success: true,
             status: StatusCodes.OK,
@@ -75,15 +129,20 @@ export const getAllOrdersByUser = async (req: Request, res: Response, next: Next
     );
 };
 
-//@GET: Get the detailed my order
-export const getDetailedOrder = async (req: Request, res: Response, next: NextFunction) => {
-    const order = await Order.findById(req.params.id).select(['-customerInfo', '-updatedAt']);
+//@GET: Get the detailed order
 
-    if (!order) throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} order with id: ${req.params.id}`);
+export const getDetailedOrder = async (req: Request, res: Response, next: NextFunction) => {
+    const order = await Order.findById(req.params.id).lean();
+
+    if (!order) {
+        throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} order with id: ${req.params.id}`);
+    }
+
+    const result = _.omit(order, ['_id', 'canceledBy', 'updatedAt']);
 
     return res
         .status(StatusCodes.OK)
-        .json(customResponse({ data: order, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+        .json(customResponse({ data: result, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
 };
 
 // @POST: Create new order
@@ -107,28 +166,27 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
 
 //@POST Set order status to cancelled
 export const cancelOrder = async (req: Request, res: Response, next: NextFunction) => {
-    const foundedOrder = await Order.findOneAndUpdate(
-        {
-            _id: req.body.orderId,
-            currentOrderStatus: ORDER_STATUS.PENDING,
-        },
-        {
-            $push: {
-                orderStatusLogs: generateOrderStatusLog({
-                    statusChangedBy: req.userId,
-                    orderStatus: ORDER_STATUS.CANCELLED,
-                    reason: req.body.reason,
-                }),
-            },
-            $set: { currentOrderStatus: ORDER_STATUS.CANCELLED },
-        },
-    );
+    const foundedOrder = await Order.findOne({ _id: req.body.orderId });
 
     if (!foundedOrder) {
-        throw new BadRequestError(
-            `Not found order with id ${req.body.orderId} or status is not ${ORDER_STATUS.PENDING}.`,
-        );
+        throw new BadRequestError(`Not found order with id ${req.body.orderId}`);
     }
+
+    if (foundedOrder.orderStatus === ORDER_STATUS.CANCELLED) {
+        throw new NotAcceptableError(`You cannot cancel this order because it was cancelled before. `);
+    }
+
+    if (foundedOrder.orderStatus === ORDER_STATUS.SHIPPING) {
+        throw new NotAcceptableError(`Your order is shipping , you can not cancel.`);
+    }
+
+    if (req.role === ROLE.ADMIN) {
+        foundedOrder.canceledBy = ROLE.ADMIN;
+    }
+
+    foundedOrder.orderStatus = ORDER_STATUS.CANCELLED;
+    foundedOrder.description = req.body.description ?? '';
+    foundedOrder.save();
 
     return res
         .status(StatusCodes.OK)
@@ -139,31 +197,22 @@ export const cancelOrder = async (req: Request, res: Response, next: NextFunctio
 
 // @Set order status to confirmed
 export const confirmOrder = async (req: Request, res: Response, next: NextFunction) => {
-    if (!req.role || req.role !== ROLE.ADMIN) {
+    if (!req.role || req.role !== 'admin') {
         throw new NotAcceptableError('Only admin can access.');
     }
 
-    const foundedOrder = await Order.findOneAndUpdate(
-        {
-            _id: req.body.orderId,
-            currentOrderStatus: ORDER_STATUS.PENDING,
-        },
-        {
-            $push: {
-                orderStatusLogs: generateOrderStatusLog({
-                    statusChangedBy: req.userId,
-                    orderStatus: ORDER_STATUS.CONFIRMED,
-                    reason: req.body.reason,
-                }),
-            },
-            $set: { currentOrderStatus: ORDER_STATUS.CONFIRMED },
-        },
-    );
+    const foundedOrder = await Order.findOne({ _id: req.body.orderId });
+
     if (!foundedOrder) {
-        throw new BadRequestError(
-            `Not found order with id ${req.body.orderId} or status is not ${ORDER_STATUS.PENDING}.`,
-        );
+        throw new BadRequestError(`Not found order with id ${req.body.orderId}`);
     }
+
+    if (foundedOrder.orderStatus === ORDER_STATUS.CONFIRMED) {
+        throw new BadRequestError(`Your order is confirmed.`);
+    }
+
+    foundedOrder.orderStatus = ORDER_STATUS.CONFIRMED;
+    foundedOrder.save();
 
     return res
         .status(StatusCodes.OK)
@@ -173,112 +222,52 @@ export const confirmOrder = async (req: Request, res: Response, next: NextFuncti
 };
 
 // @ Set order status to delivered
-export const shippingOrder = async (req: Request, res: Response, next: NextFunction) => {
-    if (!req.role || req.role !== ROLE.ADMIN) {
+export const deliverOrder = async (req: Request, res: Response, next: NextFunction) => {
+    if (!req.role || req.role !== 'admin') {
         throw new NotAcceptableError('Only admin can access.');
     }
 
-    const foundedOrder = await Order.findOneAndUpdate(
-        {
-            _id: req.body.orderId,
-            currentOrderStatus: ORDER_STATUS.CONFIRMED,
-        },
-        {
-            $push: {
-                orderStatusLogs: generateOrderStatusLog({
-                    statusChangedBy: req.userId,
-                    orderStatus: ORDER_STATUS.SHIPPING,
-                    reason: req.body.reason,
-                }),
-            },
-            $set: { currentOrderStatus: ORDER_STATUS.SHIPPING },
-        },
-    );
+    const foundedOrder = await Order.findOne({ _id: req.body.orderId });
 
     if (!foundedOrder) {
-        throw new BadRequestError(
-            `Not found order with id ${req.body.orderId} or status is not ${ORDER_STATUS.CONFIRMED}.`,
-        );
+        throw new BadRequestError(`Not found order with id ${req.body.orderId}`);
     }
+
+    if (foundedOrder.orderStatus === ORDER_STATUS.DELIVERED) {
+        throw new BadRequestError(`Your order is delivered.`);
+    }
+
+    foundedOrder.orderStatus = ORDER_STATUS.DELIVERED;
+
+    foundedOrder.save();
 
     return res
         .status(StatusCodes.OK)
         .json(
-            customResponse({ data: null, success: true, status: StatusCodes.OK, message: 'This order is shipping.' }),
+            customResponse({ data: null, success: true, status: StatusCodes.OK, message: 'This order is delivered.' }),
         );
-};
-
-// @Set order status to delivered
-export const deliverOrder = async (req: Request, res: Response, next: NextFunction) => {
-    if (!req.role || req.role !== ROLE.ADMIN) {
-        throw new NotAcceptableError('Only admin can access.');
-    }
-
-    const foundedOrder = await Order.findOneAndUpdate(
-        {
-            _id: req.body.orderId,
-            currentOrderStatus: ORDER_STATUS.SHIPPING,
-        },
-        {
-            $push: {
-                orderStatusLogs: generateOrderStatusLog({
-                    statusChangedBy: req.userId,
-                    orderStatus: ORDER_STATUS.DELIVERED,
-                    reason: req.body.reason,
-                }),
-            },
-            $set: { currentOrderStatus: ORDER_STATUS.DELIVERED },
-        },
-    );
-
-    if (!foundedOrder) {
-        throw new BadRequestError(
-            `Not found order with id ${req.body.orderId} or status is not ${ORDER_STATUS.SHIPPING}.`,
-        );
-    }
-
-    return res.status(StatusCodes.OK).json(
-        customResponse({
-            data: null,
-            success: true,
-            status: StatusCodes.OK,
-            message: `This order is ${ORDER_STATUS.DELIVERED}.`,
-        }),
-    );
 };
 
 // @Set order status to done
 export const finishOrder = async (req: Request, res: Response, next: NextFunction) => {
-    const foundedOrder = await Order.findOneAndUpdate(
-        {
-            _id: req.body.orderId,
-            currentOrderStatus: ORDER_STATUS.DELIVERED,
-            userId: req.userId,
-        },
-        {
-            $push: {
-                orderStatusLogs: generateOrderStatusLog({
-                    statusChangedBy: req.userId,
-                    orderStatus: ORDER_STATUS.DONE,
-                    reason: req.body.reason || '',
-                }),
-            },
-            $set: { currentOrderStatus: ORDER_STATUS.DONE },
-        },
-    );
-
-    if (!foundedOrder) {
-        throw new BadRequestError(
-            `Not found order with id ${req.body.orderId} or status is not ${ORDER_STATUS.DELIVERED}.`,
-        );
+    if (!req.role || req.role !== 'admin') {
+        throw new NotAcceptableError('Only admin can access.');
     }
 
-    return res.status(StatusCodes.OK).json(
-        customResponse({
-            data: null,
-            success: true,
-            status: StatusCodes.OK,
-            message: `This order is ${ORDER_STATUS.DONE}.`,
-        }),
-    );
+    const foundedOrder = await Order.findOne({ _id: req.body.orderId });
+
+    if (!foundedOrder) {
+        throw new BadRequestError(`Not found order with id ${req.body.orderId}`);
+    }
+
+    if (foundedOrder.orderStatus === ORDER_STATUS.CONFIRMED) {
+        throw new BadRequestError(`Your order is done.`);
+    }
+
+    foundedOrder.orderStatus = ORDER_STATUS.DONE;
+    foundedOrder.save();
+
+    return res
+        .status(StatusCodes.OK)
+        .json(customResponse({ data: null, success: true, status: StatusCodes.OK, message: 'Your order is done.' }));
 };

@@ -1,16 +1,15 @@
 import app from './app';
-import config from './config/env.config';
 import connectDB from './config/database.config';
-import { addOrderToQueue, processOrderQueue } from './helpers/queue';
+import config from './config/env.config';
+import { checkOrderJob } from './job/orderJob';
 
 const PORT = config.port;
 const HOSTNAME = config.hostname;
 
 let server: any;
-connectDB().then(() => {
-    addOrderToQueue();
-
+connectDB().then(async () => {
     server = app.listen(PORT, `${HOSTNAME}`, () => {
+        checkOrderJob.start();
         console.log(`Listening to port ${PORT}`);
     });
 });
@@ -30,9 +29,6 @@ const unexpectedErrorHandler = (error: string) => {
     console.log(error);
     exitHandler();
 };
-
-// Handle update order status automatically
-processOrderQueue();
 
 process.on('uncaughtException', unexpectedErrorHandler);
 process.on('unhandledRejection', unexpectedErrorHandler);

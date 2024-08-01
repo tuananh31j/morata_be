@@ -17,7 +17,6 @@
     "license": "ISC",
     "devDependencies": {
         "@types/bcryptjs": "^2.4.6",
-        "@types/bull": "^4.10.0",
         "@types/compression": "^1.7.5",
         "@types/cookie-parser": "^1.4.7",
         "@types/cors": "^2.8.17",
@@ -40,10 +39,10 @@
     },
     "dependencies": {
         "bcryptjs": "^2.4.3",
-        "bull": "^4.15.1",
         "compression": "^1.7.4",
         "cookie-parser": "^1.4.6",
         "cors": "^2.8.5",
+        "cron": "^3.1.7",
         "date-fns": "^3.6.0",
         "dotenv": "^16.4.5",
         "express": "^4.19.2",
