@@ -2,6 +2,7 @@ import config from '@/config/env.config';
 import { BadRequestError } from '@/error/customError';
 import { OrderSchema } from '@/interfaces/schema/order';
 import Order from '@/models/Order';
+import { id } from 'date-fns/locale';
 import { NextFunction, Request, Response } from 'express';
 import Stripe from 'stripe';
 
@@ -15,6 +16,9 @@ export const createCheckout = async (req: Request, res: Response, next: NextFunc
             product_data: {
                 name: item.name,
                 images: [item.image],
+                metadata: {
+                    productId: item.productId,
+                },
             },
             unit_amount: item.price,
         },
@@ -57,6 +61,7 @@ const createOrder = async (session: Stripe.Checkout.Session) => {
                     ...item,
                     image: product.images[0],
                     name: product.name,
+                    productId: product.metadata.productId,
                 });
             }
         }
@@ -66,6 +71,7 @@ const createOrder = async (session: Stripe.Checkout.Session) => {
             quantity: item.quantity,
             price: item.amount_total,
             image: item.image,
+            productId: item.productId,
         }));
 
         // Create a new order

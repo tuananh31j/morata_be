@@ -5,6 +5,10 @@ import paginate from 'mongoose-paginate-v2';
 
 const OrderItemSchema = new mongoose.Schema(
     {
+        productId: {
+            type: String,
+            required: true,
+        },
         name: {
             type: String,
             required: true,
