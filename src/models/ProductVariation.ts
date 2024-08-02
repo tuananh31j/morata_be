@@ -13,12 +13,7 @@ const productVariationSchema = new mongoose.Schema(
         sku: {
             type: String,
         },
-        variantAttributes: [
-            {
-                type: { key: String, name: String, value: String },
-                _id: false,
-            },
-        ],
+        variantAttributes: mongoose.Schema.Types.Mixed,
         // @ref
         productId: {
             type: mongoose.Schema.Types.ObjectId,

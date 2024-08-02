@@ -19,6 +19,7 @@ router.get('/:id', [validateObjectId], productController.getDetailedProduct);
 
 // @admin
 router.get('/portal/all', authenticate, authorize(ROLE.ADMIN), productController.getAllProductAdmin);
+router.get('/portal/:id', authenticate, authorize(ROLE.ADMIN), productController.getDetailedProductAdmin);
 router.get('/portal/active', authenticate, authorize(ROLE.ADMIN), productController.getProductsActive);
 router.get('/portal/hidden', authenticate, authorize(ROLE.ADMIN), productController.getProductsHidden);
 

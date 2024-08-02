@@ -47,6 +47,10 @@ export const getAllProductByCategory = asyncHandler(async (req: Request, res: Re
 export const getAllProductAdmin = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     return await productService.getAllProductAdmin(req, res, next);
 });
+// @Get details product for admin
+export const getDetailedProductAdmin = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    return await productService.getDetailedProductAdmin(req, res, next);
+});
 // @Get all product active
 export const getProductsActive = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     return await productService.getProductsActive(req, res, next);

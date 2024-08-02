@@ -67,7 +67,6 @@ export const ProductSchema = new Schema(
                 {
                     type: Schema.Types.ObjectId,
                     ref: 'ProductVariation',
-                    _id: false,
                 },
             ],
             default: [],
