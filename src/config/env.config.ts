@@ -65,8 +65,12 @@ const config = {
     jwt: {
         accessTokenKey: envVars.JWT_ACCESS_TOKEN_KEY,
         refreshTokenKey: envVars.JWT_REFRESH_TOKEN_KEY,
+        verifyTokenKey: envVars.JWT_VERIFY_TOKEN_KEY,
+        resetPasswordTokenKey: envVars.JWT_RESETPASSWORD_TOKEN_KEY,
+        verifyExpiration: envVars.JWT_VERIFY_EXPIRATION,
         accessExpiration: envVars.JWT_ACCESS_EXPIRATION,
         refreshExpiration: envVars.JWT_REFRESH_EXPIRATION,
+        resetPasswordExpiration: envVars.JWT_RESETPASSWORD_EXPIRATION,
     },
     cookie: {
         maxAge: envVars.COOKIE_MAX_AGE,
@@ -101,6 +105,11 @@ const config = {
     },
     clientDomain: {
         url: envVars.CLIENT_DOMAIN,
+        verify: envVars.VERIFY_URL,
+    },
+    nodeMailer: {
+        email: envVars.EMAIL_USER,
+        password: envVars.EMAIL_PASSWORD,
     },
 };
 
