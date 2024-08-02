@@ -138,7 +138,7 @@ export const getDetailedOrder = async (req: Request, res: Response, next: NextFu
         throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} order with id: ${req.params.id}`);
     }
 
-    const result = _.omit(order, ['_id', 'canceledBy', 'updatedAt']);
+    const result = _.omit(order, ['_id', 'updatedAt']);
 
     return res
         .status(StatusCodes.OK)
