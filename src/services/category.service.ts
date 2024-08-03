@@ -9,7 +9,7 @@ import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 
 // @Get: getAllCategories
 export const getAllCategories = async (req: Request, res: Response, next: NextFunction) => {
-    const categories = await Category.find({}).lean();
+    const categories = await Category.find().sort({ createdAt: -1 }).lean();
     return res
         .status(StatusCodes.OK)
         .json(customResponse({ data: categories, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));

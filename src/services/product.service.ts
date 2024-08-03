@@ -162,7 +162,12 @@ export const getAllProductByCategory = async (req: Request, res: Response, next:
 // @Get: getDetailedProduct for admin
 export const getDetailedProductAdmin = async (req: Request, res: Response, next: NextFunction) => {
     const product = await Product.findOne({ _id: req.params.id })
-        .populate(populateVariation)
+        .populate({
+            path: 'variationIds',
+            select: 'price image sku color productId stock variantAttributes imageUrlRef',
+            model: 'ProductVariation',
+            options: { sort: 'createdAt' },
+        })
         .populate(populateCategory)
         .populate(populateBrand);
 
