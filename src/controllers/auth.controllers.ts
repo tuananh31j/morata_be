@@ -10,7 +10,22 @@ import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 export const register = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     return await authService.register(req, res, next);
 });
-
+// @send mail Verify
+export const sendMailVerify = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    return await authService.sendMailverifyAccount(req, res, next);
+});
+// @send mail resetPassword
+export const sendResetPassword = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    return await authService.sendMailForgotPassword(req, res, next);
+});
+// Verify
+export const verifyEmail = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    return await authService.verifyEmail(req, res, next);
+});
+// Verify
+export const resetPassword = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    return await authService.resetPassword(req, res, next);
+});
 // @Login
 export const login = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const user = await authService.login(req, res, next);

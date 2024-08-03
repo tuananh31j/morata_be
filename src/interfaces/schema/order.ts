@@ -1,4 +1,4 @@
-import { Schema, Document } from 'mongoose';
+import mongoose from 'mongoose';
 
 interface ItemOrder {
     name: string;
@@ -7,8 +7,8 @@ interface ItemOrder {
     image: string;
 }
 
-export interface OrderSchema extends Document {
-    userId: Schema.Types.ObjectId;
+export interface OrderSchema {
+    userId: mongoose.Schema.Types.ObjectId;
     items: ItemOrder[];
     totalPrice: number;
     tax: number;
@@ -33,8 +33,7 @@ export interface OrderSchema extends Document {
     };
     paymentMethod: string;
     isPaid: boolean;
-    note: string;
-    currentOrderStatus: string;
-    createdAt: string;
-    updatedAt: string;
+    canceledBy: string;
+    description: string;
+    orderStatus: string;
 }

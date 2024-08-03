@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import Joi from 'joi';
+import { env } from 'process';
 
 const envVarsSchema = Joi.object()
     .keys({
@@ -35,6 +36,8 @@ const envVarsSchema = Joi.object()
         JWT_REFRESH_TOKEN_KEY: Joi.string().required().description('JWT Refresh Token Key'),
         JWT_ACCESS_EXPIRATION: Joi.string().default('15m').description('minutes after which access tokens expire'),
         JWT_REFRESH_EXPIRATION: Joi.string().default('30d').description('days after which refresh tokens expire'),
+        REDIS_HOST: Joi.string().description('Redis Host'),
+        REDIS_PORT: Joi.number().description('Redis Port'),
         COOKIE_MAX_AGE: Joi.number()
             .empty()
             .default(1000 * 60 * 60 * 24 * 30)
@@ -62,8 +65,12 @@ const config = {
     jwt: {
         accessTokenKey: envVars.JWT_ACCESS_TOKEN_KEY,
         refreshTokenKey: envVars.JWT_REFRESH_TOKEN_KEY,
+        verifyTokenKey: envVars.JWT_VERIFY_TOKEN_KEY,
+        resetPasswordTokenKey: envVars.JWT_RESETPASSWORD_TOKEN_KEY,
+        verifyExpiration: envVars.JWT_VERIFY_EXPIRATION,
         accessExpiration: envVars.JWT_ACCESS_EXPIRATION,
         refreshExpiration: envVars.JWT_REFRESH_EXPIRATION,
+        resetPasswordExpiration: envVars.JWT_RESETPASSWORD_EXPIRATION,
     },
     cookie: {
         maxAge: envVars.COOKIE_MAX_AGE,
@@ -76,6 +83,10 @@ const config = {
         messagingSenderId: envVars.FIREBASE_MESSAGING_SENDER_ID,
         appId: envVars.FIREBASE_APP_ID,
         measurementId: envVars.FIREBASE_MEASUREMENT_ID,
+    },
+    redis: {
+        host: envVars.REDIS_HOST,
+        port: envVars.REDIS_PORT,
     },
     vnpayConfig: {
         vnpTmnCode: envVars.VNP_TMNCODE,
@@ -94,6 +105,11 @@ const config = {
     },
     clientDomain: {
         url: envVars.CLIENT_DOMAIN,
+        verify: envVars.VERIFY_URL,
+    },
+    nodeMailer: {
+        email: envVars.EMAIL_USER,
+        password: envVars.EMAIL_PASSWORD,
     },
 };
 
