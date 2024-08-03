@@ -1,14 +1,12 @@
 import { Types } from 'mongoose';
 
 export type CartItem = {
-    productId: Types.ObjectId;
     name: string;
-    price: number;
-    thumbnail: string;
+    productVariation: Types.ObjectId;
     quantity: number;
 };
 
 export type CartData = {
-    userId: string;
+    userId: Types.ObjectId;
     items: CartItem[];
 };

@@ -2,6 +2,7 @@ import { queryClientFields } from '@/constant/queryField/product';
 import { NotFoundError } from '@/error/customError';
 import APIQuery from '@/helpers/apiQuery';
 import customResponse from '@/helpers/response';
+import Cart from '@/models/Cart';
 import Product from '@/models/Product';
 import ProductVariation from '@/models/ProductVariation';
 import { IVariationPlayload } from '@/types/product';
@@ -411,11 +412,22 @@ export const addNewVariationToProduct = async (req: Request, res: Response, next
 export const deleteProduct = async (req: Request, res: Response, next: NextFunction) => {
     const product = await Product.findOneAndUpdate(
         { _id: req.params.id, isDeleted: false },
-        { isDeleted: false },
+        { isDeleted: true },
         { new: true },
     );
     if (!product) {
         throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${req.params.id}`);
+    }
+    const carts = await Cart.find({}).lean();
+    const variationsIds = product?.variationIds;
+
+    if (variationsIds) {
+        for (const variationId of variationsIds) {
+            for (const cart of carts) {
+                const updatedItems = cart.items.filter((item) => String(item.productVariation) !== String(variationId));
+                await Cart.updateOne({ userId: cart.userId }, { $set: { items: updatedItems } }, { new: true });
+            }
+        }
     }
 
     return res
