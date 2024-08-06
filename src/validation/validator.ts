@@ -10,7 +10,6 @@ const validator = async (schemaName: Joi.ObjectSchema, body: object, next: NextF
     });
 
     try {
-        // eslint-disable-next-line no-unused-expressions, @typescript-eslint/no-unused-expressions
         value.error ? next(new BadRequestError(value.error.details[0].message)) : next();
     } catch (error) {
         console.log(error);

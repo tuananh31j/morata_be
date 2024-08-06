@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { ROLE } from '@/constant/allowedRoles';
+import { IUserSchema } from '@/interfaces/schema/user';
 
 const UserSchema = new mongoose.Schema(
     {
@@ -62,4 +63,4 @@ UserSchema.methods.toJSON = function () {
     return obj;
 };
 
-export default mongoose.model('User', UserSchema);
+export default mongoose.model<IUserSchema>('User', UserSchema);

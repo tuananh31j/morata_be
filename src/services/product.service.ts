@@ -286,7 +286,6 @@ export const createNewProduct = async (req: Request, res: Response, next: NextFu
         });
     }
 
-    console.log(JSON.parse(req.body.variationsString), 'variationObjs', req.body.variationsString);
     const attributes = JSON.parse(req.body.attributes);
     const kk = JSON.parse(req.body.variationsString);
     delete req.body.variationImages;

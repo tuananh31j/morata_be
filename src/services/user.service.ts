@@ -1,9 +1,13 @@
 import User from '@/models/User';
 import Location from '@/models/Location';
 import { removeUploadedFile, uploadSingleFile } from '@/utils/files';
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import _ from 'lodash';
 import { LOCATION_TYPES } from '@/constant/location';
+import { ReasonPhrases, StatusCodes } from 'http-status-codes';
+import customResponse from '@/helpers/response';
+import APIQuery from '@/helpers/apiQuery';
+import { NotFoundError } from '@/error/customError';
 
 export const getUserProfile = async (req: Request, res: Response) => {
     const profileData = await User.findById(req.userId).lean();
@@ -13,15 +17,88 @@ export const getUserProfile = async (req: Request, res: Response) => {
     const result = _.pick(profileData, ['username', 'email', 'avatar', 'phone', 'address', 'role', 'isActive', '_id']);
     return { ...result, address };
 };
-export const getAllUsers = async (req: Request, res: Response) => {
-    const profileData = await User.findById(req.userId).lean();
 
-    const address = await Location.findOne({ user: req.userId, type: LOCATION_TYPES.DEFAULT }).lean();
+// @Get: getAllUsers
+export const getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
+    const page = req.query.page ? +req.query.page : 1;
+    const features = new APIQuery(User.find({}).select('-password -avatarRef'), req.query);
+    features.filter().sort().limitFields().search().paginate();
 
-    const result = _.pick(profileData, ['username', 'email', 'avatar', 'phone', 'address', 'role', 'isActive', '_id']);
-    return { ...result, address };
+    const [data, totalDocs] = await Promise.all([features.query, features.count()]);
+    const totalPages = Math.ceil(Number(totalDocs) / page);
+    return res.status(StatusCodes.OK).json(
+        customResponse({
+            data: {
+                products: data,
+                page: page,
+                totalDocs: totalDocs,
+                totalPages: totalPages,
+            },
+            success: true,
+            status: StatusCodes.OK,
+            message: ReasonPhrases.OK,
+        }),
+    );
 };
 
+// @Get: getUserDetails
+export const getUserDetails = async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.params;
+    const user = await User.findById(userId).select('-password').lean();
+    if (!user) throw new NotFoundError(`${ReasonPhrases.NOT_FOUND}/ID: ${userId}`);
+    return res.status(StatusCodes.OK).json(
+        customResponse({
+            data: user,
+            success: true,
+            status: StatusCodes.OK,
+            message: ReasonPhrases.OK,
+        }),
+    );
+};
+// @Get: updateUser
+export const updateUser = async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.params;
+    const file = req.file as any;
+    const user = await User.findById(userId).select('-password');
+    if (!user) throw new NotFoundError(`${ReasonPhrases.NOT_FOUND}/ID: ${userId}`);
+    if (file) {
+        if (user.avatarRef) await removeUploadedFile(user.avatarRef);
+        const { downloadURL, urlRef } = await uploadSingleFile(file, 'files');
+        req.body.avatar = downloadURL;
+        req.body.avatarRef = urlRef;
+    }
+    user.set(req.body);
+    await user.save();
+
+    return res.status(StatusCodes.OK).json(
+        customResponse({
+            data: user,
+            success: true,
+            status: StatusCodes.OK,
+            message: ReasonPhrases.OK,
+        }),
+    );
+};
+// @Get: createUser
+export const createUser = async (req: Request, res: Response, next: NextFunction) => {
+    const file = req.file as any;
+    if (file) {
+        const { downloadURL, urlRef } = await uploadSingleFile(file, 'files');
+        req.body.avatar = downloadURL;
+        req.body.avatarRef = urlRef;
+    }
+    const user = await User.create(req.body);
+    return res.status(StatusCodes.OK).json(
+        customResponse({
+            data: user,
+            success: true,
+            status: StatusCodes.OK,
+            message: ReasonPhrases.OK,
+        }),
+    );
+};
+
+// @Patch: updateUserProfile
 export const updateUserProfile = async (req: Request, res: Response) => {
     const file = req.file as any;
 
