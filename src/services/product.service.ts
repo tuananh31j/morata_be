@@ -372,9 +372,8 @@ export const updateProductVariation = async (req: Request, res: Response, next: 
         variant.image = fileUrls[0];
         variant.imageUrlRef = fileUrlRefs[0];
     }
-
-    productVariation.set({ ...productVariation, ...variant });
-    productVariation.save();
+    productVariation.set({ ...variant });
+    await productVariation.save();
 
     return res.status(StatusCodes.OK).json(
         customResponse({
@@ -402,7 +401,7 @@ export const addNewVariationToProduct = async (req: Request, res: Response, next
 
     const newVariation = await ProductVariation.create({ ...variant, productId });
     product.set({ variationIds: [...product.variationIds, newVariation._id] });
-    product.save();
+    await product.save();
     return res.status(StatusCodes.OK).json(
         customResponse({
             data: product,

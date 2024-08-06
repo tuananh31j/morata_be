@@ -13,6 +13,14 @@ export const getUserProfile = async (req: Request, res: Response) => {
     const result = _.pick(profileData, ['username', 'email', 'avatar', 'phone', 'address', 'role', 'isActive', '_id']);
     return { ...result, address };
 };
+export const getAllUsers = async (req: Request, res: Response) => {
+    const profileData = await User.findById(req.userId).lean();
+
+    const address = await Location.findOne({ user: req.userId, type: LOCATION_TYPES.DEFAULT }).lean();
+
+    const result = _.pick(profileData, ['username', 'email', 'avatar', 'phone', 'address', 'role', 'isActive', '_id']);
+    return { ...result, address };
+};
 
 export const updateUserProfile = async (req: Request, res: Response) => {
     const file = req.file as any;
