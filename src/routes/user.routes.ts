@@ -9,6 +9,9 @@ import { Router } from 'express';
 const router = Router();
 
 router.get('/private', authenticate, userController.getUserProfile);
+router.get('/private/wish-list', authenticate, userController.getWishListByUser);
+router.patch('/private/wish-list/add', authenticate, userController.addWishList);
+router.patch('/private/wish-list/remove', authenticate, userController.deleteWishList);
 router.patch('/private', authenticate, upload.single('avatar'), userController.updateUserProfile);
 
 router.get('/all', authenticate, authorize(ROLE.ADMIN), userController.getAllUsers);

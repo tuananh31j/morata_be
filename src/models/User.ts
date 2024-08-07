@@ -41,6 +41,7 @@ const UserSchema = new mongoose.Schema(
             default: ROLE.USER,
             enum: [ROLE.USER, ROLE.ADMIN, ROLE.SUPER_ADMIN],
         },
+        wishList: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product', default: [] }],
     },
     {
         timestamps: true,
@@ -63,4 +64,6 @@ UserSchema.methods.toJSON = function () {
     return obj;
 };
 
-export default mongoose.model<IUserSchema>('User', UserSchema);
+const User = mongoose.model<IUserSchema>('User', UserSchema);
+
+export default User;

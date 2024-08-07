@@ -10,12 +10,18 @@ import APIQuery from '@/helpers/apiQuery';
 import { NotFoundError } from '@/error/customError';
 
 export const getUserProfile = async (req: Request, res: Response) => {
-    const profileData = await User.findById(req.userId).lean();
-
-    const address = await Location.findOne({ user: req.userId, type: LOCATION_TYPES.DEFAULT }).lean();
-
-    const result = _.pick(profileData, ['username', 'email', 'avatar', 'phone', 'address', 'role', 'isActive', '_id']);
-    return { ...result, address };
+    const userId = req.userId;
+    const profileData = await User.findById(userId)
+        .select(['username', 'email', 'avatar', 'phone', 'role', 'isActive'])
+        .lean();
+    return res.status(StatusCodes.OK).json(
+        customResponse({
+            data: profileData,
+            success: true,
+            status: StatusCodes.OK,
+            message: ReasonPhrases.OK,
+        }),
+    );
 };
 
 // @Get: getAllUsers
@@ -44,11 +50,14 @@ export const getAllUsers = async (req: Request, res: Response, next: NextFunctio
 // @Get: getUserDetails
 export const getUserDetails = async (req: Request, res: Response, next: NextFunction) => {
     const { userId } = req.params;
-    const user = await User.findById(userId).select('-password').lean();
+    const [user, location] = await Promise.all([
+        User.findById(userId).select('-password').lean(),
+        Location.findOne({ user: userId }).lean(),
+    ]);
     if (!user) throw new NotFoundError(`${ReasonPhrases.NOT_FOUND}/ID: ${userId}`);
     return res.status(StatusCodes.OK).json(
         customResponse({
-            data: user,
+            data: { user, location },
             success: true,
             status: StatusCodes.OK,
             message: ReasonPhrases.OK,
@@ -120,4 +129,47 @@ export const updateUserProfile = async (req: Request, res: Response) => {
 
     const profileData = await User.findByIdAndUpdate(req.userId, req.body, { new: true }).lean();
     return { profileData, userAddress };
+};
+
+// @Patch: Add wishlist
+export const addWishList = async (req: Request, res: Response) => {
+    const userId = req.userId;
+    const productId = req.body.productId;
+    const user = await User.findByIdAndUpdate(userId, { $addToSet: { wishList: productId } }, { new: true }).lean();
+
+    return res.status(StatusCodes.OK).json(
+        customResponse({
+            data: user,
+            success: true,
+            status: StatusCodes.OK,
+            message: ReasonPhrases.OK,
+        }),
+    );
+};
+// @Patch: delete wishlist
+export const deleteWishList = async (req: Request, res: Response) => {
+    const userId = req.userId;
+    const productId = req.body.productId;
+    const user = await User.findByIdAndUpdate(userId, { $pull: { wishList: productId } }, { new: true }).lean();
+    return res.status(StatusCodes.OK).json(
+        customResponse({
+            data: user,
+            success: true,
+            status: StatusCodes.OK,
+            message: ReasonPhrases.OK,
+        }),
+    );
+};
+// @Get: get wishlist by user
+export const getWishListByUser = async (req: Request, res: Response) => {
+    const userId = req.userId;
+    const whislist = await User.findById(userId).select('wishList').populate('wishList').lean();
+    return res.status(StatusCodes.OK).json(
+        customResponse({
+            data: whislist,
+            success: true,
+            status: StatusCodes.OK,
+            message: ReasonPhrases.OK,
+        }),
+    );
 };
