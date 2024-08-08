@@ -36,6 +36,7 @@ const clientRequiredFields = { isDeleted: false, isAvailable: true };
 // @Get: getAllProducts
 export const getAllProducts = async (req: Request, res: Response, next: NextFunction) => {
     const page = req.query.page ? +req.query.page : 1;
+
     const features = new APIQuery(
         Product.find({ ...clientRequiredFields })
             .populate(populateVariation)

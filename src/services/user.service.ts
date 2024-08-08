@@ -8,6 +8,7 @@ import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import customResponse from '@/helpers/response';
 import APIQuery from '@/helpers/apiQuery';
 import { NotFoundError } from '@/error/customError';
+import { el } from 'date-fns/locale';
 
 export const getUserProfile = async (req: Request, res: Response) => {
     const userId = req.userId;
@@ -119,8 +120,9 @@ export const updateUserProfile = async (req: Request, res: Response) => {
         const { downloadURL, urlRef } = await uploadSingleFile(file, 'avatars');
         req.body.avatar = downloadURL;
         req.body.avatarRef = urlRef;
+    } else {
+        delete req.body.avatar;
     }
-
     const userAddress = await Location.findOneAndUpdate(
         { user: req.userId, type: LOCATION_TYPES.DEFAULT },
         req.body.address,
@@ -128,7 +130,14 @@ export const updateUserProfile = async (req: Request, res: Response) => {
     ).lean();
 
     const profileData = await User.findByIdAndUpdate(req.userId, req.body, { new: true }).lean();
-    return { profileData, userAddress };
+    return res.status(StatusCodes.OK).json(
+        customResponse({
+            data: { profileData, userAddress },
+            success: true,
+            status: StatusCodes.OK,
+            message: ReasonPhrases.OK,
+        }),
+    );
 };
 
 // @Patch: Add wishlist
@@ -163,7 +172,19 @@ export const deleteWishList = async (req: Request, res: Response) => {
 // @Get: get wishlist by user
 export const getWishListByUser = async (req: Request, res: Response) => {
     const userId = req.userId;
-    const whislist = await User.findById(userId).select('wishList').populate('wishList').lean();
+
+    const whislist = await User.findById(userId)
+        .select('wishList')
+        .populate({
+            path: 'wishList',
+            populate: {
+                path: 'variationIds',
+                select: 'price image sku color productId stock variantAttributes imageUrlRef',
+                model: 'ProductVariation',
+                options: { sort: 'price' },
+            },
+        })
+        .lean();
     return res.status(StatusCodes.OK).json(
         customResponse({
             data: whislist,
