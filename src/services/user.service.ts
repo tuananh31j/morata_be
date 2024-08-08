@@ -35,7 +35,7 @@ export const getAllUsers = async (req: Request, res: Response, next: NextFunctio
     return res.status(StatusCodes.OK).json(
         customResponse({
             data: {
-                products: data,
+                users: data,
                 page: page,
                 totalDocs: totalDocs,
                 totalPages: totalPages,
