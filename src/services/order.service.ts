@@ -2,6 +2,7 @@ import { ROLE } from '@/constant/allowedRoles';
 import { ORDER_STATUS } from '@/constant/order';
 import { BadRequestError, NotAcceptableError, NotFoundError } from '@/error/customError';
 import customResponse from '@/helpers/response';
+import { ItemOrder, OrderSchema } from '@/interfaces/schema/order';
 import Order from '@/models/Order';
 import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
@@ -113,7 +114,6 @@ export const getAllOrdersByUser = async (req: Request, res: Response, next: Next
     const orders = data.docs.map((order) => {
         return _.pick(order, ['_id', 'totalPrice', 'paymentMethod', 'isPaid', 'orderStatus', 'createdAt']);
     });
-
     return res.status(StatusCodes.OK).json(
         customResponse({
             data: {
@@ -138,7 +138,7 @@ export const getDetailedOrder = async (req: Request, res: Response, next: NextFu
         throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} order with id: ${req.params.id}`);
     }
 
-    const result = _.omit(order, ['_id', 'updatedAt']);
+    const result = _.omit(order, ['updatedAt']);
 
     return res
         .status(StatusCodes.OK)
@@ -270,4 +270,21 @@ export const finishOrder = async (req: Request, res: Response, next: NextFunctio
     return res
         .status(StatusCodes.OK)
         .json(customResponse({ data: null, success: true, status: StatusCodes.OK, message: 'Your order is done.' }));
+};
+
+//@ update item to is reviewed in order
+export const updateItemToIsReviewed = async (req: Request, res: Response, next: NextFunction) => {
+    const order = await Order.findById(req.body.orderId).lean();
+
+    if (!order) throw new BadRequestError(`Not found order with id ${req.body.orderId}`);
+
+    const newItems = order?.items?.map((item: ItemOrder) =>
+        item.productId === req.body.productId ? { ...item, isReviewed: true } : item,
+    );
+
+    await Order.updateOne({ _id: req.body.orderId }, { items: newItems }, { new: true });
+
+    return res
+        .status(StatusCodes.OK)
+        .json(customResponse({ data: req.body, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
 };
