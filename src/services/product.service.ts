@@ -36,6 +36,7 @@ const clientRequiredFields = { isDeleted: false, isAvailable: true };
 // @Get: getAllProducts
 export const getAllProducts = async (req: Request, res: Response, next: NextFunction) => {
     const page = req.query.page ? +req.query.page : 1;
+
     const features = new APIQuery(
         Product.find({ ...clientRequiredFields })
             .populate(populateVariation)
@@ -286,7 +287,6 @@ export const createNewProduct = async (req: Request, res: Response, next: NextFu
         });
     }
 
-    console.log(JSON.parse(req.body.variationsString), 'variationObjs', req.body.variationsString);
     const attributes = JSON.parse(req.body.attributes);
     const kk = JSON.parse(req.body.variationsString);
     delete req.body.variationImages;
@@ -372,9 +372,8 @@ export const updateProductVariation = async (req: Request, res: Response, next: 
         variant.image = fileUrls[0];
         variant.imageUrlRef = fileUrlRefs[0];
     }
-
-    productVariation.set({ ...productVariation, ...variant });
-    productVariation.save();
+    productVariation.set({ ...variant });
+    await productVariation.save();
 
     return res.status(StatusCodes.OK).json(
         customResponse({
@@ -402,7 +401,7 @@ export const addNewVariationToProduct = async (req: Request, res: Response, next
 
     const newVariation = await ProductVariation.create({ ...variant, productId });
     product.set({ variationIds: [...product.variationIds, newVariation._id] });
-    product.save();
+    await product.save();
     return res.status(StatusCodes.OK).json(
         customResponse({
             data: product,

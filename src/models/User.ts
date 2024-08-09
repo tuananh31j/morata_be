@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { ROLE } from '@/constant/allowedRoles';
+import { IUserSchema } from '@/interfaces/schema/user';
 
 const UserSchema = new mongoose.Schema(
     {
@@ -40,6 +41,7 @@ const UserSchema = new mongoose.Schema(
             default: ROLE.USER,
             enum: [ROLE.USER, ROLE.ADMIN, ROLE.SUPER_ADMIN],
         },
+        wishList: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product', default: [] }],
     },
     {
         timestamps: true,
@@ -62,4 +64,6 @@ UserSchema.methods.toJSON = function () {
     return obj;
 };
 
-export default mongoose.model('User', UserSchema);
+const User = mongoose.model<IUserSchema>('User', UserSchema);
+
+export default User;
