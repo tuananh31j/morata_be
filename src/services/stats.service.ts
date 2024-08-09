@@ -206,27 +206,10 @@ export const orderByMonthStats = async (req: Request, res: Response, next: NextF
             $project: {
                 _id: 0,
                 month: {
-                    $let: {
-                        vars: {
-                            monthNames: [
-                                'Jan',
-                                'Feb',
-                                'Mar',
-                                'Apr',
-                                'May',
-                                'Jun',
-                                'Jul',
-                                'Aug',
-                                'Sep',
-                                'Oct',
-                                'Nov',
-                                'Dec',
-                            ],
-                        },
-                        in: {
-                            $arrayElemAt: ['$$monthNames', { $subtract: ['$_id.month', 1] }],
-                        },
-                    },
+                    $arrayElemAt: [
+                        ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                        { $subtract: ['$_id.month', 1] },
+                    ],
                 },
                 year: '$_id.year',
                 totalOrders: 1,
@@ -234,11 +217,27 @@ export const orderByMonthStats = async (req: Request, res: Response, next: NextF
             },
         },
         {
-            $sort: { month: 1 },
+            $sort: { '_id.month': 1 },
         },
     ]);
 
-    return data;
+    // Tạo mảng đầy đủ 12 tháng
+    const fullYearData = Array.from({ length: 12 }, (_, i) => ({
+        month: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i],
+        year: parseInt(year as string),
+        totalOrders: 0,
+        totalRevenue: 0,
+    }));
+
+    // Merge dữ liệu thực tế vào mảng đầy đủ
+    data.forEach((item) => {
+        const index = fullYearData.findIndex((d) => d.month === item.month);
+        if (index !== -1) {
+            fullYearData[index] = item;
+        }
+    });
+
+    return fullYearData;
 };
 
 export const orderByYearStats = async (req: Request, res: Response, next: NextFunction) => {
