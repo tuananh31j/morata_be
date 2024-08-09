@@ -5,6 +5,8 @@ import { NextFunction, Request, Response } from 'express';
 import moment from 'moment';
 import { parse, format, eachDayOfInterval, startOfDay, endOfDay, isValid } from 'date-fns';
 import { PipelineStage } from 'mongoose';
+import { ReasonPhrases, StatusCodes } from 'http-status-codes';
+import customResponse from '@/helpers/response';
 
 interface DateStats {
     date: string;
@@ -27,33 +29,87 @@ interface ProductStat {
 }
 
 export const totalStats = async (req: Request, res: Response, next: NextFunction) => {
-    const totalUsers = await User.countDocuments();
-    const totalProducts = await Product.countDocuments();
+    const { dateFilter, startDate, endDate, month, year } = req.query;
 
-    // Đếm tổng số đơn hàng, loại trừ đơn hàng đã hủy
-    const totalOrders = await Order.countDocuments({ orderStatus: { $ne: 'cancelled' } });
+    let start: Date, end: Date;
 
-    // Tính tổng doanh thu từ các đơn hàng thành công
-    const totalRevenue = await Order.aggregate([
-        {
-            $match: { orderStatus: 'done' },
-        },
-        {
-            $group: {
-                _id: null,
-                total: { $sum: '$totalPrice' },
+    if (dateFilter === 'range' && startDate && endDate) {
+        start = moment(startDate as string, 'DD-MM-YYYY')
+            .startOf('day')
+            .toDate();
+        end = moment(endDate as string, 'DD-MM-YYYY')
+            .endOf('day')
+            .toDate();
+    } else if (month && year) {
+        start = moment(`01-${month}-${year}`, 'DD-MM-YYYY').startOf('day').toDate();
+        end = moment(`01-${+month + 1}-${year}`, 'DD-MM-YYYY')
+            .subtract(1, 'days')
+            .endOf('day')
+            .toDate();
+    } else if (year) {
+        start = moment(`01-01-${year}`, 'DD-MM-YYYY').startOf('day').toDate();
+        end = moment(`31-12-${year}`, 'DD-MM-YYYY').endOf('day').toDate();
+    } else if (dateFilter === 'single' && startDate) {
+        start = moment(startDate as string, 'DD-MM-YYYY')
+            .startOf('day')
+            .toDate();
+        end = moment(startDate as string, 'DD-MM-YYYY')
+            .endOf('day')
+            .toDate();
+    } else {
+        return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid date filter' });
+    }
+
+    const [totalOrders, cancelledOrders, totalRevenue, newUsers, newProducts] = await Promise.all([
+        Order.countDocuments({ createdAt: { $gte: start, $lte: end } }),
+        Order.countDocuments({ createdAt: { $gte: start, $lte: end }, orderStatus: 'cancelled' }),
+        Order.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: start, $lte: end },
+                    orderStatus: 'done',
+                },
             },
-        },
-    ]).then((result) => result[0]?.total || 0);
+            {
+                $group: {
+                    _id: null,
+                    total: { $sum: '$totalPrice' },
+                    count: { $sum: 1 },
+                },
+            },
+        ]).then((result) => ({ total: result[0]?.total || 0, count: result[0]?.count || 0 })),
+        User.countDocuments({ createdAt: { $gte: start, $lte: end } }),
+        Product.countDocuments({ createdAt: { $gte: start, $lte: end } }),
+    ]);
+
+    const successfulOrders = totalRevenue.count;
+
+    // Tính các tỷ lệ
+    const orderSuccessRate = totalOrders > 0 ? (successfulOrders / totalOrders) * 100 : 0;
+    const orderCancelRate = totalOrders > 0 ? (cancelledOrders / totalOrders) * 100 : 0;
+
+    // Tính trung bình doanh thu mỗi ngày
+    const daysDiff = moment(end).diff(moment(start), 'days') + 1;
+    const averageDailyRevenue = totalRevenue.total / daysDiff;
 
     return {
-        totalUsers,
-        totalProducts,
-        totalOrders,
-        totalRevenue,
+        data: {
+            totalOrders,
+            cancelledOrders,
+            successfulOrders,
+            totalRevenue: totalRevenue.total,
+            orderSuccessRate: parseFloat(orderSuccessRate.toFixed(2)),
+            orderCancelRate: parseFloat(orderCancelRate.toFixed(2)),
+            newUsers,
+            newProducts,
+            averageDailyRevenue: parseFloat(averageDailyRevenue.toFixed(2)),
+            dateRange: {
+                start: moment(start).format('YYYY-MM-DD'),
+                end: moment(end).format('YYYY-MM-DD'),
+            },
+        },
     };
 };
-
 export const orderByDayStats = async (req: Request, res: Response, next: NextFunction) => {
     let year = new Date().getFullYear();
     let month = new Date().getMonth() + 1;
@@ -115,7 +171,27 @@ export const orderByDayStats = async (req: Request, res: Response, next: NextFun
 };
 
 export const orderByMonthStats = async (req: Request, res: Response, next: NextFunction) => {
+    const { year } = req.query;
+
+    if (!year) {
+        return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Year is required' });
+    }
+
+    const startDate = moment(`01-01-${year as string}`, 'DD-MM-YYYY')
+        .startOf('day')
+        .toDate();
+    const endDate = moment(`31-12-${year as string}`, 'DD-MM-YYYY')
+        .endOf('day')
+        .toDate();
+
     const data = await Order.aggregate([
+        {
+            $match: {
+                createdAt: { $gte: startDate, $lte: endDate },
+                orderStatus: 'done',
+                isPaid: true,
+            },
+        },
         {
             $group: {
                 _id: {
@@ -129,37 +205,63 @@ export const orderByMonthStats = async (req: Request, res: Response, next: NextF
         {
             $project: {
                 _id: 0,
-                month: '$_id.month',
+                month: {
+                    $let: {
+                        vars: {
+                            monthNames: [
+                                'Jan',
+                                'Feb',
+                                'Mar',
+                                'Apr',
+                                'May',
+                                'Jun',
+                                'Jul',
+                                'Aug',
+                                'Sep',
+                                'Oct',
+                                'Nov',
+                                'Dec',
+                            ],
+                        },
+                        in: {
+                            $arrayElemAt: ['$$monthNames', { $subtract: ['$_id.month', 1] }],
+                        },
+                    },
+                },
                 year: '$_id.year',
                 totalOrders: 1,
                 totalRevenue: 1,
             },
         },
         {
-            $sort: { year: 1, month: 1 },
+            $sort: { month: 1 },
         },
     ]);
 
-    const stats = data.map((stat) => ({
-        month: moment(`${stat.year}-${stat.month}-01`).format('MMM'),
-        totalOrders: stat.totalOrders,
-        totalRevenue: stat.totalRevenue,
-    }));
-
-    return stats;
+    return data;
 };
 
 export const orderByYearStats = async (req: Request, res: Response, next: NextFunction) => {
-    const pipeline: PipelineStage[] = [
+    const { year } = req.query;
+
+    if (!year) {
+        return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Year is required' });
+    }
+
+    const start = moment(`01-01-${year}`, 'DD-MM-YYYY').startOf('day').toDate();
+    const end = moment(`31-12-${year}`, 'DD-MM-YYYY').endOf('day').toDate();
+
+    const pipeline: any[] = [
         {
             $match: {
+                createdAt: { $gte: start, $lte: end },
                 orderStatus: { $ne: 'cancelled' }, // Loại bỏ đơn hàng bị hủy
             },
         },
         {
             $group: {
                 _id: {
-                    year: { $year: '$createdAt' },
+                    month: { $month: '$createdAt' },
                 },
                 totalOrders: { $sum: 1 },
                 totalRevenue: {
@@ -172,36 +274,48 @@ export const orderByYearStats = async (req: Request, res: Response, next: NextFu
         {
             $project: {
                 _id: 0,
-                year: '$_id.year',
+                month: '$_id.month',
                 totalOrders: 1,
                 totalRevenue: 1,
             },
         },
         {
-            $sort: { year: 1 },
+            $sort: { month: 1 },
         },
     ];
 
     const data = await Order.aggregate(pipeline);
-    return data;
-};
 
-export const findTop5Buyers = async (req: Request, res: Response, next: NextFunction) => {};
+    // Tính tổng số đơn hàng và tổng doanh thu cho cả năm
+    const totalOrders = data.reduce((acc, curr) => acc + curr.totalOrders, 0);
+    const totalRevenue = data.reduce((acc, curr) => acc + curr.totalRevenue, 0);
 
-export const orderByDateRangeStats = async (startDate: string, endDate: string): Promise<DateStats[]> => {
-    const parseDate = (dateString: string): moment.Moment => {
-        const parsedDate = moment(dateString, 'DD-MM-YYYY');
-        if (!parsedDate.isValid()) {
-            throw new Error('Ngày không hợp lệ. Vui lòng sử dụng định dạng DD-MM-YYYY.');
-        }
-        return parsedDate;
+    return {
+        data: {
+            year: parseInt(year as string, 10),
+            months: data,
+            totalOrders,
+            totalRevenue,
+        },
     };
+};
+export const orderByDateRangeStats = async (req: Request, res: Response, next: NextFunction) => {
+    const { startDate, endDate } = req.query;
 
-    // Chuyển đổi thời gian địa phương sang UTC
-    const start = parseDate(startDate).startOf('day').subtract(7, 'hours').toDate();
-    const end = parseDate(endDate).endOf('day').subtract(7, 'hours').toDate();
+    let start: Date, end: Date;
 
-    const aggregationPipeline: PipelineStage[] = [
+    if (startDate && endDate) {
+        start = moment(startDate as string, 'DD-MM-YYYY')
+            .startOf('day')
+            .toDate();
+        end = moment(endDate as string, 'DD-MM-YYYY')
+            .endOf('day')
+            .toDate();
+    } else {
+        return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid date range' });
+    }
+
+    const pipeline: any[] = [
         {
             $match: {
                 createdAt: { $gte: start, $lte: end },
@@ -213,7 +327,7 @@ export const orderByDateRangeStats = async (startDate: string, endDate: string):
                 _id: {
                     $dateToString: {
                         format: '%Y-%m-%d',
-                        date: { $add: ['$createdAt', 7 * 60 * 60 * 1000] }, // Thêm 7 giờ để chuyển về múi giờ Việt Nam
+                        date: '$createdAt',
                     },
                 },
                 totalOrders: { $sum: 1 },
@@ -235,15 +349,15 @@ export const orderByDateRangeStats = async (startDate: string, endDate: string):
         { $sort: { date: 1 } },
     ];
 
-    const data: AggregationResult[] = await Order.aggregate(aggregationPipeline);
+    const data = await Order.aggregate(pipeline);
 
-    const allDates: DateStats[] = [];
-    const currentDate = moment(start).add(7, 'hours');
-    const lastDate = moment(end).add(7, 'hours');
+    const allDates = [];
+    const currentDate = moment(start);
+    const lastDate = moment(end);
 
     while (currentDate <= lastDate) {
         const dateString = currentDate.format('DD-MM-YYYY');
-        const existingStat = data.find((s) => moment(s.date).format('DD-MM-YYYY') === dateString) || {
+        const existingStat = data.find((s) => s.date === currentDate.format('YYYY-MM-DD')) || {
             totalOrders: 0,
             totalRevenue: 0,
         };
@@ -259,84 +373,154 @@ export const orderByDateRangeStats = async (startDate: string, endDate: string):
 };
 
 export const getProductStats = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const { startDate, endDate } = req.query;
+    const { startDate, endDate } = req.query;
 
-        if (!startDate || !endDate) {
-            throw new Error('Start date and end date are required');
-        }
+    let start: Date, end: Date;
 
-        const parseDate = (dateString: string): Date => {
-            const parsedDate = moment(dateString, 'DD-MM-YYYY');
-            if (!parsedDate.isValid()) {
-                throw new Error('Invalid date. Please use DD-MM-YYYY format.');
-            }
-            return parsedDate.toDate();
-        };
-
-        // Convert local time to UTC
-        const start = moment(parseDate(startDate as string))
+    if (startDate && endDate) {
+        start = moment(startDate as string, 'DD-MM-YYYY')
             .startOf('day')
-            .subtract(7, 'hours')
             .toDate();
-        const end = moment(parseDate(endDate as string))
+        end = moment(endDate as string, 'DD-MM-YYYY')
             .endOf('day')
-            .subtract(7, 'hours')
             .toDate();
+    } else {
+        return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid date range' });
+    }
 
-        const pipeline: PipelineStage[] = [
-            // Match orders within the date range and only 'done' status
-            {
-                $match: {
-                    createdAt: { $gte: start, $lte: end },
-                    orderStatus: 'done',
-                },
+    const pipeline: any[] = [
+        {
+            $match: {
+                createdAt: { $gte: start, $lte: end },
+                orderStatus: 'done',
             },
-            // Unwind to process each item in the items array
-            { $unwind: '$items' },
-            // Group by product
-            {
-                $group: {
-                    _id: '$items.productId',
-                    name: { $first: '$items.name' },
-                    totalQuantity: { $sum: '$items.quantity' },
-                    totalRevenue: { $sum: { $multiply: ['$items.quantity', '$items.price'] } },
-                    image: { $first: '$items.image' },
-                    price: { $first: '$items.price' },
-                },
+        },
+        { $unwind: '$items' },
+        {
+            $group: {
+                _id: '$items.productId',
+                name: { $first: '$items.name' },
+                totalQuantity: { $sum: '$items.quantity' },
+                totalRevenue: { $sum: { $multiply: ['$items.quantity', '$items.price'] } },
+                image: { $first: '$items.image' },
+                price: { $first: '$items.price' },
             },
-            // Sort by totalQuantity to get top/bottom
-            { $sort: { totalQuantity: -1 } },
-        ];
+        },
+        { $sort: { totalQuantity: -1 } },
+    ];
 
-        const allProductStats: ProductStat[] = await Order.aggregate(pipeline);
+    const allProductStats = await Order.aggregate(pipeline);
 
-        // Get top 5 best-selling products
-        const topSellingProducts = allProductStats.slice(0, 5);
+    // Get top 5 best-selling products
+    const topSellingProducts = allProductStats.slice(0, 5);
 
-        // Get top 5 least-selling products
-        const leastSellingProducts = allProductStats.slice(-5).reverse();
+    // Get top 5 least-selling products
+    const leastSellingProducts = allProductStats.slice(-5).reverse();
 
-        // Get total number of products to calculate percentage
-        const totalProducts = await Product.countDocuments({ isDeleted: false, isHide: false });
+    // Get total number of products to calculate percentage
+    const totalProducts = await Product.countDocuments({ isDeleted: false, isHide: false });
 
-        // Add percentage information to the results
-        const addPercentage = (products: ProductStat[]) => {
-            return products.map((product) => ({
-                ...product,
-                percentageOfTotal: ((product.totalQuantity / totalProducts) * 100).toFixed(2),
-            }));
-        };
+    // Add percentage information to the results
+    const addPercentage = (products: any[]) => {
+        return products.map((product) => ({
+            ...product,
+            percentageOfTotal: ((product.totalQuantity / totalProducts) * 100).toFixed(2),
+        }));
+    };
 
-        return {
+    return {
+        data: {
             topSellingProducts: addPercentage(topSellingProducts),
             leastSellingProducts: addPercentage(leastSellingProducts),
             dateRange: {
-                start: moment(start).add(7, 'hours').format('DD-MM-YYYY'),
-                end: moment(end).add(7, 'hours').format('DD-MM-YYYY'),
+                start: moment(start).format('DD-MM-YYYY'),
+                end: moment(end).format('DD-MM-YYYY'),
             },
-        };
-    } catch (error) {
-        next(error);
+        },
+    };
+};
+
+export const findTop5Buyers = async (req: Request, res: Response, next: NextFunction) => {
+    const { dateFilter, startDate, endDate, month, year } = req.query;
+
+    let start: Date, end: Date;
+
+    if (dateFilter === 'range' && startDate && endDate) {
+        start = moment(startDate as string, 'DD-MM-YYYY')
+            .startOf('day')
+            .toDate();
+        end = moment(endDate as string, 'DD-MM-YYYY')
+            .endOf('day')
+            .toDate();
+    } else if (month && year) {
+        start = moment(`01-${month}-${year}`, 'DD-MM-YYYY').startOf('day').toDate();
+        end = moment(`01-${+month + 1}-${year}`, 'DD-MM-YYYY')
+            .subtract(1, 'days')
+            .endOf('day')
+            .toDate();
+    } else if (year) {
+        start = moment(`01-01-${year}`, 'DD-MM-YYYY').startOf('day').toDate();
+        end = moment(`31-12-${year}`, 'DD-MM-YYYY').endOf('day').toDate();
+    } else {
+        return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid date filter' });
     }
+
+    const pipeline: any[] = [
+        {
+            $match: {
+                createdAt: { $gte: start, $lte: end },
+                orderStatus: 'done',
+                isPaid: true,
+            },
+        },
+        {
+            $group: {
+                _id: '$userId',
+                totalOrders: { $sum: 1 },
+                totalSpent: { $sum: '$totalPrice' },
+                totalItems: { $sum: { $size: '$items' } },
+                lastOrderDate: { $max: '$createdAt' },
+            },
+        },
+        {
+            $lookup: {
+                from: 'users',
+                localField: '_id',
+                foreignField: '_id',
+                as: 'userInfo',
+            },
+        },
+        {
+            $unwind: '$userInfo',
+        },
+        {
+            $project: {
+                _id: 1,
+                totalOrders: 1,
+                totalSpent: 1,
+                totalItems: 1,
+                lastOrderDate: 1,
+                name: '$userInfo.username',
+                email: '$userInfo.email',
+                phone: '$userInfo.phone',
+                avatar: '$userInfo.avatar',
+            },
+        },
+        {
+            $sort: { totalSpent: -1 },
+        },
+        {
+            $limit: 5,
+        },
+    ];
+
+    const topBuyers = await Order.aggregate(pipeline);
+
+    return {
+        topBuyers,
+        dateRange: {
+            start: moment(start).format('DD-MM-YYYY'),
+            end: moment(end).format('DD-MM-YYYY'),
+        },
+    };
 };
