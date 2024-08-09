@@ -76,6 +76,8 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
         const { downloadURL, urlRef } = await uploadSingleFile(file, 'files');
         req.body.avatar = downloadURL;
         req.body.avatarRef = urlRef;
+    } else {
+        delete req.body.avatar;
     }
     user.set(req.body);
     await user.save();
