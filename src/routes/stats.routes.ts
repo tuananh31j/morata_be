@@ -11,5 +11,6 @@ router.get('/monthly', statsController.orderByMonthStats);
 router.get('/yearly', statsController.orderByYearStats);
 router.get('/dateRange', statsController.orderByDateRangeStats);
 router.get('/productStats', statsController.getProductStats);
+router.get('/topBuyers', statsController.getTop5Buyers);
 
 export default router;
