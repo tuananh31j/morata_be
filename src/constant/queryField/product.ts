@@ -4,6 +4,7 @@ export const queryClientFields = {
     images: 1,
     rating: 1,
     reviewCount: 1,
+    attributes: 1,
     discountPercentage: 1,
     categoryId: 1,
     brandId: 1,

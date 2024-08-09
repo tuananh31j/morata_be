@@ -1,3 +1,4 @@
+import { de } from 'date-fns/locale';
 import mongoose, { Query, Document } from 'mongoose';
 
 interface QueryString {
@@ -28,6 +29,12 @@ class APIQuery<T extends Document> {
         const excludedFields = ['page', 'sort', 'limit', 'fields', 'search'];
         excludedFields.forEach((el) => delete queryObj[el]);
 
+        // Remove 'raw' fields from queryObj (remove manual fields)
+        Object.keys(queryObj).forEach((el) => {
+            if (el.includes('raw')) {
+                delete queryObj[el];
+            }
+        });
         if (queryObj.categoryId) {
             queryObj.categoryId = { $in: queryObj.categoryId.split(',') };
         }
@@ -38,6 +45,7 @@ class APIQuery<T extends Document> {
         queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
 
         this.query = this.query.find(JSON.parse(queryStr));
+        console.log(JSON.parse(queryStr), this.queryString);
 
         return this;
     }

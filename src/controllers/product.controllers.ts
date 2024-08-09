@@ -83,3 +83,7 @@ export const updateProductVariation = asyncHandler(async (req: Request, res: Res
 export const deleteProduct = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     return await productService.deleteProduct(req, res, next);
 });
+// @GET: filterProductsBycategory
+export const filterProductsBycategory = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    return await productService.filterProductsBycategory(req, res, next);
+});

@@ -1,6 +1,6 @@
-import { Document } from 'mongoose';
+import { Document, Schema } from 'mongoose';
 
 export interface ICategorySchema extends Document {
     name: string;
-    description: string;
+    attributeIds: Schema.Types.ObjectId[];
 }

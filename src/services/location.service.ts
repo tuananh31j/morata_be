@@ -64,3 +64,16 @@ export const getAllLocationByUser = async (req: Request, res: Response) => {
         }),
     );
 };
+export const getLocationDetails = async (req: Request, res: Response) => {
+    const id = req.params.locationId;
+    const address = await Location.findById(id).lean();
+    if (!address) throw new NotFoundError('Location not found');
+    return res.status(StatusCodes.OK).json(
+        customResponse({
+            data: address,
+            success: true,
+            status: StatusCodes.OK,
+            message: ReasonPhrases.OK,
+        }),
+    );
+};

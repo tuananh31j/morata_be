@@ -16,6 +16,7 @@ router.get('/reviews', productController.getTopReviewsProducts);
 router.get('/related', productController.getTopRelatedProducts);
 router.get('/byCate/:cateId', productController.getAllProductByCategory);
 router.get('/:id', [validateObjectId], productController.getDetailedProduct);
+router.get('/filter/:categoryId', productController.filterProductsBycategory);
 
 // @admin
 router.get('/portal/all', authenticate, authorize(ROLE.ADMIN), productController.getAllProductAdmin);

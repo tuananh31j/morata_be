@@ -84,17 +84,6 @@ export const ProductSchema = new Schema(
     { timestamps: true, versionKey: false },
 );
 
-// ProductSchema.virtual('price').get(async function () {
-//     const productVariantId = this.variationIds[0];
-//     const firtProductVariation = (await mongoose
-//         .model('ProductVariation')
-//         .findById(productVariantId)
-//         .select('price')
-//         .lean()) || { price: 0 };
-
-//     return firtProductVariation.price;
-// });
-
 const Product = mongoose.model<IProductSchema>('Product', ProductSchema);
 
 export default Product;

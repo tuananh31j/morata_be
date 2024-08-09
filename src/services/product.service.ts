@@ -1,8 +1,10 @@
+import { AttributeType } from '@/constant/attributeType';
 import { queryClientFields } from '@/constant/queryField/product';
 import { NotFoundError } from '@/error/customError';
 import APIQuery from '@/helpers/apiQuery';
 import customResponse from '@/helpers/response';
 import Cart from '@/models/Cart';
+import Category from '@/models/Category';
 import Product from '@/models/Product';
 import ProductVariation from '@/models/ProductVariation';
 import { IVariationPlayload } from '@/types/product';
@@ -27,29 +29,90 @@ const populateBrand = {
     select: 'name',
     model: 'Brand',
 };
+// query attribute conversion function for attribute and variant
+const transformQuery = (query: any): { attributeQuery: any; variantQuery: any } => {
+    const queryCopy: any = { ...query };
+    //Delete key not attribute or variant
+    delete queryCopy['price'];
+    delete queryCopy['sort'];
+
+    const attributeQueries: any[] = [];
+    const variantQueries: any[] = [];
+
+    Object.keys(queryCopy).forEach((key) => {
+        const values = queryCopy[key].split(',').map((item: any) => item.split('-').join(' '));
+
+        if (values[0] === 'variant') {
+            const variantValues = values.slice(1);
+            variantQueries.push({
+                variantAttributes: { $elemMatch: { key, value: { $in: variantValues } } },
+            });
+        } else {
+            attributeQueries.push({
+                attributes: { $elemMatch: { key, value: { $in: values } } },
+            });
+        }
+    });
+
+    const combinedVariantQuery = variantQueries.length > 0 ? { $and: variantQueries } : {};
+    const combinedAttributeQuery = attributeQueries.length > 0 ? { $and: attributeQueries } : {};
+
+    return { attributeQuery: combinedAttributeQuery, variantQuery: combinedVariantQuery };
+};
 
 const clientRequiredFields = { isDeleted: false, isAvailable: true };
-// match: {
-//   price: { $gte: 50, $lte: 100 },
-// }
 
 // @Get: getAllProducts
 export const getAllProducts = async (req: Request, res: Response, next: NextFunction) => {
     const page = req.query.page ? +req.query.page : 1;
+    const queryCopy = { ...req.query };
+
+    Object.keys(queryCopy).forEach((el) => {
+        if (!el.includes('raw')) {
+            delete queryCopy[el];
+        }
+    });
+    let queryStr = JSON.stringify(queryCopy);
+    // Remove the word "raw"
+    queryStr = queryStr.replace(/\braw/g, '');
+    // Replace comparison operators
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+
+    // convert back to object
+    const queryVariant = JSON.parse(queryStr);
+    const filterPrice = queryVariant.price ? { price: queryVariant.price } : {};
+    const sortPrice = queryVariant.sort ? { sort: queryVariant.sort } : {};
+    const queryTransformed = transformQuery(queryVariant);
+
+    const populateVariantAndFilter = {
+        path: 'variationIds',
+        select: 'price image sku productId stock variantAttributes imageUrlRef',
+        model: 'ProductVariation',
+        match: { ...queryTransformed.variantQuery, ...filterPrice },
+        options: sortPrice,
+    };
 
     const features = new APIQuery(
-        Product.find({ ...clientRequiredFields })
-            .populate(populateVariation)
-            .select(queryClientFields),
+        Product.find({ ...clientRequiredFields, ...queryTransformed.attributeQuery })
+            .populate(populateVariantAndFilter)
+            .select(queryClientFields)
+            .lean(),
         req.query,
     );
+
     features.filter().sort().limitFields().search().paginate();
     const [data, totalDocs] = await Promise.all([features.query, features.count()]);
     const totalPages = Math.ceil(Number(totalDocs) / page);
+
+    const filteredData = data.filter((item) => item.variationIds.length > 0);
     return res.status(StatusCodes.OK).json(
         customResponse({
             data: {
-                products: data,
+                qrt: queryStr,
+                filte: queryVariant,
+                ok: transformQuery(queryVariant),
+                queryStr: queryStr,
+                products: filteredData,
                 length: data.length,
                 page: page,
                 totalDocs: totalDocs,
@@ -437,4 +500,22 @@ export const deleteProduct = async (req: Request, res: Response, next: NextFunct
     return res
         .status(StatusCodes.OK)
         .json(customResponse({ data: null, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+};
+
+//GET: filterProductsBycategory
+export const filterProductsBycategory = async (req: Request, res: Response, next: NextFunction) => {
+    const categoryId = req.params.categoryId || null;
+    const category = await Category.findById(categoryId, { attributeIds: 1 }).populate('attributeIds').lean();
+    if (!category) throw new NotFoundError('Category not found');
+    const filteredAttributes = category.attributeIds.filter((attr: any) => {
+        return attr.type === AttributeType.Options;
+    });
+    return res.status(StatusCodes.OK).json(
+        customResponse({
+            data: filteredAttributes,
+            success: true,
+            status: StatusCodes.OK,
+            message: ReasonPhrases.OK,
+        }),
+    );
 };

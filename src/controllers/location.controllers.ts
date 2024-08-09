@@ -18,3 +18,7 @@ export const deleteLocation = asyncHandler(async (req: Request, res: Response) =
     const locations = await locationService.deleteLocation(req, res);
     return locations;
 });
+export const getLocationDetails = asyncHandler(async (req: Request, res: Response) => {
+    const locations = await locationService.getLocationDetails(req, res);
+    return locations;
+});
