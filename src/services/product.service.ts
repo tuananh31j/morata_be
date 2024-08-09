@@ -9,7 +9,13 @@ import { IVariationPlayload } from '@/types/product';
 import { removeUploadedFile, uploadFiles } from '@/utils/files';
 import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
+import { Types } from 'mongoose';
 import _ from 'lodash';
+import { CartItem } from '@/types/cart';
+
+interface VariationId {
+    _id: Types.ObjectId;
+}
 
 const populateVariation = {
     path: 'variationIds',
@@ -426,7 +432,8 @@ export const deleteProduct = async (req: Request, res: Response, next: NextFunct
             options: { sort: 'createdAt' },
         })
         .populate(populateCategory)
-        .populate(populateBrand);
+        .populate(populateBrand)
+        .lean();
 
     if (!product) {
         throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${req.params.id}`);
@@ -435,11 +442,15 @@ export const deleteProduct = async (req: Request, res: Response, next: NextFunct
     const carts = await Cart.find({}).lean();
     const variationsIds = product?.variationIds;
     if (variationsIds) {
-        for (const variationId of variationsIds) {
-            for (const cart of carts) {
-                const updatedItems = cart.items.filter((item) => String(item.productVariation) !== String(variationId));
-                console.log('Item', updatedItems);
-                await Cart.updateOne({ userId: cart.userId }, { $set: { items: updatedItems } });
+        for (const cart of carts) {
+            const updatedItems = cart.items.filter((item) => {
+                return !variationsIds.some(
+                    (variation: any) => item.productVariation.toString() === variation._id.toString(),
+                );
+            });
+
+            if (cart.items.length !== updatedItems.length) {
+                await Cart.updateOne({ userId: cart.userId }, { items: updatedItems });
             }
         }
     }
