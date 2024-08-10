@@ -11,13 +11,7 @@ import { IVariationPlayload } from '@/types/product';
 import { removeUploadedFile, uploadFiles } from '@/utils/files';
 import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
-import { Types } from 'mongoose';
 import _ from 'lodash';
-import { CartItem } from '@/types/cart';
-
-interface VariationId {
-    _id: Types.ObjectId;
-}
 
 const populateVariation = {
     path: 'variationIds',
@@ -114,10 +108,6 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
     return res.status(StatusCodes.OK).json(
         customResponse({
             data: {
-                qrt: queryStr,
-                filte: queryVariant,
-                ok: transformQuery(queryVariant),
-                queryStr: queryStr,
                 products: filteredData,
                 length: data.length,
                 page: page,
@@ -152,10 +142,13 @@ export const getTopLatestProducts = async (req: Request, res: Response, next: Ne
         .select(queryClientFields)
         .sort({ createdAt: -1 })
         .limit(10)
-        .populate(populateVariation);
+        .populate(populateVariation)
+        .lean();
+    const filteredData = topLatestProducts.filter((item) => item.variationIds.length > 0);
+
     return res.status(StatusCodes.OK).json(
         customResponse({
-            data: topLatestProducts,
+            data: filteredData,
             success: true,
             status: StatusCodes.OK,
             message: ReasonPhrases.OK,

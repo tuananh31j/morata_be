@@ -6,7 +6,7 @@ const storage = multer.memoryStorage();
 const upload = multer({
     storage: storage,
     fileFilter: (req, file, cb) => {
-        if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+        if (!file.originalname.match(/\.(jpg|jpeg|png|webp)$/)) {
             return cb(new BadRequestError('Only JPG, JPEG, and PNG files are allowed!'));
         }
         if (file.size > 3 * 1024 * 1024) {
