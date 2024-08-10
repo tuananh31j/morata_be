@@ -1,10 +1,13 @@
+import { is } from 'date-fns/locale';
 import mongoose from 'mongoose';
 
-interface ItemOrder {
+export interface ItemOrder {
+    productId: string;
     name: string;
     quantity: number;
     price: number;
     image: string;
+    isReviewed: boolean;
 }
 
 export interface OrderSchema {

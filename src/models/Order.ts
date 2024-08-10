@@ -26,6 +26,9 @@ const OrderItemSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
+        isReviewed: {
+            type: Boolean,
+        },
     },
     {
         _id: false,

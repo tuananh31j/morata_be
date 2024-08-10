@@ -9,3 +9,10 @@ export const createNewReview = asyncHandler(async (req: Request, res: Response, 
 export const getAllReviewsOfProduct = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     return await reviewService.getAllReviewsOfProduct(req, res, next);
 });
+export const getDetailReivewOfProduct = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    return await reviewService.getDetailReviewsOfProduct(req, res, next);
+});
+
+export const updateReview = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    return await reviewService.updateReview(req, res, next);
+});
