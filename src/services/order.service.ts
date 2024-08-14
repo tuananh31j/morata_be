@@ -57,7 +57,15 @@ export const getAllOrders = async (req: Request, res: Response, next: NextFuncti
     const data = await Order.paginate(query, options);
 
     const orders = data.docs.map((order) => {
-        return _.pick(order, ['_id', 'totalPrice', 'paymentMethod', 'isPaid', 'orderStatus', 'createdAt']);
+        return _.pick(order, [
+            '_id',
+            'totalPrice',
+            'customerInfo',
+            'paymentMethod',
+            'isPaid',
+            'orderStatus',
+            'createdAt',
+        ]);
     });
 
     return res.status(StatusCodes.OK).json(
