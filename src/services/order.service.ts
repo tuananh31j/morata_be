@@ -171,17 +171,17 @@ export const cancelOrder = async (req: Request, res: Response, next: NextFunctio
         throw new NotAcceptableError(`You cannot cancel this order because it was cancelled before. `);
     }
 
-    if (foundedOrder.orderStatus === ORDER_STATUS.SHIPPING) {
+    if (foundedOrder.orderStatus === ORDER_STATUS.PENDING) {
+        if (req.role === ROLE.ADMIN) {
+            foundedOrder.canceledBy = ROLE.ADMIN;
+        }
+
+        foundedOrder.orderStatus = ORDER_STATUS.CANCELLED;
+        foundedOrder.description = req.body.description ?? '';
+        foundedOrder.save();
+    } else {
         throw new NotAcceptableError(`Your order is shipping , you can not cancel.`);
     }
-
-    if (req.role === ROLE.ADMIN) {
-        foundedOrder.canceledBy = ROLE.ADMIN;
-    }
-
-    foundedOrder.orderStatus = ORDER_STATUS.CANCELLED;
-    foundedOrder.description = req.body.description ?? '';
-    foundedOrder.save();
 
     return res
         .status(StatusCodes.OK)
@@ -202,18 +202,49 @@ export const confirmOrder = async (req: Request, res: Response, next: NextFuncti
         throw new BadRequestError(`Not found order with id ${req.body.orderId}`);
     }
 
-    if (foundedOrder.orderStatus === ORDER_STATUS.CONFIRMED) {
+    if (foundedOrder.orderStatus === ORDER_STATUS.PENDING) {
+        foundedOrder.orderStatus = ORDER_STATUS.CONFIRMED;
+        foundedOrder.save();
+    } else {
         throw new BadRequestError(`Your order is confirmed.`);
     }
-
-    foundedOrder.orderStatus = ORDER_STATUS.CONFIRMED;
-    foundedOrder.save();
 
     return res
         .status(StatusCodes.OK)
         .json(
             customResponse({ data: null, success: true, status: StatusCodes.OK, message: 'Your order is confirmed.' }),
         );
+};
+
+// @Set order status to shipping
+export const shippingOrder = async (req: Request, res: Response, next: NextFunction) => {
+    if (!req.role || req.role !== 'admin') {
+        throw new NotAcceptableError('Only admin can access.');
+    }
+
+    const foundedOrder = await Order.findOne({
+        _id: req.body.orderId,
+    });
+
+    if (!foundedOrder) {
+        throw new BadRequestError(`Not found order with id ${req.body.orderId}`);
+    }
+
+    if (foundedOrder.orderStatus === ORDER_STATUS.CONFIRMED) {
+        foundedOrder.orderStatus = ORDER_STATUS.SHIPPING;
+        await foundedOrder.save();
+    } else {
+        throw new BadRequestError(`Your order is not confirmed.`);
+    }
+
+    return res.status(StatusCodes.OK).json(
+        customResponse({
+            data: null,
+            success: true,
+            status: StatusCodes.OK,
+            message: 'Your order is on delivery.',
+        }),
+    );
 };
 
 // @ Set order status to delivered
@@ -228,13 +259,12 @@ export const deliverOrder = async (req: Request, res: Response, next: NextFuncti
         throw new BadRequestError(`Not found order with id ${req.body.orderId}`);
     }
 
-    if (foundedOrder.orderStatus === ORDER_STATUS.DELIVERED) {
+    if (foundedOrder.orderStatus === ORDER_STATUS.SHIPPING) {
+        foundedOrder.orderStatus = ORDER_STATUS.DELIVERED;
+        foundedOrder.save();
+    } else {
         throw new BadRequestError(`Your order is delivered.`);
     }
-
-    foundedOrder.orderStatus = ORDER_STATUS.DELIVERED;
-
-    foundedOrder.save();
 
     return res
         .status(StatusCodes.OK)
@@ -255,12 +285,12 @@ export const finishOrder = async (req: Request, res: Response, next: NextFunctio
         throw new BadRequestError(`Not found order with id ${req.body.orderId}`);
     }
 
-    if (foundedOrder.orderStatus === ORDER_STATUS.CONFIRMED) {
+    if (foundedOrder.orderStatus === ORDER_STATUS.DELIVERED) {
+        foundedOrder.orderStatus = ORDER_STATUS.DONE;
+        foundedOrder.save();
+    } else {
         throw new BadRequestError(`Your order is done.`);
     }
-
-    foundedOrder.orderStatus = ORDER_STATUS.DONE;
-    foundedOrder.save();
 
     return res
         .status(StatusCodes.OK)
