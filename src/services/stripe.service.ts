@@ -36,7 +36,7 @@ export const createCheckout = async (req: Request, res: Response, next: NextFunc
             enabled: true,
         },
         shipping_address_collection: {
-            allowed_countries: ['VN', 'US'],
+            allowed_countries: ['VN'],
         },
         billing_address_collection: 'required',
         mode: 'payment',

@@ -10,10 +10,10 @@ interface JwtPayload {
 }
 
 export const authenticate = (req: Request, res: Response, next: NextFunction) => {
-    const cookies = req.cookies;
-    if (!cookies.jwt) {
-        return next(new UnAuthorizedError('Token: UnAuthorized access.'));
-    }
+    // const cookies = req.cookies;
+    // if (!cookies.jwt) {
+    //     return next(new UnAuthorizedError('Token: UnAuthorized access.'));
+    // }
 
     const authHeader = req.headers.authorization || (req.headers.Authorization as string);
     if (!authHeader || !authHeader.startsWith('Bearer ')) {

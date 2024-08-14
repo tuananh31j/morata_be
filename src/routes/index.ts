@@ -11,6 +11,7 @@ import locationRouter from './location.routes';
 import reviewRouter from './review.routes';
 import statsRouter from './stats.routes';
 import attributeRouter from './attribute.routes';
+import shippingRouter from './shipping.routes';
 
 const router = Router();
 
@@ -22,6 +23,7 @@ router.use('/categories', categoryRouter);
 router.use('/brands', brandRouter);
 router.use('/reviews', reviewRouter);
 router.use('/carts', cartRouter);
+router.use('/shipping', shippingRouter);
 router.use(checkoutRouter);
 router.use('/orders', orderRouter);
 router.use('/stats', statsRouter);

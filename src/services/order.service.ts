@@ -152,12 +152,7 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
         userId: req.userId,
     });
 
-    if (req.body.paymentMethod === 'cash') {
-        if (req.body.totalPrice >= 1000) {
-            return res.status(StatusCodes.NOT_ACCEPTABLE).json({ message: ReasonPhrases.NOT_ACCEPTABLE });
-        }
-        await order.save();
-    }
+    await order.save();
 
     return res
         .status(StatusCodes.OK)
