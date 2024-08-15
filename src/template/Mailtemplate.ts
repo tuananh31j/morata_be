@@ -246,6 +246,8 @@ export const templateMail = (template: Template, mailContent: Content) => {
       .footer p {
         margin: 0;
       }
+        .warning{
+        color: 'red'}
     </style>
   </head>
   <body>
@@ -299,7 +301,11 @@ export const templateMail = (template: Template, mailContent: Content) => {
         ${mailContent.product?.totalPrice ? `<p><strong>Tổng Tiền:</strong> ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(mailContent.product.totalPrice)}</p>` : `<p><strong>Tổng Tiền:</strong> ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(0)}</p>`}
        
         <p>Để kiểm tra đơn hàng của bạn: <a href='${mailContent?.link?.linkHerf}'>Tại đây</a> </p>
-    
+        ${
+            mailContent.content.warning &&
+            ` <p class="warning">${mailContent.content.warning}</p>
+    `
+        }
       </div>
       <div class="footer">
         <p>Thank you,<br />The Morata Team</p>
