@@ -9,7 +9,7 @@ export const createNewReview = async (req: Request, res: Response, next: NextFun
     const product = await Product.findById(req.body.productId);
     if (!product) throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${req.body.productId}`);
     const newReview = new Review({ ...req.body });
-    product?.reviewIds.push(newReview._id as any);
+    // product?.reviewIds.push(newReview._id as any);
     await product?.save();
     await newReview.save();
 

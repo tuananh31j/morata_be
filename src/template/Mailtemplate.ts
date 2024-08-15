@@ -11,7 +11,7 @@ export type Content = {
             productId?: string;
             image: string;
             name: string;
-            quantity: number;
+            quantity: number | null;
             price: number;
         }[];
         totalPrice: number;
@@ -302,8 +302,9 @@ export const templateMail = (template: Template, mailContent: Content) => {
        
         <p>Để kiểm tra đơn hàng của bạn: <a href='${mailContent?.link?.linkHerf}'>Tại đây</a> </p>
         ${
-            mailContent.content.warning &&
-            ` <p class="warning">${mailContent.content.warning}</p>
+            !mailContent.content.warning
+                ? ''
+                : ` <p class="warning">${mailContent.content.warning}</p>
     `
         }
       </div>
