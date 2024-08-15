@@ -1,32 +1,10 @@
 import Order from '@/models/Order';
 import Product from '@/models/Product';
+import ProductVariation from '@/models/ProductVariation';
 import User from '@/models/User';
 import { NextFunction, Request, Response } from 'express';
+import { StatusCodes } from 'http-status-codes';
 import moment from 'moment';
-import { parse, format, eachDayOfInterval, startOfDay, endOfDay, isValid } from 'date-fns';
-import { PipelineStage } from 'mongoose';
-import { ReasonPhrases, StatusCodes } from 'http-status-codes';
-import customResponse from '@/helpers/response';
-
-interface DateStats {
-    date: string;
-    totalOrders: number;
-    totalRevenue: number;
-}
-
-interface AggregationResult {
-    date: string;
-    totalOrders: number;
-    totalRevenue: number;
-}
-interface ProductStat {
-    _id: string;
-    name: string;
-    totalQuantity: number;
-    totalRevenue: number;
-    image: string;
-    price: number;
-}
 
 export const totalStats = async (req: Request, res: Response, next: NextFunction) => {
     const { dateFilter, startDate, endDate, month, year } = req.query;
@@ -416,21 +394,40 @@ export const getProductStats = async (req: Request, res: Response, next: NextFun
     // Get top 5 least-selling products
     const leastSellingProducts = allProductStats.slice(-5).reverse();
 
-    // Get total number of products to calculate percentage
-    const totalProducts = await Product.countDocuments({ isDeleted: false, isHide: false });
+    // Get total stock of all product variations
+    const totalStock = await ProductVariation.aggregate([
+        {
+            $group: {
+                _id: null,
+                totalStock: { $sum: '$stock' },
+            },
+        },
+    ]);
 
-    // Add percentage information to the results
-    const addPercentage = (products: any[]) => {
-        return products.map((product) => ({
-            ...product,
-            percentageOfTotal: ((product.totalQuantity / totalProducts) * 100).toFixed(2),
-        }));
+    const totalStockValue = totalStock[0]?.totalStock || 0;
+
+    // Function to add percentage information
+    const addPercentage = async (products: any[]) => {
+        return Promise.all(
+            products.map(async (product) => {
+                const productVariations = await ProductVariation.find({ productId: product._id });
+                const productTotalStock = productVariations.reduce((sum, variation) => sum + (variation.stock ?? 0), 0);
+                return {
+                    ...product,
+                    percentageOfTotal: ((product.totalQuantity / productTotalStock) * 100).toFixed(2),
+                    percentageOfAllProducts: ((productTotalStock / totalStockValue) * 100).toFixed(2),
+                };
+            }),
+        );
     };
+
+    const topSellingWithPercentage = await addPercentage(topSellingProducts);
+    const leastSellingWithPercentage = await addPercentage(leastSellingProducts);
 
     return {
         data: {
-            topSellingProducts: addPercentage(topSellingProducts),
-            leastSellingProducts: addPercentage(leastSellingProducts),
+            topSellingProducts: topSellingWithPercentage,
+            leastSellingProducts: leastSellingWithPercentage,
             dateRange: {
                 start: moment(start).format('DD-MM-YYYY'),
                 end: moment(end).format('DD-MM-YYYY'),
@@ -438,7 +435,6 @@ export const getProductStats = async (req: Request, res: Response, next: NextFun
         },
     };
 };
-
 export const findTop5Buyers = async (req: Request, res: Response, next: NextFunction) => {
     const { dateFilter, startDate, endDate, month, year } = req.query;
 
@@ -477,7 +473,7 @@ export const findTop5Buyers = async (req: Request, res: Response, next: NextFunc
                 _id: '$userId',
                 totalOrders: { $sum: 1 },
                 totalSpent: { $sum: '$totalPrice' },
-                totalItems: { $sum: { $size: '$items' } },
+                totalItems: { $sum: { $sum: '$items.quantity' } },
                 lastOrderDate: { $max: '$createdAt' },
             },
         },
