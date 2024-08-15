@@ -81,7 +81,13 @@ const createOrder = async (session: Stripe.Checkout.Session) => {
                 items: dataItems,
                 totalPrice: session.amount_total,
                 paymentMethod: session.payment_method_types[0],
-                shippingAddress: session.customer_details?.address,
+                shippingAddress: {
+                    country: session.customer_details?.address?.country ?? '',
+                    province: session.customer_details?.address?.state ?? '',
+                    district: '',
+                    ward: '',
+                    address: session.customer_details?.address?.line1 ?? '',
+                },
                 customerInfo: {
                     name: session.customer_details?.name,
                     email: session.customer_details?.email,
