@@ -1,3 +1,4 @@
+import { boolean } from 'joi';
 import mongoose from 'mongoose';
 
 const productVariationSchema = new mongoose.Schema(
@@ -11,8 +12,16 @@ const productVariationSchema = new mongoose.Schema(
         stock: {
             type: Number,
         },
+        sold: {
+            type: Number,
+            default: 0,
+        },
         sku: {
             type: String,
+        },
+        isActive: {
+            type: Boolean,
+            default: true,
         },
         variantAttributes: mongoose.Schema.Types.Mixed,
         // @ref

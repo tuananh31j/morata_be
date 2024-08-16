@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 
 export interface ItemOrder {
     productId: string;
+    productVariationId: string;
     name: string;
     quantity: number;
     price: number;
@@ -15,7 +16,9 @@ export interface OrderSchema {
     items: ItemOrder[];
     totalPrice: number;
     tax: number;
+    coupon: string;
     shippingFee: number;
+    shippingMethod: string;
     customerInfo: {
         name: string;
         email: string;
@@ -27,12 +30,14 @@ export interface OrderSchema {
         phone: string;
     };
     shippingAddress: {
-        city: string;
         country: string;
-        line1: string;
-        line2: string;
-        postal_code: string;
-        state: string;
+        province: string;
+        district: string;
+        ward: string;
+        address: string;
+        provinceId: number;
+        districtId: number;
+        wardCode: string;
     };
     paymentMethod: string;
     isPaid: boolean;

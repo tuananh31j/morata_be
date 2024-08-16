@@ -1,4 +1,4 @@
-import { ORDER_STATUS, PAYMENT_METHOD } from '@/constant/order';
+import { ORDER_STATUS, PAYMENT_METHOD, SHIPPING_METHOD } from '@/constant/order';
 import { OrderSchema } from '@/interfaces/schema/order';
 import mongoose, { PaginateModel } from 'mongoose';
 import paginate from 'mongoose-paginate-v2';
@@ -6,6 +6,10 @@ import paginate from 'mongoose-paginate-v2';
 const OrderItemSchema = new mongoose.Schema(
     {
         productId: {
+            type: String,
+            required: true,
+        },
+        productVariationId: {
             type: String,
             required: true,
         },
@@ -46,7 +50,6 @@ const OrderSchema = new mongoose.Schema<OrderSchema>(
         },
         items: [OrderItemSchema],
         totalPrice: {
-            // total price after calculate tax fee
             type: Number,
             required: true,
         },
@@ -54,9 +57,18 @@ const OrderSchema = new mongoose.Schema<OrderSchema>(
             type: Number,
             default: 0.1,
         },
+        coupon: {
+            type: String,
+            default: null,
+        },
         shippingFee: {
             type: Number,
             default: 0,
+        },
+        shippingMethod: {
+            type: String,
+            default: SHIPPING_METHOD.STANDARD,
+            enum: [SHIPPING_METHOD.STANDARD, SHIPPING_METHOD.SPECIAL],
         },
         customerInfo: {
             name: { type: String, required: true },
@@ -68,14 +80,18 @@ const OrderSchema = new mongoose.Schema<OrderSchema>(
             email: { type: String, default: '' },
             phone: { type: String, default: '' },
         },
-
         shippingAddress: {
-            city: String,
-            country: String,
-            line1: String,
-            line2: String,
-            postal_code: String,
-            state: String,
+            country: {
+                type: String,
+                default: 'Viet Nam',
+            },
+            province: String,
+            district: String,
+            ward: String,
+            address: String,
+            provinceId: Number,
+            districtId: Number,
+            wardCode: String,
         },
         paymentMethod: {
             type: String,

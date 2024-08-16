@@ -1,4 +1,5 @@
 import { AttributeType } from '@/constant/attributeType';
+import { IAttributeSchema } from '@/interfaces/schema/attribute';
 import mongoose from 'mongoose';
 
 const attributeSchema = new mongoose.Schema(
@@ -29,6 +30,6 @@ attributeSchema.pre('save', async function (next) {
     this.attributeKey = this.name!.toLowerCase().replace(/ /g, '_');
     next();
 });
-const Attribute = mongoose.model('Attribute', attributeSchema);
+const Attribute = mongoose.model<IAttributeSchema>('Attribute', attributeSchema);
 
 export default Attribute;

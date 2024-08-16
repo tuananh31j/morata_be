@@ -8,6 +8,8 @@ const router = Router();
 
 router.get('/all', attributeController.getAllAttributes);
 router.get('/:categoryId', attributeController.getAttributeByCategory);
-router.post('/', authenticate, authorize(ROLE.ADMIN), attributeController.getCreateAttribute);
+router.get('/details/:attributeId', attributeController.getAttributeDetails);
+router.post('/', authenticate, authorize(ROLE.ADMIN), attributeController.CreateAttribute);
+router.put('/:attributeId', authenticate, authorize(ROLE.ADMIN), attributeController.updateAttibute);
 
 export default router;

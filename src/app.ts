@@ -13,14 +13,8 @@ import errorHandler from './middlewares/errorHandlerMiddleware';
 import notFoundHandler from './middlewares/notFoundHandlerMiddleware';
 import router from './routes';
 import ProductVariation from './models/ProductVariation';
-// import crypto from 'crypto';
-// import axios from 'axios';
 
 const app: Express = express();
-
-// const accessKey = 'F8BBA842ECF85';
-// const secretKey = 'K951B6PE1waDMi640xX08PD3vg6EkVlz';
-// const partnerCode = 'MOMO';
 
 // firebase app
 initializeApp(firebaseConfig);

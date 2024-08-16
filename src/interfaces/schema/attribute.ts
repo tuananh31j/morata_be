@@ -1,11 +1,11 @@
-import mongoose from 'mongoose';
+import { AttributeType } from '@/constant/attributeType';
+import { Document } from 'mongoose';
 
-export interface AttributeValue {
+export interface IAttributeSchema extends Document {
     name: string;
-    attributeId: mongoose.Types.ObjectId;
-}
-
-export interface Attribute {
-    name: string;
-    detailId: mongoose.Types.ObjectId;
+    attributeKey: string;
+    isVariant: boolean;
+    isRequired: boolean;
+    type: AttributeType;
+    values: (string | number)[];
 }

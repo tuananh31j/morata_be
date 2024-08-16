@@ -9,7 +9,7 @@ import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 
 // @Get: getAllCategories
 export const getAllCategories = async (req: Request, res: Response, next: NextFunction) => {
-    const categories = await Category.find().sort({ createdAt: -1 }).lean();
+    const categories = await Category.find().sort({ createdAt: -1 }).populate('attributeIds').lean();
     return res
         .status(StatusCodes.OK)
         .json(customResponse({ data: categories, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
@@ -73,10 +73,8 @@ export const getPopularCategories = async (req: Request, res: Response, next: Ne
 
 // @Get: getDetailedCategory
 export const getDetailedCategory = async (req: Request, res: Response, next: NextFunction) => {
-    const category = await Category.findOne({ _id: req.params.id, deleted: false }).lean();
-    if (!category) {
-        throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} category with id: ${req.params.id}`);
-    }
+    const category = await Category.findOne({ _id: req.params.id }).populate('attributeIds').lean();
+    if (!category) throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} category with id: ${req.params.id}`);
     return res
         .status(StatusCodes.OK)
         .json(customResponse({ data: category, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
@@ -87,11 +85,6 @@ export const createNewCategory = async (req: Request, res: Response, next: NextF
     const attributeIds = req.body.attributeIds as string[];
     const name = req.body.name as string;
 
-    if (req.body.newAttributes) {
-        const newAttributes = req.body.newAttributes as { name: string; values: string[] | number[] }[];
-        const data = await Attribute.insertMany(newAttributes);
-        attributeIds.push(...data.map((item) => item._id as unknown as string));
-    }
     const category = await Category.create({ name, attributeIds });
 
     console.log(req.body);
@@ -108,12 +101,19 @@ export const createNewCategory = async (req: Request, res: Response, next: NextF
 
 // @Patch: updateCategory
 export const updateCateGory = async (req: Request, res: Response, next: NextFunction) => {
-    const category = await Category.findByIdAndUpdate(req.params.id, { ...req.body }, { new: true });
-    if (!category) {
-        throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} category with id: ${req.params.id}`);
-    }
+    const id = req.params.id;
+    const attributeIds = req.body.attributeIds as string[];
+    const name = req.body.name as string;
+    const category = await Category.findOneAndUpdate({ _id: id }, { name, attributeIds }, { new: true });
 
-    return res
-        .status(StatusCodes.OK)
-        .json(customResponse({ data: category, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+    if (!category) throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} category with id: ${id}`);
+
+    return res.status(StatusCodes.CREATED).json(
+        customResponse({
+            data: category,
+            success: true,
+            status: StatusCodes.CREATED,
+            message: ReasonPhrases.CREATED,
+        }),
+    );
 };

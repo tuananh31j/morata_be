@@ -38,7 +38,7 @@ export const createNewBrand = async (req: Request, res: Response, next: NextFunc
 };
 
 // @Patch: updateBrand
-export const updateCateGory = async (req: Request, res: Response, next: NextFunction) => {
+export const updateBrand = async (req: Request, res: Response, next: NextFunction) => {
     const brand = await Brand.findByIdAndUpdate(req.params.id, { ...req.body }, { new: true });
 
     if (!brand) {

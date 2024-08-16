@@ -11,3 +11,8 @@ export enum PAYMENT_METHOD {
     CASH = 'cash',
     CARD = 'card',
 }
+
+export enum SHIPPING_METHOD {
+    STANDARD = 'standard',
+    SPECIAL = 'special',
+}

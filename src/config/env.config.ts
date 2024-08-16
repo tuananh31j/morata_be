@@ -1,14 +1,21 @@
 import 'dotenv/config';
 import Joi from 'joi';
-import { env } from 'process';
 
 const envVarsSchema = Joi.object()
     .keys({
         NODE_ENV: Joi.string().valid('production', 'development').required(),
         PORT: Joi.number().default(80),
-        HOSTNAME: Joi.string().default('0.0.0.0'),
+        HOSTNAME: Joi.string().default('127.0.0.1'),
         MONGODB_URL_DEV: Joi.string().description('Local Mongo DB'),
         MONGODB_URL_CLOUD: Joi.string().description('Cloud Mongo DB'),
+
+        SHIPPING_API_TOKEN: Joi.string().description('Shipping Api Token'),
+        SHIPPING_API_ENDPOINT: Joi.string().description('Shipping Api Endpoint'),
+        SHOP_ID: Joi.string().description('Shop Id'),
+        FROM_DISTRICT_ID: Joi.number()
+            .custom((value: string) => Number(value))
+            .description('From District'),
+        FROM_WARD_CODE: Joi.string().description('From Ward'),
 
         FIREBASE_API_KEY: Joi.string().description('Firebase Api Key'),
         FIREBASE_AUTH_DOMAIN: Joi.string().description('Firebase Auth Domain'),
@@ -25,12 +32,6 @@ const envVarsSchema = Joi.object()
         STRIPE_URL_CANCEL: Joi.string().description('Stripe url cancel.'),
         STRIPE_WEBHOOK_ENDPOINT_SECRET: Joi.string().description('Stripe webhook endpoint secret.'),
         CLIENT_DOMAIN: Joi.string().description('Client domain'),
-
-        VNP_TMNCODE: Joi.string().description('Terminal ID VNpay Key'),
-        VNP_HASHSECRET: Joi.string().description('Secret VNpay Key'),
-        VNP_URL: Joi.string().description('UI VNpay Url'),
-        VNP_API: Joi.string().description('API VNpay'),
-        VNP_RETURNURL: Joi.string().description('Callback after payment'),
 
         JWT_ACCESS_TOKEN_KEY: Joi.string().required().description('JWT Access Token Key'),
         JWT_REFRESH_TOKEN_KEY: Joi.string().required().description('JWT Refresh Token Key'),
@@ -84,18 +85,15 @@ const config = {
         appId: envVars.FIREBASE_APP_ID,
         measurementId: envVars.FIREBASE_MEASUREMENT_ID,
     },
-    redis: {
-        host: envVars.REDIS_HOST,
-        port: envVars.REDIS_PORT,
+
+    shipping: {
+        apiToken: envVars.SHIPPING_API_TOKEN,
+        apiEndpoint: envVars.SHIPPING_API_ENDPOINT,
+        shopId: envVars.SHOP_ID,
+        fromDistrictId: envVars.FROM_DISTRICT_ID,
+        fromWardCode: envVars.FROM_WARD_CODE,
     },
-    vnpayConfig: {
-        vnpTmnCode: envVars.VNP_TMNCODE,
-        vnp_HashSecret: envVars.VNP_HASHSECRET,
-        vnp_Url: envVars.VNP_URL,
-        vnp_Api: envVars.VNP_API,
-        vnp_ReturnUrl: envVars.VNP_RETURNURL,
-        urlSuccess: envVars.STRIPE_URL_SUCCESS,
-    },
+
     stripeConfig: {
         publicKey: envVars.STRIPE_PUBLIC_KEY,
         secretKey: envVars.STRIPE_SECRET_KEY,

@@ -23,7 +23,7 @@ router.patch(
     '/:id',
     authenticate,
     authorize(ROLE.ADMIN),
-    [validateObjectId, updateCategoryValidation],
+    // [validateObjectId, updateCategoryValidation],
     categoryController.updateCateGory,
 );
 

@@ -15,7 +15,7 @@ import _ from 'lodash';
 
 const populateVariation = {
     path: 'variationIds',
-    select: 'price image sku color productId stock variantAttributes imageUrlRef',
+    select: 'price image sku productId stock sold variantAttributes imageUrlRef',
     model: 'ProductVariation',
     options: { sort: 'price' },
 };
@@ -29,6 +29,8 @@ const populateBrand = {
     select: 'name',
     model: 'Brand',
 };
+const clientRequiredFields = { isDeleted: false, isAvailable: true };
+
 // query attribute conversion function for attribute and variant
 const transformQuery = (query: any): { attributeQuery: any; variantQuery: any } => {
     const queryCopy: any = { ...query };
@@ -60,11 +62,11 @@ const transformQuery = (query: any): { attributeQuery: any; variantQuery: any } 
     return { attributeQuery: combinedAttributeQuery, variantQuery: combinedVariantQuery };
 };
 
-const clientRequiredFields = { isDeleted: false, isAvailable: true };
-
 // @Get: getAllProducts
 export const getAllProducts = async (req: Request, res: Response, next: NextFunction) => {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     const page = req.query.page ? +req.query.page : 1;
+    req.query.limit = String(req.query.limit || 10);
     const queryCopy = { ...req.query };
 
     Object.keys(queryCopy).forEach((el) => {
@@ -81,12 +83,12 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
     // convert back to object
     const queryVariant = JSON.parse(queryStr);
     const filterPrice = queryVariant.price ? { price: queryVariant.price } : {};
-    const sortPrice = queryVariant.sort ? { sort: queryVariant.sort } : {};
+    const sortPrice = queryVariant.sort ? { sort: queryVariant.sort } : { sort: 'price' };
     const queryTransformed = transformQuery(queryVariant);
 
     const populateVariantAndFilter = {
         path: 'variationIds',
-        select: 'price image sku productId stock variantAttributes imageUrlRef',
+        select: 'price image sku productId stock sold variantAttributes imageUrlRef',
         model: 'ProductVariation',
         match: { ...queryTransformed.variantQuery, ...filterPrice },
         options: sortPrice,
@@ -102,16 +104,29 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
 
     features.filter().sort().limitFields().search().paginate();
     const [data, totalDocs] = await Promise.all([features.query, features.count()]);
-    const totalPages = Math.ceil(Number(totalDocs) / page);
+    const totalDocsValid = { value: totalDocs };
 
-    const filteredData = data.filter((item) => item.variationIds.length > 0);
+    const filteredData = data.filter((item) => {
+        if (item.variationIds.length === 0) {
+            totalDocsValid.value -= 1;
+        }
+        return item.variationIds.length > 0;
+    });
+    filteredData.sort((a, b) => {
+        const priceA = (a.variationIds[0] as any).price;
+        const priceB = (b.variationIds[0] as any).price;
+        if (queryVariant.sort === 'price') return priceA - priceB;
+        return priceB - priceA;
+    });
+    const totalPages = Math.ceil(Number(totalDocsValid.value) / +req.query.limit);
+
     return res.status(StatusCodes.OK).json(
         customResponse({
             data: {
                 products: filteredData,
                 length: data.length,
                 page: page,
-                totalDocs: totalDocs,
+                totalDocs: totalDocsValid.value,
                 totalPages: totalPages,
             },
             success: true,

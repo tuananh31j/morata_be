@@ -8,7 +8,6 @@ import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import customResponse from '@/helpers/response';
 import APIQuery from '@/helpers/apiQuery';
 import { NotFoundError } from '@/error/customError';
-import { el } from 'date-fns/locale';
 
 export const getUserProfile = async (req: Request, res: Response) => {
     const userId = req.userId;
@@ -28,11 +27,13 @@ export const getUserProfile = async (req: Request, res: Response) => {
 // @Get: getAllUsers
 export const getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
     const page = req.query.page ? +req.query.page : 1;
+    req.query.limit = String(req.query.limit || 10);
+
     const features = new APIQuery(User.find({}).select('-password -avatarRef'), req.query);
     features.filter().sort().limitFields().search().paginate();
 
     const [data, totalDocs] = await Promise.all([features.query, features.count()]);
-    const totalPages = Math.ceil(Number(totalDocs) / page);
+    const totalPages = Math.ceil(Number(totalDocs) / +req.query.limit);
     return res.status(StatusCodes.OK).json(
         customResponse({
             data: {
