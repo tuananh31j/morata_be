@@ -1,10 +1,12 @@
 import { ROLE } from '@/constant/allowedRoles';
-import { ORDER_STATUS } from '@/constant/order';
+import { ORDER_STATUS, PAYMENT_METHOD } from '@/constant/order';
 import { BadRequestError, NotAcceptableError, NotFoundError } from '@/error/customError';
 import customResponse from '@/helpers/response';
 import { ItemOrder, OrderSchema } from '@/interfaces/schema/order';
 import Order from '@/models/Order';
 import ProductVariation from '@/models/ProductVariation';
+import { Content } from '@/template/Mailtemplate';
+import { sendMail } from '@/utils/sendMail';
 import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import _ from 'lodash';
@@ -160,7 +162,29 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
         ...req.body,
         userId: req.userId,
     });
-
+    const template: Content = {
+        content: {
+            title: 'Đơn hàng mới của bạn',
+            description: 'Bạn vừa mới đặt một đơn hàng từ Morata dưới đây là sản phẩm bạn đã đặt:',
+            email: req.body.customerInfo.email,
+        },
+        product: {
+            items: req.body.items,
+            shippingfee: req.body.shippingFee,
+            totalPrice: req.body.totalPrice,
+        },
+        subject: '[MORATA] - Đơn hàng mới của bạn',
+        link: {
+            linkHerf: `http://localhost:3000/my-orders/${order._id}`,
+            linkName: `Kiểm tra đơn hàng`,
+        },
+        user: {
+            name: req.body.receiverInfo.name,
+            phone: req.body.receiverInfo.phone,
+            email: req.body.receiverInfo.email,
+            address: `[${req.body.shippingAddress.address}] - ${req.body.shippingAddress.ward}, ${req.body.shippingAddress.district}, ${req.body.shippingAddress.province}, Việt Nam`,
+        },
+    };
     await order.save();
     await Promise.all(
         req.body.items.map(async (item: ItemOrder) => {
@@ -175,6 +199,7 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
             );
         }),
     );
+    await sendMail({ email: req.body.customerInfo.email, template, type: 'UpdateStatusOrder' });
     return res
         .status(StatusCodes.OK)
         .json(customResponse({ data: req.body, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
@@ -196,7 +221,6 @@ export const cancelOrder = async (req: Request, res: Response, next: NextFunctio
         if (req.role === ROLE.ADMIN) {
             foundedOrder.canceledBy = ROLE.ADMIN;
         }
-
         foundedOrder.orderStatus = ORDER_STATUS.CANCELLED;
         foundedOrder.description = req.body.description ?? '';
         foundedOrder.save();
@@ -213,6 +237,42 @@ export const cancelOrder = async (req: Request, res: Response, next: NextFunctio
                 );
             }),
         );
+        const template: Content = {
+            content: {
+                title: `${req.role === ROLE.ADMIN ? 'Đơn hàng của bạn đã bị hủy bởi admin' : 'Đơn hàng của bạn đã bị hủy'}`,
+                description: `${req.role === ROLE.ADMIN ? `Đơn hàng của bạn đã bị hủy bởi admin với lý do ${foundedOrder.description} dưới đây là thông tin đơn hàng:` : `Bạn vừa hủy một đơn hàng với lý do ${foundedOrder.description} từ Morata thông tin đơn hàng:`}`,
+                email:
+                    foundedOrder.paymentMethod === PAYMENT_METHOD.CARD
+                        ? foundedOrder.customerInfo.email
+                        : foundedOrder.receiverInfo.email,
+            },
+            product: {
+                items: foundedOrder.items,
+                shippingfee: foundedOrder.shippingFee,
+                totalPrice: foundedOrder.totalPrice,
+            },
+            subject: '[MORATA] - Đơn hàng của bạn đã bị hủy',
+            link: {
+                linkHerf: `http://localhost:3000/my-orders/${req.body.orderId}`,
+                linkName: `Kiểm tra đơn hàng`,
+            },
+            user: {
+                name:
+                    foundedOrder.paymentMethod === PAYMENT_METHOD.CARD
+                        ? foundedOrder.customerInfo.name
+                        : foundedOrder.receiverInfo.name,
+                phone:
+                    foundedOrder.paymentMethod === PAYMENT_METHOD.CARD
+                        ? foundedOrder.customerInfo.phone
+                        : foundedOrder.receiverInfo.phone,
+                email:
+                    foundedOrder.paymentMethod === PAYMENT_METHOD.CARD
+                        ? foundedOrder.customerInfo.email
+                        : foundedOrder.receiverInfo.email,
+                address: `[${foundedOrder.shippingAddress.address}] -${foundedOrder.paymentMethod === PAYMENT_METHOD.CARD ? '' : ` ${foundedOrder.shippingAddress.ward}, ${foundedOrder.shippingAddress.district},`} ${foundedOrder.shippingAddress.province}, ${foundedOrder.shippingAddress.country}`,
+            },
+        };
+        await sendMail({ email: foundedOrder.customerInfo.email, template, type: 'UpdateStatusOrder' });
     } else {
         throw new NotAcceptableError(`Your order is shipping , you can not cancel.`);
     }
@@ -239,6 +299,42 @@ export const confirmOrder = async (req: Request, res: Response, next: NextFuncti
     if (foundedOrder.orderStatus === ORDER_STATUS.PENDING) {
         foundedOrder.orderStatus = ORDER_STATUS.CONFIRMED;
         foundedOrder.save();
+        const template: Content = {
+            content: {
+                title: `Đơn hàng của bạn đã được xác nhận`,
+                description: `Đơn hàng của bạn đã được xác nhận bởi Morata. Đơn hàng sẽ được giao tới tay bạn khoảng 3-5 ngày. Dưới đây là thông tin đơn hàng của bạn`,
+                email:
+                    foundedOrder.paymentMethod === PAYMENT_METHOD.CARD
+                        ? foundedOrder.customerInfo.email
+                        : foundedOrder.receiverInfo.email,
+            },
+            product: {
+                items: foundedOrder.items,
+                shippingfee: foundedOrder.shippingFee,
+                totalPrice: foundedOrder.totalPrice,
+            },
+            subject: '[MORATA] - Đơn hàng của bạn đã được xác nhận',
+            link: {
+                linkHerf: `http://localhost:3000/my-orders/${req.body.orderId}`,
+                linkName: `Kiểm tra đơn hàng`,
+            },
+            user: {
+                name:
+                    foundedOrder.paymentMethod === PAYMENT_METHOD.CARD
+                        ? foundedOrder.customerInfo.name
+                        : foundedOrder.receiverInfo.name,
+                phone:
+                    foundedOrder.paymentMethod === PAYMENT_METHOD.CARD
+                        ? foundedOrder.customerInfo.phone
+                        : foundedOrder.receiverInfo.phone,
+                email:
+                    foundedOrder.paymentMethod === PAYMENT_METHOD.CARD
+                        ? foundedOrder.customerInfo.email
+                        : foundedOrder.receiverInfo.email,
+                address: `[${foundedOrder.shippingAddress.address}] -${foundedOrder.paymentMethod === PAYMENT_METHOD.CARD ? '' : ` ${foundedOrder.shippingAddress.ward}, ${foundedOrder.shippingAddress.district},`} ${foundedOrder.shippingAddress.province}, ${foundedOrder.shippingAddress.country}`,
+            },
+        };
+        await sendMail({ email: foundedOrder.customerInfo.email, template, type: 'UpdateStatusOrder' });
     } else {
         throw new BadRequestError(`Your order is confirmed.`);
     }
@@ -267,6 +363,42 @@ export const shippingOrder = async (req: Request, res: Response, next: NextFunct
     if (foundedOrder.orderStatus === ORDER_STATUS.CONFIRMED) {
         foundedOrder.orderStatus = ORDER_STATUS.SHIPPING;
         await foundedOrder.save();
+        const template: Content = {
+            content: {
+                title: `Đơn hàng của bạn đang được giao`,
+                description: `Đơn hàng của đang được giao tới bạn vui lòng để ý điện thoại. Dưới đây là thông tin đơn hàng của bạn:`,
+                email:
+                    foundedOrder.paymentMethod === PAYMENT_METHOD.CARD
+                        ? foundedOrder.customerInfo.email
+                        : foundedOrder.receiverInfo.email,
+            },
+            product: {
+                items: foundedOrder.items,
+                shippingfee: foundedOrder.shippingFee,
+                totalPrice: foundedOrder.totalPrice,
+            },
+            subject: '[MORATA] - Đơn hàng của bạn đang được giao',
+            link: {
+                linkHerf: `http://localhost:3000/my-orders/${req.body.orderId}`,
+                linkName: `Kiểm tra đơn hàng`,
+            },
+            user: {
+                name:
+                    foundedOrder.paymentMethod === PAYMENT_METHOD.CARD
+                        ? foundedOrder.customerInfo.name
+                        : foundedOrder.receiverInfo.name,
+                phone:
+                    foundedOrder.paymentMethod === PAYMENT_METHOD.CARD
+                        ? foundedOrder.customerInfo.phone
+                        : foundedOrder.receiverInfo.phone,
+                email:
+                    foundedOrder.paymentMethod === PAYMENT_METHOD.CARD
+                        ? foundedOrder.customerInfo.email
+                        : foundedOrder.receiverInfo.email,
+                address: `[${foundedOrder.shippingAddress.address}] -${foundedOrder.paymentMethod === PAYMENT_METHOD.CARD ? '' : ` ${foundedOrder.shippingAddress.ward}, ${foundedOrder.shippingAddress.district},`} ${foundedOrder.shippingAddress.province}, ${foundedOrder.shippingAddress.country}`,
+            },
+        };
+        await sendMail({ email: foundedOrder.customerInfo.email, template, type: 'UpdateStatusOrder' });
     } else {
         throw new BadRequestError(`Your order is not confirmed.`);
     }
@@ -296,6 +428,43 @@ export const deliverOrder = async (req: Request, res: Response, next: NextFuncti
     if (foundedOrder.orderStatus === ORDER_STATUS.SHIPPING) {
         foundedOrder.orderStatus = ORDER_STATUS.DELIVERED;
         foundedOrder.save();
+        const template: Content = {
+            content: {
+                title: `Đơn hàng của bạn đã được giao`,
+                description: `Đơn hàng của đã được giao tới bạn. Dưới đây là thông tin đơn hàng của bạn:`,
+                email:
+                    foundedOrder.paymentMethod === PAYMENT_METHOD.CARD
+                        ? foundedOrder.customerInfo.email
+                        : foundedOrder.receiverInfo.email,
+                warning: 'Nếu bạn chưa nhận được hàng vui lòng liên hệ tới email của shop: morata@shop.com',
+            },
+            product: {
+                items: foundedOrder.items,
+                shippingfee: foundedOrder.shippingFee,
+                totalPrice: foundedOrder.totalPrice,
+            },
+            subject: '[MORATA] - Đơn hàng của bạn đã được giao',
+            link: {
+                linkHerf: `http://localhost:3000/my-orders/${req.body.orderId}`,
+                linkName: `Kiểm tra đơn hàng`,
+            },
+            user: {
+                name:
+                    foundedOrder.paymentMethod === PAYMENT_METHOD.CARD
+                        ? foundedOrder.customerInfo.name
+                        : foundedOrder.receiverInfo.name,
+                phone:
+                    foundedOrder.paymentMethod === PAYMENT_METHOD.CARD
+                        ? foundedOrder.customerInfo.phone
+                        : foundedOrder.receiverInfo.phone,
+                email:
+                    foundedOrder.paymentMethod === PAYMENT_METHOD.CARD
+                        ? foundedOrder.customerInfo.email
+                        : foundedOrder.receiverInfo.email,
+                address: `[${foundedOrder.shippingAddress.address}] -${foundedOrder.paymentMethod === PAYMENT_METHOD.CARD ? '' : ` ${foundedOrder.shippingAddress.ward}, ${foundedOrder.shippingAddress.district},`} ${foundedOrder.shippingAddress.province}, ${foundedOrder.shippingAddress.country}`,
+            },
+        };
+        await sendMail({ email: foundedOrder.customerInfo.email, template, type: 'UpdateStatusOrder' });
     } else {
         throw new BadRequestError(`Your order is delivered.`);
     }
@@ -322,6 +491,42 @@ export const finishOrder = async (req: Request, res: Response, next: NextFunctio
     if (foundedOrder.orderStatus === ORDER_STATUS.DELIVERED) {
         foundedOrder.orderStatus = ORDER_STATUS.DONE;
         foundedOrder.save();
+        const template: Content = {
+            content: {
+                title: `Đơn hàng của đã hoàn tất`,
+                description: `Đơn hàng của đã hoàn tất quá trình giao hàng. Dưới đây là thông tin đơn hàng của bạn:`,
+                email:
+                    foundedOrder.paymentMethod === PAYMENT_METHOD.CARD
+                        ? foundedOrder.customerInfo.email
+                        : foundedOrder.receiverInfo.email,
+            },
+            product: {
+                items: foundedOrder.items,
+                shippingfee: foundedOrder.shippingFee,
+                totalPrice: foundedOrder.totalPrice,
+            },
+            subject: '[MORATA] - Đơn hàng của bạn đã hoàn tất',
+            link: {
+                linkHerf: `http://localhost:3000/my-orders/${req.body.orderId}`,
+                linkName: `Kiểm tra đơn hàng`,
+            },
+            user: {
+                name:
+                    foundedOrder.paymentMethod === PAYMENT_METHOD.CARD
+                        ? foundedOrder.customerInfo.name
+                        : foundedOrder.receiverInfo.name,
+                phone:
+                    foundedOrder.paymentMethod === PAYMENT_METHOD.CARD
+                        ? foundedOrder.customerInfo.phone
+                        : foundedOrder.receiverInfo.phone,
+                email:
+                    foundedOrder.paymentMethod === PAYMENT_METHOD.CARD
+                        ? foundedOrder.customerInfo.email
+                        : foundedOrder.receiverInfo.email,
+                address: `[${foundedOrder.shippingAddress.address}] -${foundedOrder.paymentMethod === PAYMENT_METHOD.CARD ? '' : ` ${foundedOrder.shippingAddress.ward}, ${foundedOrder.shippingAddress.district},`} ${foundedOrder.shippingAddress.province}, ${foundedOrder.shippingAddress.country}`,
+            },
+        };
+        await sendMail({ email: foundedOrder.customerInfo.email, template, type: 'UpdateStatusOrder' });
     } else {
         throw new BadRequestError(`Your order is done.`);
     }

@@ -98,31 +98,32 @@ export const logout = async (req: Request, res: Response, next: NextFunction) =>
 export const sendMailverifyAccount = async (req: Request, res: Response, next: NextFunction) => {
     const checkedEmail = await User.findOne({ email: req.body.email });
     if (checkedEmail?.isActive) {
-        throw new BadRequestError('User is actived');
+        throw new BadRequestError('Người dùng này đã được kích hoạt!');
     }
     if (!checkedEmail) {
-        throw new BadRequestError('Not found the user');
+        throw new BadRequestError('Không tìm thấy người dùng này!');
     }
     const verifyToken = generateToken(checkedEmail, config.jwt.verifyTokenKey, config.jwt.verifyExpiration);
     await saveToken(verifyToken, checkedEmail._id.toString(), tokenTypes.VERIFY_EMAIL);
     const contentEmail = {
-        subject: '[MORATA] - Activate your account',
+        subject: '[MORATA] - Kích Hoạt Tài Khoản',
         content: {
-            title: 'Activate Your Account',
-            warning: 'If you do not register, you will not be able to use all of our services.',
+            title: 'Kích Hoạt Tài Khoản Của Bạn',
+            warning: 'Nếu bạn không kích hoạt tài khoản, bạn sẽ không sử dụng được toàn bộ dịch vụ của chúng tôi',
             description:
-                'Thank you for signing up with Morata! To complete your account activation, please click the link below:',
+                'Cảm ơn bạn vì đã lựa chọn Morata! Để hoàn tất việc đăng ký tài khoản, vui lòng nhấn vào đường dẫn dưới đây:',
+            email: req.body.email,
         },
         link: {
-            linkName: 'Activate Account',
+            linkName: 'Kích Hoạt Tài Khoản',
             linkHerf: `http://localhost:3000/verifyAccount/${verifyToken}?email=${checkedEmail.email}`,
         },
     };
-    sendMail({ email: req.body.email, template: contentEmail });
+    sendMail({ email: req.body.email, template: contentEmail, type: 'Verify' });
     return res.status(StatusCodes.OK).json(
         customResponse({
             data: null,
-            message: 'Please Check Your Email',
+            message: 'Vui Lòng Kiểm Tra Email',
             success: true,
             status: StatusCodes.NO_CONTENT,
         }),
@@ -135,12 +136,12 @@ export const verifyEmail = async (req: Request, res: Response, next: NextFunctio
     jwt.verify(token, config.jwt.verifyTokenKey, async (err: any, decoded: any) => {
         if (err) {
             if (err.name === 'TokenExpiredError') {
-                return next(new UnAuthenticatedError('Token has expired.'));
+                return next(new UnAuthenticatedError('Mã đã hết hạn'));
             }
             if (err.name === 'JsonWebTokenError') {
-                return next(new UnAuthenticatedError('Invalid token.'));
+                return next(new UnAuthenticatedError('Mã không hợp lệ'));
             }
-            return next(new UnAuthenticatedError('Token verification failed.'));
+            return next(new UnAuthenticatedError('Xác thực thất bại vui lòng thử lại!'));
         }
         const { userId } = decoded as JwtPayload;
         await User.findByIdAndUpdate(userId, { isActive: true });
@@ -149,7 +150,7 @@ export const verifyEmail = async (req: Request, res: Response, next: NextFunctio
                 data: null,
                 status: StatusCodes.ACCEPTED,
                 success: true,
-                message: 'Your account has been successfully activated.',
+                message: 'Tài khoản của bạn đã được kích hoạt thành công',
             }),
         );
     });
@@ -161,7 +162,7 @@ export const sendMailForgotPassword = async (req: Request, res: Response, next: 
             customResponse({
                 data: {
                     field: 'email',
-                    message: 'This email is not registered',
+                    message: 'Email chưa được đăng ký',
                 },
                 message: 'Error Email',
                 status: 400,
@@ -176,22 +177,23 @@ export const sendMailForgotPassword = async (req: Request, res: Response, next: 
     );
     await saveToken(verifyToken, checkedEmail._id.toString(), tokenTypes.RESET_PASSWORD);
     const contentEmail = {
-        subject: '[MORATA] - Reset your password',
+        subject: '[MORATA] - Phục Hồi Mật Khẩu',
         content: {
-            title: 'Reset Your password',
-            warning: 'Warning: This link will expire in 5 minutes!',
-            description: 'You want to reset your password. Please click the link below to reset your password.',
+            title: 'Phục Hồi Lại Mật Khẩu Của Bạn',
+            warning: 'Cảnh báo: Đường dẫn này hết hạn trong 5 phút!',
+            description: 'Bạn muốn khôi phục lại mật khẩu. Vui lòng nhấn vào đường dẫn dưới đây để phục hồi một khẩu',
+            email: req.body.email,
         },
         link: {
-            linkName: 'Reset Password',
+            linkName: 'Phục Hồi Mật Khẩu',
             linkHerf: `http://localhost:3000/resetPassword/${verifyToken}?email=${checkedEmail.email}`,
         },
     };
-    sendMail({ email: req.body.email, template: contentEmail });
+    sendMail({ email: req.body.email, template: contentEmail, type: 'ResetPassword' });
     return res.status(StatusCodes.OK).json(
         customResponse({
             data: null,
-            message: 'Please Check Your Email',
+            message: 'Vui Lòng Kiểm Tra Email',
             success: true,
             status: StatusCodes.NO_CONTENT,
         }),
@@ -202,12 +204,12 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
     jwt.verify(token, config.jwt.resetPasswordTokenKey, async (err: any, decoded: any) => {
         if (err) {
             if (err.name === 'TokenExpiredError') {
-                return next(new UnAuthenticatedError('Token has expired.'));
+                return next(new UnAuthenticatedError('Mã đã hết hạn'));
             }
             if (err.name === 'JsonWebTokenError') {
-                return next(new UnAuthenticatedError('Invalid token.'));
+                return next(new UnAuthenticatedError('Mã không hợp lệ'));
             }
-            return next(new UnAuthenticatedError('Token verification failed.'));
+            return next(new UnAuthenticatedError('Xác thực thất bại vui lòng thử lại!'));
         }
         const { userId } = decoded as JwtPayload;
         const saltRounds = 10;
@@ -218,7 +220,7 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
                 data: null,
                 status: StatusCodes.ACCEPTED,
                 success: true,
-                message: 'Your password has been successfully changed.',
+                message: 'Mật khẩu mới của bạn đã được thay đổi.',
             }),
         );
     });
