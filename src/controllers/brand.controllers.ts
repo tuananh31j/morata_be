@@ -19,5 +19,5 @@ export const createNewBrand = asyncHandler(async (req: Request, res: Response, n
 
 // @Patch: createNewBrand
 export const updateBrand = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    return await brandService.updateCateGory(req, res, next);
+    return await brandService.updateBrand(req, res, next);
 });
