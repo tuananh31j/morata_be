@@ -15,7 +15,7 @@ import _ from 'lodash';
 
 const populateVariation = {
     path: 'variationIds',
-    select: 'price image sku productId stock sold variantAttributes imageUrlRef',
+    select: 'price image sku productId isActive stock sold variantAttributes imageUrlRef',
     model: 'ProductVariation',
     options: { sort: 'price' },
 };
@@ -87,9 +87,7 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
     const queryTransformed = transformQuery(queryVariant);
 
     const populateVariantAndFilter = {
-        path: 'variationIds',
-        select: 'price image sku productId stock sold variantAttributes imageUrlRef',
-        model: 'ProductVariation',
+        ...populateVariation,
         match: { ...queryTransformed.variantQuery, ...filterPrice },
         options: sortPrice,
     };
@@ -240,12 +238,7 @@ export const getAllProductByCategory = async (req: Request, res: Response, next:
 // @Get: getDetailedProduct for admin
 export const getDetailedProductAdmin = async (req: Request, res: Response, next: NextFunction) => {
     const product = await Product.findOne({ _id: req.params.id })
-        .populate({
-            path: 'variationIds',
-            select: 'price image sku color productId stock variantAttributes imageUrlRef',
-            model: 'ProductVariation',
-            options: { sort: 'createdAt' },
-        })
+        .populate(populateVariation)
         .populate(populateCategory)
         .populate(populateBrand);
 
@@ -426,7 +419,7 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
             req.body.imageUrlRefs = oldImageRefs;
         }
     }
-    await product.set({ ...req.body });
+    product.set({ ...req.body });
     await product.save();
 
     return res
@@ -439,6 +432,7 @@ export const updateProductVariation = async (req: Request, res: Response, next: 
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
     const productVariation = await ProductVariation.findById(req.params.variationId);
     const variant = req.body.variantString ? JSON.parse(req.body.variantString) : {};
+    console.log(variant);
     if (!productVariation)
         throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product variation with id: ${req.params.variationId}`);
 
