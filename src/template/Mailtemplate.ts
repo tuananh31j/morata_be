@@ -11,7 +11,7 @@ export type Content = {
             productId?: string;
             image: string;
             name: string;
-            quantity: number;
+            quantity: number | null;
             price: number;
         }[];
         totalPrice: number;

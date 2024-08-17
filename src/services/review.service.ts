@@ -12,10 +12,10 @@ import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 export const createNewReview = async (req: Request, res: Response, next: NextFunction) => {
     const product = await Product.findById(req.body.productId);
     const order = await Order.findById(req.body.orderId).lean();
-    
+
     if (!product) throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${req.body.productId}`);
     const newReview = new Review({ ...req.body });
-    // product?.reviewIds?.push(newReview._id as any);
+    // product?.reviewIds.push(newReview._id as any);
     await product?.save();
     await newReview.save();
 
