@@ -52,10 +52,25 @@ export const totalStats = async (req: Request, res: Response, next: NextFunction
                 $group: {
                     _id: null,
                     total: { $sum: '$totalPrice' },
+                    totalShipping: { $sum: '$shippingFee' },
                     count: { $sum: 1 },
                 },
             },
-        ]).then((result) => ({ total: result[0]?.total || 0, count: result[0]?.count || 0 })),
+            {
+                $project: {
+                    adjustedTotal: {
+                        $subtract: [
+                            { $subtract: ['$total', '$totalShipping'] }, // Trừ phí ship
+                            { $multiply: [{ $subtract: ['$total', '$totalShipping'] }, 0.1] }, // Trừ 10% thuế
+                        ],
+                    },
+                    count: 1,
+                },
+            },
+        ]).then((result) => ({
+            total: result[0]?.adjustedTotal || 0,
+            count: result[0]?.count || 0,
+        })),
         User.countDocuments({ createdAt: { $gte: start, $lte: end } }),
         Product.countDocuments({ createdAt: { $gte: start, $lte: end } }),
     ]);
@@ -117,7 +132,8 @@ export const orderByDayStats = async (req: Request, res: Response, next: NextFun
                     year: { $year: '$createdAt' },
                 },
                 totalOrders: { $sum: 1 },
-                totalRevenue: { $sum: '$totalPrice' },
+                totalPrice: { $sum: '$totalPrice' },
+                totalShipping: { $sum: '$shippingFee' },
             },
         },
         {
@@ -131,7 +147,12 @@ export const orderByDayStats = async (req: Request, res: Response, next: NextFun
                     },
                 },
                 totalOrders: 1,
-                totalRevenue: 1,
+                totalRevenue: {
+                    $subtract: [
+                        { $subtract: ['$totalPrice', '$totalShipping'] },
+                        { $multiply: [{ $subtract: ['$totalPrice', '$totalShipping'] }, 0.1] },
+                    ],
+                },
             },
         },
         {
@@ -177,7 +198,8 @@ export const orderByMonthStats = async (req: Request, res: Response, next: NextF
                     year: { $year: '$createdAt' },
                 },
                 totalOrders: { $sum: 1 },
-                totalRevenue: { $sum: '$totalPrice' },
+                totalPrice: { $sum: '$totalPrice' },
+                totalShipping: { $sum: '$shippingFee' },
             },
         },
         {
@@ -191,7 +213,12 @@ export const orderByMonthStats = async (req: Request, res: Response, next: NextF
                 },
                 year: '$_id.year',
                 totalOrders: 1,
-                totalRevenue: 1,
+                totalRevenue: {
+                    $subtract: [
+                        { $subtract: ['$totalPrice', '$totalShipping'] },
+                        { $multiply: [{ $subtract: ['$totalPrice', '$totalShipping'] }, 0.1] },
+                    ],
+                },
             },
         },
         {
@@ -211,7 +238,10 @@ export const orderByMonthStats = async (req: Request, res: Response, next: NextF
     data.forEach((item) => {
         const index = fullYearData.findIndex((d) => d.month === item.month);
         if (index !== -1) {
-            fullYearData[index] = item;
+            fullYearData[index] = {
+                ...item,
+                totalRevenue: parseFloat(item.totalRevenue.toFixed(2)),
+            };
         }
     });
 
@@ -243,7 +273,16 @@ export const orderByYearStats = async (req: Request, res: Response, next: NextFu
                 totalOrders: { $sum: 1 },
                 totalRevenue: {
                     $sum: {
-                        $cond: [{ $eq: ['$orderStatus', 'done'] }, '$totalPrice', 0],
+                        $cond: [
+                            { $eq: ['$orderStatus', 'done'] },
+                            {
+                                $subtract: [
+                                    { $subtract: ['$totalPrice', '$shippingFee'] },
+                                    { $multiply: [{ $subtract: ['$totalPrice', '$shippingFee'] }, 0.1] },
+                                ],
+                            },
+                            0,
+                        ],
                     },
                 },
             },
@@ -310,7 +349,16 @@ export const orderByDateRangeStats = async (req: Request, res: Response, next: N
                 totalOrders: { $sum: 1 },
                 totalRevenue: {
                     $sum: {
-                        $cond: [{ $eq: ['$orderStatus', 'done'] }, '$totalPrice', 0],
+                        $cond: [
+                            { $eq: ['$orderStatus', 'done'] },
+                            {
+                                $subtract: [
+                                    { $subtract: ['$totalPrice', '$shippingFee'] },
+                                    { $multiply: [{ $subtract: ['$totalPrice', '$shippingFee'] }, 0.1] },
+                                ],
+                            },
+                            0,
+                        ],
                     },
                 },
             },
@@ -341,14 +389,13 @@ export const orderByDateRangeStats = async (req: Request, res: Response, next: N
         allDates.push({
             date: dateString,
             totalOrders: existingStat.totalOrders,
-            totalRevenue: existingStat.totalRevenue,
+            totalRevenue: parseFloat(existingStat.totalRevenue.toFixed(2)),
         });
         currentDate.add(1, 'days');
     }
 
     return allDates;
 };
-
 export const getProductStats = async (req: Request, res: Response, next: NextFunction) => {
     const { startDate, endDate } = req.query;
 
