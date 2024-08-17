@@ -20,6 +20,7 @@ export const createCheckout = async (req: Request, res: Response, next: NextFunc
                 images: [item.image],
                 metadata: {
                     productId: item.productId,
+                    productVariationId: item.productVariationId,
                 },
             },
             unit_amount: item.price,
@@ -64,6 +65,7 @@ const createOrder = async (session: Stripe.Checkout.Session) => {
                     image: product.images[0],
                     name: product.name,
                     productId: product.metadata.productId,
+                    productVariationId: product.metadata.productVariationId,
                 });
             }
         }
@@ -74,6 +76,7 @@ const createOrder = async (session: Stripe.Checkout.Session) => {
             price: item.amount_total,
             image: item.image,
             productId: item.productId,
+            productVariationId: item.productVariationId,
         }));
 
         // Create a new order
