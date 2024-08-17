@@ -15,7 +15,7 @@ router.post(
     authenticate,
     authenticate,
     authorize(ROLE.ADMIN),
-    [createBrandValidation],
+    // [createBrandValidation],
     brandController.createNewBrand,
 );
 router.patch(
@@ -23,7 +23,7 @@ router.patch(
     authenticate,
     authenticate,
     authorize(ROLE.ADMIN),
-    [validateObjectId, updateBrandValidation],
+    // [validateObjectId, updateBrandValidation],
     brandController.updateBrand,
 );
 

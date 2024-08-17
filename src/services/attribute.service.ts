@@ -53,8 +53,6 @@ export const getAttributeDetails = async (req: Request, res: Response, next: Nex
 
 // @Get: get all attributes
 export const getAllAttributes = async (req: Request, res: Response, next: NextFunction) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
     const page = req.query.page ? +req.query.page : 1;
     req.query.limit = String(req.query.limit || 10);
     const features = new APIQuery(
@@ -103,6 +101,7 @@ export const createAttibute = async (req: Request, res: Response, next: NextFunc
 
 // @Get: create attibute
 export const updateAttibute = async (req: Request, res: Response, next: NextFunction) => {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     const id = req.params.attributeId;
     const newAttributes = await Attribute.findOneAndUpdate({ _id: id }, req.body, { new: true });
     if (!newAttributes) throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} attribute with id: ${id}`);

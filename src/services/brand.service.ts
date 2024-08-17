@@ -7,7 +7,7 @@ import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 
 // @Get: getAllBrand
 export const getAllBrands = async (req: Request, res: Response, next: NextFunction) => {
-    const brands = await Brand.find({}).lean();
+    const brands = await Brand.find({});
     return res
         .status(StatusCodes.OK)
         .json(customResponse({ data: brands, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));

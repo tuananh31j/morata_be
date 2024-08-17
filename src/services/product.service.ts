@@ -64,7 +64,6 @@ const transformQuery = (query: any): { attributeQuery: any; variantQuery: any } 
 
 // @Get: getAllProducts
 export const getAllProducts = async (req: Request, res: Response, next: NextFunction) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
     const page = req.query.page ? +req.query.page : 1;
     req.query.limit = String(req.query.limit || 10);
     const queryCopy = { ...req.query };

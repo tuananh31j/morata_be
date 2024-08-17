@@ -10,6 +10,7 @@ import { sendMail } from '@/utils/sendMail';
 import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import _ from 'lodash';
+import { inventoryService } from '.';
 
 type Options = {
     userId?: string;
@@ -186,19 +187,10 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
         },
     };
     await order.save();
-    await Promise.all(
-        req.body.items.map(async (item: ItemOrder) => {
-            await ProductVariation.updateOne(
-                { _id: item.productVariationId },
-                {
-                    $inc: {
-                        sold: item.quantity, // Increment "sold" by item.quantity
-                        stock: -item.quantity, // Decrement "stock" by item.quantity
-                    },
-                },
-            );
-        }),
-    );
+
+    // Update stock
+    await inventoryService.updateStockOnCreateOrder(req.body.items);
+
     await sendMail({ email: req.body.customerInfo.email, template, type: 'UpdateStatusOrder' });
     return res
         .status(StatusCodes.OK)
@@ -224,19 +216,10 @@ export const cancelOrder = async (req: Request, res: Response, next: NextFunctio
         foundedOrder.orderStatus = ORDER_STATUS.CANCELLED;
         foundedOrder.description = req.body.description ?? '';
         foundedOrder.save();
-        await Promise.all(
-            foundedOrder.items.map(async (item: ItemOrder) => {
-                await ProductVariation.updateOne(
-                    { _id: item.productVariationId },
-                    {
-                        $inc: {
-                            sold: -item.quantity, // Decrement "sold" by item.quantity
-                            stock: item.quantity, // Increment "stock" by item.quantity
-                        },
-                    },
-                );
-            }),
-        );
+
+        // Update stock
+        await inventoryService.updateStockOnCancelOrder(foundedOrder.items);
+
         const template: Content = {
             content: {
                 title: `${req.role === ROLE.ADMIN ? 'Đơn hàng của bạn đã bị hủy bởi admin' : 'Đơn hàng của bạn đã bị hủy'}`,

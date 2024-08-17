@@ -1,6 +1,6 @@
 import config from '@/config/env.config';
 import { BadRequestError } from '@/error/customError';
-import { OrderSchema } from '@/interfaces/schema/order';
+import { ItemOrder, OrderSchema } from '@/interfaces/schema/order';
 import Order from '@/models/Order';
 import { id } from 'date-fns/locale';
 import { NextFunction, Request, Response } from 'express';

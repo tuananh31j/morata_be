@@ -12,3 +12,4 @@ export * as tokenService from './token.service';
 export * as userService from './user.service';
 export * as statsService from './stats.service';
 export * as attributeService from './attribute.service';
+export * as inventoryService from './inventory.service';
