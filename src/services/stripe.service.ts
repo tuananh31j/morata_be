@@ -2,6 +2,8 @@ import config from '@/config/env.config';
 import { BadRequestError } from '@/error/customError';
 import { ItemOrder, OrderSchema } from '@/interfaces/schema/order';
 import Order from '@/models/Order';
+import { Content } from '@/template/Mailtemplate';
+import { sendMail } from '@/utils/sendMail';
 import { id } from 'date-fns/locale';
 import { NextFunction, Request, Response } from 'express';
 import Stripe from 'stripe';
@@ -18,6 +20,7 @@ export const createCheckout = async (req: Request, res: Response, next: NextFunc
                 images: [item.image],
                 metadata: {
                     productId: item.productId,
+                    productVariationId: item.productVariationId,
                 },
             },
             unit_amount: item.price,
@@ -62,6 +65,7 @@ const createOrder = async (session: Stripe.Checkout.Session) => {
                     image: product.images[0],
                     name: product.name,
                     productId: product.metadata.productId,
+                    productVariationId: product.metadata.productVariationId,
                 });
             }
         }
@@ -72,6 +76,7 @@ const createOrder = async (session: Stripe.Checkout.Session) => {
             price: item.amount_total,
             image: item.image,
             productId: item.productId,
+            productVariationId: item.productVariationId,
         }));
 
         // Create a new order
@@ -97,6 +102,30 @@ const createOrder = async (session: Stripe.Checkout.Session) => {
             });
 
             await newOrder.save();
+            const template: Content = {
+                content: {
+                    title: 'Đơn hàng mới của bạn',
+                    description: 'Bạn vừa mới đặt một đơn hàng từ Morata dưới đây là sản phẩm bạn đã đặt:',
+                    email: session.customer_details?.email!,
+                },
+                product: {
+                    items: dataItems,
+                    shippingfee: 0,
+                    totalPrice: session.amount_total!,
+                },
+                subject: '[MORATA] - Đơn hàng mới của bạn',
+                link: {
+                    linkHerf: `http://localhost:3000/my-orders/${newOrder._id}`,
+                    linkName: `Kiểm tra đơn hàng`,
+                },
+                user: {
+                    name: session.customer_details?.name!,
+                    phone: session.customer_details?.email!,
+                    email: session.customer_details?.phone!,
+                    address: `[${session.customer_details?.address?.line1}] - ${session.customer_details?.address?.state} , ${session.customer_details?.address?.country}`,
+                },
+            };
+            await sendMail({ email: session.customer_details?.email!, template, type: 'UpdateStatusOrder' });
         }
 
         console.log('Order saved successfully');

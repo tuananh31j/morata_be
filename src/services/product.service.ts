@@ -15,7 +15,7 @@ import _ from 'lodash';
 
 const populateVariation = {
     path: 'variationIds',
-    select: 'price image sku productId isActive stock sold variantAttributes imageUrlRef',
+    select: 'price image sku productId stock sold variantAttributes imageUrlRef isActive',
     model: 'ProductVariation',
     options: { sort: 'price' },
 };

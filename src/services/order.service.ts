@@ -473,6 +473,7 @@ export const finishOrder = async (req: Request, res: Response, next: NextFunctio
 
     if (foundedOrder.orderStatus === ORDER_STATUS.DELIVERED) {
         foundedOrder.orderStatus = ORDER_STATUS.DONE;
+        foundedOrder.isPaid = true;
         foundedOrder.save();
         const template: Content = {
             content: {
