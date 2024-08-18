@@ -23,7 +23,7 @@ const attributeSchema = new mongoose.Schema(
             },
         ],
     },
-    { versionKey: false, timestamps: false },
+    { versionKey: false, timestamps: true },
 );
 
 attributeSchema.pre('save', async function (next) {

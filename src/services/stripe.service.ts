@@ -1,12 +1,12 @@
 import config from '@/config/env.config';
 import { BadRequestError } from '@/error/customError';
-import { ItemOrder, OrderSchema } from '@/interfaces/schema/order';
+import { ItemOrder } from '@/interfaces/schema/order';
 import Order from '@/models/Order';
 import { Content } from '@/template/Mailtemplate';
 import { sendMail } from '@/utils/sendMail';
-import { id } from 'date-fns/locale';
 import { NextFunction, Request, Response } from 'express';
 import Stripe from 'stripe';
+import { inventoryService } from '.';
 
 const stripe = new Stripe(config.stripeConfig.secretKey);
 
@@ -77,7 +77,7 @@ const createOrder = async (session: Stripe.Checkout.Session) => {
             image: item.image,
             productId: item.productId,
             productVariationId: item.productVariationId,
-        }));
+        })) as ItemOrder[];
 
         // Create a new order
         if (session) {
@@ -125,6 +125,7 @@ const createOrder = async (session: Stripe.Checkout.Session) => {
                     address: `[${session.customer_details?.address?.line1}] - ${session.customer_details?.address?.state} , ${session.customer_details?.address?.country}`,
                 },
             };
+            await inventoryService.updateStockOnCreateOrder(dataItems);
             await sendMail({ email: session.customer_details?.email!, template, type: 'UpdateStatusOrder' });
         }
 

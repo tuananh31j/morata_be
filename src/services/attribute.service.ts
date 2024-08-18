@@ -53,6 +53,7 @@ export const getAttributeDetails = async (req: Request, res: Response, next: Nex
 
 // @Get: get all attributes
 export const getAllAttributes = async (req: Request, res: Response, next: NextFunction) => {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     const page = req.query.page ? +req.query.page : 1;
     req.query.limit = String(req.query.limit || 10);
     const features = new APIQuery(
@@ -62,10 +63,11 @@ export const getAllAttributes = async (req: Request, res: Response, next: NextFu
             isVariant: 1,
             values: 1,
             type: 1,
+            isRequired: 1,
         }),
         req.query,
     );
-    features.paginate();
+    features.paginate().sort();
 
     const [data, totalDocs] = await Promise.all([features.query, features.count()]);
     const totalPages = Math.ceil(Number(totalDocs) / +req.query.limit);
@@ -88,6 +90,7 @@ export const getAllAttributes = async (req: Request, res: Response, next: NextFu
 // @Get: create attibute
 export const createAttibute = async (req: Request, res: Response, next: NextFunction) => {
     const newAttributes = new Attribute(req.body);
+    console.log(req.body);
     await newAttributes.save();
     return res.status(StatusCodes.OK).json(
         customResponse({
