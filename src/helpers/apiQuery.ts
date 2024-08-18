@@ -1,4 +1,5 @@
 import { de } from 'date-fns/locale';
+import e from 'express';
 import mongoose, { Query, Document } from 'mongoose';
 
 interface QueryString {
@@ -28,24 +29,25 @@ class APIQuery<T extends Document> {
         const queryObj = { ...this.queryString };
         const excludedFields = ['page', 'sort', 'limit', 'fields', 'search'];
         excludedFields.forEach((el) => delete queryObj[el]);
-
+        console.log(this.queryString, 'this.queryString');
         // Remove 'raw' fields from queryObj (remove manual fields)
         Object.keys(queryObj).forEach((el) => {
             if (el.includes('raw')) {
                 delete queryObj[el];
             }
         });
-        if (queryObj.categoryId) {
-            queryObj.categoryId = { $in: queryObj.categoryId.split(',') };
-        }
-        if (queryObj.brandId) {
-            queryObj.brandId = { $in: queryObj.brandId.split(',') };
-        }
+        console.log(queryObj, 'queryObj');
+        Object.keys(queryObj).forEach((el) => {
+            console.log(el, 'el');
+            if (queryObj[el].includes(',')) {
+                console.log(el);
+                queryObj[el] = { $in: queryObj[el].split(',') };
+            }
+        });
         let queryStr = JSON.stringify(queryObj);
         queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
 
         this.query = this.query.find(JSON.parse(queryStr));
-        console.log(JSON.parse(queryStr), this.queryString);
 
         return this;
     }

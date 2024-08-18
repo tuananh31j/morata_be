@@ -5,7 +5,7 @@ import { IUserSchema } from '@/interfaces/schema/user';
 
 const UserSchema = new mongoose.Schema(
     {
-        username: {
+        name: {
             type: String,
             required: true,
             trim: true,

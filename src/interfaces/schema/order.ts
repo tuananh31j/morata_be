@@ -1,4 +1,3 @@
-import { is } from 'date-fns/locale';
 import mongoose from 'mongoose';
 
 export interface ItemOrder {
@@ -11,7 +10,7 @@ export interface ItemOrder {
     isReviewed: boolean;
 }
 
-export interface OrderSchema {
+export interface OrderSchema extends mongoose.Document {
     userId: mongoose.Schema.Types.ObjectId;
     items: ItemOrder[];
     totalPrice: number;

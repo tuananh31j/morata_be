@@ -11,6 +11,7 @@ import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import _ from 'lodash';
 import { inventoryService } from '.';
+import APIQuery from '@/helpers/apiQuery';
 
 type Options = {
     userId?: string;
@@ -29,57 +30,22 @@ type Options = {
 // @GET:  Get all orders
 
 export const getAllOrders = async (req: Request, res: Response, next: NextFunction) => {
-    let query: { isDeleted: boolean } = { isDeleted: false }; // Filter for non-deleted products
+    const page = req.query.page ? +req.query.page : 1;
+    req.query.limit = String(req.query.limit || 10);
 
-    // Build filter object based on request query parameters
-    const filter: { [key: string]: any } = {};
-    if (req.query.search) {
-        const search = req.query.search as string;
-        filter._id = { $regex: new RegExp(search, 'i') };
-    }
+    const features = new APIQuery(Order.find({}), req.query);
+    features.filter().sort().limitFields().search().paginate();
 
-    if (req.query.paymentMethod) {
-        filter.paymentMethod = req.query.paymentMethod;
-    }
-
-    if (req.query.isPaid) {
-        filter.isPaid = req.query.isPaid;
-    }
-
-    if (req.query.orderStatus) {
-        filter.orderStatus = req.query.orderStatus;
-    }
-
-    const options: Options = {
-        page: req.query.page ? +req.query.page : 1,
-        limit: req.query.limit ? +req.query.limit : 10,
-        sort: req.query.sort ? JSON.parse(req.query.sort as string) : { createdAt: -1 }, // Parse sort criteria from JSON
-        lean: true,
-    };
-
-    query = { ...query, ...filter };
-
-    const data = await Order.paginate(query, options);
-
-    const orders = data.docs.map((order) => {
-        return _.pick(order, [
-            '_id',
-            'totalPrice',
-            'customerInfo',
-            'paymentMethod',
-            'isPaid',
-            'orderStatus',
-            'createdAt',
-        ]);
-    });
+    const [orders, totalDocs] = await Promise.all([features.query, features.count()]);
+    const totalPages = Math.ceil(Number(totalDocs) / +req.query.limit);
 
     return res.status(StatusCodes.OK).json(
         customResponse({
             data: {
-                orders: orders,
-                page: data.page,
-                totalDocs: data.totalDocs,
-                totalPages: data.totalPages,
+                orders,
+                page,
+                totalDocs,
+                totalPages,
             },
             success: true,
             status: StatusCodes.OK,
@@ -89,50 +55,23 @@ export const getAllOrders = async (req: Request, res: Response, next: NextFuncti
 };
 
 //@GET: Get all orders by user
-
 export const getAllOrdersByUser = async (req: Request, res: Response, next: NextFunction) => {
-    let query: { isDeleted: boolean; userId: string } = { isDeleted: false, userId: req.userId }; // Filter for non-deleted products
+    const userId = req.userId;
+    const page = req.query.page ? +req.query.page : 1;
+    req.query.limit = String(req.query.limit || 10);
 
-    // Build filter object based on request query parameters
-    const filter: { [key: string]: any } = {};
+    const features = new APIQuery(Order.find({ userId }), req.query);
+    features.filter().sort().limitFields().search().paginate();
 
-    if (req.query.search) {
-        const search = req.query.search as string;
-        filter._id = { $regex: new RegExp(search, 'i') };
-    }
-
-    if (req.query.paymentMethod) {
-        filter.paymentMethod = req.query.paymentMethod;
-    }
-
-    if (req.query.isPaid) {
-        filter.isPaid = req.query.isPaid;
-    }
-
-    if (req.query.orderStatus) {
-        filter.orderStatus = req.query.orderStatus;
-    }
-
-    const options: Options = {
-        page: req.query.page ? +req.query.page : 1,
-        limit: req.query.limit ? +req.query.limit : 10,
-        sort: req.query.sort ? JSON.parse(req.query.sort as string) : { createdAt: -1 }, // Parse sort criteria from JSON
-        lean: true,
-    };
-
-    query = { ...query, ...filter };
-
-    const data = await Order.paginate(query, options);
-    const orders = data.docs.map((order) => {
-        return _.pick(order, ['_id', 'totalPrice', 'paymentMethod', 'isPaid', 'orderStatus', 'createdAt']);
-    });
+    const [orders, totalDocs] = await Promise.all([features.query, features.count()]);
+    const totalPages = Math.ceil(Number(totalDocs) / +req.query.limit);
     return res.status(StatusCodes.OK).json(
         customResponse({
             data: {
-                orders: orders,
-                page: data.page,
-                totalDocs: data.totalDocs,
-                totalPages: data.totalPages,
+                orders,
+                page,
+                totalDocs,
+                totalPages,
             },
             success: true,
             status: StatusCodes.OK,

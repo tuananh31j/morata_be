@@ -55,7 +55,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         );
     }
 
-    const user = _.pick(foundedUser, ['_id', 'username', 'email', 'role', 'isActive']);
+    const user = _.pick(foundedUser, ['_id', 'name', 'email', 'role', 'isActive']);
     return user;
 };
 

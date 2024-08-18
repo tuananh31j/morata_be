@@ -55,7 +55,7 @@ export const updateReview = async (req: Request, res: Response, next: NextFuncti
 // @Get all review
 export const getAllReviewsOfProduct = async (req: Request, res: Response, next: NextFunction) => {
     const listReviews = await Review.find({ productId: req.query.productId as string })
-        .populate('userId', 'username avatar _id')
+        .populate('userId', 'name avatar _id')
         .lean();
 
     return res
@@ -65,7 +65,7 @@ export const getAllReviewsOfProduct = async (req: Request, res: Response, next: 
 
 // @Get detail review
 export const getDetailReviewsOfProduct = async (req: Request, res: Response, next: NextFunction) => {
-    const review = await Review.findById(req.params.id).populate('userId', 'username avatar -_id').lean();
+    const review = await Review.findById(req.params.id).populate('userId', 'name avatar -_id').lean();
     if (!review) throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} review with id: ${req.params.id}`);
 
     return res

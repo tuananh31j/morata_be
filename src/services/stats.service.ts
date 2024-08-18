@@ -542,7 +542,7 @@ export const findTop5Buyers = async (req: Request, res: Response, next: NextFunc
                 totalSpent: 1,
                 totalItems: 1,
                 lastOrderDate: 1,
-                name: '$userInfo.username',
+                name: '$userInfo.name',
                 email: '$userInfo.email',
                 phone: '$userInfo.phone',
                 avatar: '$userInfo.avatar',

@@ -1,4 +1,5 @@
 import { NotFoundError } from '@/error/customError';
+import APIQuery from '@/helpers/apiQuery';
 import customResponse from '@/helpers/response';
 import Brand from '@/models/Brand';
 import Product from '@/models/Product';
@@ -7,7 +8,9 @@ import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 
 // @Get: getAllBrand
 export const getAllBrands = async (req: Request, res: Response, next: NextFunction) => {
-    const brands = await Brand.find({});
+    const features = new APIQuery(Brand.find({}), req.query);
+    features.search().sort();
+    const brands = await features.query;
     return res
         .status(StatusCodes.OK)
         .json(customResponse({ data: brands, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));

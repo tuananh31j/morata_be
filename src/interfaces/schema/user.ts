@@ -2,7 +2,7 @@ import { ROLE } from './../../constant/allowedRoles';
 import { Document } from 'mongoose';
 
 export interface IUserSchema extends Document {
-    username: string;
+    name: string;
     email: string;
     password: string;
     isActive: boolean;

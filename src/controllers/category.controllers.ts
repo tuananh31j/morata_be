@@ -6,6 +6,10 @@ import { categoryService } from '../services/index';
 export const getAllCategories = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     return await categoryService.getAllCategories(req, res, next);
 });
+// @Get: getAllCategoriesForMenu
+export const getAllCategoriesForMenu = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    return await categoryService.getAllCategoriesForMenu(req, res, next);
+});
 
 // @Get: getPopularCategories
 export const getPopularCategories = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {

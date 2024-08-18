@@ -1,4 +1,5 @@
 import { NotFoundError } from '@/error/customError';
+import APIQuery from '@/helpers/apiQuery';
 import customResponse from '@/helpers/response';
 import Attribute from '@/models/Attribute';
 import Category from '@/models/Category';
@@ -9,7 +10,31 @@ import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 
 // @Get: getAllCategories
 export const getAllCategories = async (req: Request, res: Response, next: NextFunction) => {
-    const categories = await Category.find().sort({ createdAt: -1 }).populate('attributeIds').lean();
+    const page = req.query.page ? +req.query.page : 1;
+    req.query.limit = String(req.query.limit || 10);
+
+    const features = new APIQuery(Category.find().populate('attributeIds'), req.query);
+    features.filter().sort().limitFields().search().paginate();
+
+    const [categories, totalDocs] = await Promise.all([features.query, features.count()]);
+    const totalPages = Math.ceil(Number(totalDocs) / +req.query.limit);
+    return res.status(StatusCodes.OK).json(
+        customResponse({
+            data: {
+                categories,
+                page,
+                totalDocs,
+                totalPages,
+            },
+            success: true,
+            status: StatusCodes.OK,
+            message: ReasonPhrases.OK,
+        }),
+    );
+};
+// @Get: get all categories for menu
+export const getAllCategoriesForMenu = async (req: Request, res: Response, next: NextFunction) => {
+    const categories = await Category.find().select('name _id').lean();
     return res
         .status(StatusCodes.OK)
         .json(customResponse({ data: categories, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));

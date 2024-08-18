@@ -67,7 +67,7 @@ export const getAllAttributes = async (req: Request, res: Response, next: NextFu
         }),
         req.query,
     );
-    features.paginate().sort();
+    features.paginate().sort().filter().search();
 
     const [data, totalDocs] = await Promise.all([features.query, features.count()]);
     const totalPages = Math.ceil(Number(totalDocs) / +req.query.limit);
