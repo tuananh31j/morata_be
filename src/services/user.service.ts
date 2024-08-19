@@ -182,7 +182,7 @@ export const getWishListByUser = async (req: Request, res: Response) => {
             path: 'wishList',
             populate: {
                 path: 'variationIds',
-                select: 'price image sku color productId stock variantAttributes imageUrlRef',
+                select: 'price image sku color productId stock variantAttributes imageUrlRef isActive',
                 model: 'ProductVariation',
                 options: { sort: 'price' },
             },

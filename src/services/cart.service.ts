@@ -7,18 +7,23 @@ import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 
 // @Get cart by user
 export const getCartByUser = async (req: Request, res: Response, next: NextFunction) => {
-    const cart = await Cart.findOne({ userId: req.params.id }).populate({
-        path: 'items.productVariation',
-        populate: {
-            path: 'productId',
-            select: { name: 1 },
-        },
-    });
-    if (!cart) throw new NotFoundError('Not found cart or cart is not exist.');
-
+    const cartUser = await Cart.findOne({ userId: req.params.id })
+        .populate({
+            path: 'items.productVariation',
+            populate: {
+                path: 'productId',
+                select: { name: 1 },
+            },
+        })
+        .lean();
+    if (!cartUser) throw new NotFoundError('Not found cart or cart is not exist.');
+    const filteredProducts = cartUser.items.filter(
+        (item) => (item.productVariation as any).isActive !== false && (item.productVariation as any).stock > 0,
+    );
+    cartUser.items = filteredProducts;
     return res
         .status(StatusCodes.OK)
-        .json(customResponse({ data: cart, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+        .json(customResponse({ data: cartUser, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
 };
 
 // @Add to cart

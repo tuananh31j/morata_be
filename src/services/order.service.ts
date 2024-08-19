@@ -32,8 +32,9 @@ type Options = {
 export const getAllOrders = async (req: Request, res: Response, next: NextFunction) => {
     const page = req.query.page ? +req.query.page : 1;
     req.query.limit = String(req.query.limit || 10);
-
-    const features = new APIQuery(Order.find({}), req.query);
+    const searchString = req.query.rawsearch;
+    const searchQuery = searchString ? { 'customerInfo.name': { $regex: searchString, $options: 'i' } } : {};
+    const features = new APIQuery(Order.find(searchQuery), req.query);
     features.filter().sort().limitFields().search().paginate();
 
     const [orders, totalDocs] = await Promise.all([features.query, features.count()]);

@@ -1,5 +1,6 @@
 import { AttributeType } from '@/constant/attributeType';
 import { IAttributeSchema } from '@/interfaces/schema/attribute';
+import { convertString } from '@/utils/convertString';
 import mongoose from 'mongoose';
 
 const attributeSchema = new mongoose.Schema(
@@ -27,7 +28,7 @@ const attributeSchema = new mongoose.Schema(
 );
 
 attributeSchema.pre('save', async function (next) {
-    this.attributeKey = this.name!.toLowerCase().replace(/ /g, '_');
+    this.attributeKey = convertString(this.name as string);
     next();
 });
 const Attribute = mongoose.model<IAttributeSchema>('Attribute', attributeSchema);

@@ -29,7 +29,6 @@ class APIQuery<T extends Document> {
         const queryObj = { ...this.queryString };
         const excludedFields = ['page', 'sort', 'limit', 'fields', 'search'];
         excludedFields.forEach((el) => delete queryObj[el]);
-        console.log(this.queryString, 'this.queryString');
         // Remove 'raw' fields from queryObj (remove manual fields)
         Object.keys(queryObj).forEach((el) => {
             if (el.includes('raw')) {
