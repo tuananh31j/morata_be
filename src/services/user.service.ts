@@ -1,5 +1,4 @@
 import User from '@/models/User';
-import Location from '@/models/Location';
 import { removeUploadedFile, uploadSingleFile } from '@/utils/files';
 import { NextFunction, Request, Response } from 'express';
 import _ from 'lodash';
@@ -52,14 +51,11 @@ export const getAllUsers = async (req: Request, res: Response, next: NextFunctio
 // @Get: getUserDetails
 export const getUserDetails = async (req: Request, res: Response, next: NextFunction) => {
     const { userId } = req.params;
-    const [user, location] = await Promise.all([
-        User.findById(userId).select('-password').lean(),
-        Location.findOne({ user: userId }).lean(),
-    ]);
+    const user = await User.findById(userId).select('-password').lean();
     if (!user) throw new NotFoundError(`${ReasonPhrases.NOT_FOUND}/ID: ${userId}`);
     return res.status(StatusCodes.OK).json(
         customResponse({
-            data: { user, location },
+            data: { user },
             success: true,
             status: StatusCodes.OK,
             message: ReasonPhrases.OK,
@@ -126,16 +122,11 @@ export const updateUserProfile = async (req: Request, res: Response) => {
     } else {
         delete req.body.avatar;
     }
-    const userAddress = await Location.findOneAndUpdate(
-        { user: req.userId, type: LOCATION_TYPES.DEFAULT },
-        req.body.address,
-        { new: true },
-    ).lean();
 
     const profileData = await User.findByIdAndUpdate(req.userId, req.body, { new: true }).lean();
     return res.status(StatusCodes.OK).json(
         customResponse({
-            data: { profileData, userAddress },
+            data: { profileData },
             success: true,
             status: StatusCodes.OK,
             message: ReasonPhrases.OK,

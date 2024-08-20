@@ -14,15 +14,12 @@ router.get('/latest', productController.getTopLatestProducts);
 router.get('/deals', productController.getTopDealsOfTheDay);
 router.get('/reviews', productController.getTopReviewsProducts);
 router.get('/related', productController.getTopRelatedProducts);
-router.get('/byCate/:cateId', productController.getAllProductByCategory);
 router.get('/:id', [validateObjectId], productController.getDetailedProduct);
 router.get('/filter/:categoryId', productController.filterProductsBycategory);
 
 // @admin
 router.get('/portal/all', authenticate, authorize(ROLE.ADMIN), productController.getAllProductAdmin);
 router.get('/portal/:id', authenticate, authorize(ROLE.ADMIN), productController.getDetailedProductAdmin);
-router.get('/portal/active', authenticate, authorize(ROLE.ADMIN), productController.getProductsActive);
-router.get('/portal/hidden', authenticate, authorize(ROLE.ADMIN), productController.getProductsHidden);
 
 router.post(
     '/',
@@ -57,6 +54,7 @@ router.patch(
     upload.fields([{ name: 'image', maxCount: 1 }]),
     productController.updateProductVariation,
 );
-router.delete('/:id', [authenticate, authorize(ROLE.ADMIN), validateObjectId], productController.deleteProduct);
+router.patch('/hide/:productId', [authenticate, authorize(ROLE.ADMIN)], productController.hiddenProduct);
+router.patch('/show/:productId', [authenticate, authorize(ROLE.ADMIN)], productController.showProduct);
 
 export default router;

@@ -2,9 +2,8 @@ import { ROLE } from '@/constant/allowedRoles';
 import { ORDER_STATUS, PAYMENT_METHOD } from '@/constant/order';
 import { BadRequestError, NotAcceptableError, NotFoundError } from '@/error/customError';
 import customResponse from '@/helpers/response';
-import { ItemOrder, OrderSchema } from '@/interfaces/schema/order';
+import { ItemOrder } from '@/interfaces/schema/order';
 import Order from '@/models/Order';
-import ProductVariation from '@/models/ProductVariation';
 import { Content } from '@/template/Mailtemplate';
 import { sendMail } from '@/utils/sendMail';
 import { NextFunction, Request, Response } from 'express';
@@ -13,22 +12,7 @@ import _ from 'lodash';
 import { inventoryService } from '.';
 import APIQuery from '@/helpers/apiQuery';
 
-type Options = {
-    userId?: string;
-    page: number;
-    limit: number;
-    sort?: { [key: string]: number };
-    lean: boolean;
-
-    //Filter properties
-    search?: string;
-    paymentMethod?: string;
-    isPaid?: boolean;
-    orderStatus?: string;
-};
-
 // @GET:  Get all orders
-
 export const getAllOrders = async (req: Request, res: Response, next: NextFunction) => {
     const page = req.query.page ? +req.query.page : 1;
     req.query.limit = String(req.query.limit || 10);
