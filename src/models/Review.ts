@@ -1,3 +1,4 @@
+import { IReviewSchema } from '@/interfaces/schema/review';
 import mongoose, { Schema } from 'mongoose';
 
 const reviewSchema = new mongoose.Schema(
@@ -55,4 +56,5 @@ reviewSchema.post('save', async function (doc) {
         console.error('Error updating product rating:', error);
     }
 });
-export default mongoose.model('Review', reviewSchema);
+const Review = mongoose.model<IReviewSchema>('Review', reviewSchema);
+export default Review;
