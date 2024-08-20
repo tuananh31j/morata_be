@@ -39,10 +39,6 @@ export const getTopRelatedProducts = asyncHandler(async (req: Request, res: Resp
     return await productService.getTopRelatedProducts(req, res, next);
 });
 
-// @Get all product by category
-export const getAllProductByCategory = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    return await productService.getAllProductByCategory(req, res, next);
-});
 // @Get all product for admin
 export const getAllProductAdmin = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     return await productService.getAllProductAdmin(req, res, next);
@@ -50,14 +46,6 @@ export const getAllProductAdmin = asyncHandler(async (req: Request, res: Respons
 // @Get details product for admin
 export const getDetailedProductAdmin = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     return await productService.getDetailedProductAdmin(req, res, next);
-});
-// @Get all product active
-export const getProductsActive = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    return await productService.getProductsActive(req, res, next);
-});
-// @Get all product hidden
-export const getProductsHidden = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    return await productService.getProductsHidden(req, res, next);
 });
 
 // @Post: createNewProduct
@@ -79,9 +67,13 @@ export const updateProductVariation = asyncHandler(async (req: Request, res: Res
     return await productService.updateProductVariation(req, res, next);
 });
 
-// @Delete: deleteProduct
-export const deleteProduct = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    return await productService.deleteProduct(req, res, next);
+// @PATCH: hiddenProduct
+export const hiddenProduct = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    return await productService.hiddenProduct(req, res, next);
+});
+// @PATCH: showProduct
+export const showProduct = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    return await productService.showProduct(req, res, next);
 });
 // @GET: filterProductsBycategory
 export const filterProductsBycategory = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {

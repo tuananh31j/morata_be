@@ -27,7 +27,7 @@ const populateBrand = {
     path: 'brandId',
     model: 'Brand',
 };
-const clientRequiredFields = { isDeleted: false, isAvailable: true };
+const clientRequiredFields = { isDeleted: false, isAvailable: true, isHide: false };
 
 // query attribute conversion function for attribute and variant
 const transformQuery = (query: any): { attributeQuery: any; variantQuery: any } => {
@@ -221,17 +221,6 @@ export const getTopRelatedProducts = async (req: Request, res: Response, next: N
     );
 };
 
-// @Get all products by category
-export const getAllProductByCategory = async (req: Request, res: Response, next: NextFunction) => {
-    const products = await Product.find({ categoryId: req.params.cateId, ...clientRequiredFields })
-        .select(queryClientFields)
-        .populate(populateVariation);
-
-    return res
-        .status(StatusCodes.OK)
-        .json(customResponse({ data: products, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
-};
-
 // @Get: getDetailedProduct for admin
 export const getDetailedProductAdmin = async (req: Request, res: Response, next: NextFunction) => {
     const product = await Product.findOne({ _id: req.params.id })
@@ -255,60 +244,9 @@ export const getDetailedProductAdmin = async (req: Request, res: Response, next:
 export const getAllProductAdmin = async (req: Request, res: Response, next: NextFunction) => {
     const page = req.query.page ? +req.query.page : 1;
     const features = new APIQuery(
-        Product.find({ isDeleted: false })
-            .populate(populateVariation)
-            .populate(populateCategory)
-            .populate(populateBrand),
+        Product.find().populate(populateVariation).populate(populateCategory).populate(populateBrand),
         req.query,
     );
-    features.filter().sort().limitFields().search().paginate();
-
-    const [data, totalDocs] = await Promise.all([features.query, features.count()]);
-    const totalPages = Math.ceil(Number(totalDocs) / page);
-    return res.status(StatusCodes.OK).json(
-        customResponse({
-            data: {
-                products: data,
-                page: page,
-                totalDocs: totalDocs,
-                totalPages: totalPages,
-            },
-            success: true,
-            status: StatusCodes.OK,
-            message: ReasonPhrases.OK,
-        }),
-    );
-};
-
-// @Get hidden products for admin
-export const getProductsHidden = async (req: Request, res: Response, next: NextFunction) => {
-    const page = req.query.page ? +req.query.page : 1;
-    const features = new APIQuery(
-        Product.find({ isDeleted: false, isHide: true }).populate(populateVariation),
-        req.query,
-    );
-    features.filter().sort().limitFields().search().paginate();
-
-    const [data, totalDocs] = await Promise.all([features.query, features.count()]);
-    const totalPages = Math.ceil(Number(totalDocs) / page);
-    return res.status(StatusCodes.OK).json(
-        customResponse({
-            data: {
-                products: data,
-                page: page,
-                totalDocs: totalDocs,
-                totalPages: totalPages,
-            },
-            success: true,
-            status: StatusCodes.OK,
-            message: ReasonPhrases.OK,
-        }),
-    );
-};
-// @Get active products for admin
-export const getProductsActive = async (req: Request, res: Response, next: NextFunction) => {
-    const page = req.query.page ? +req.query.page : 1;
-    const features = new APIQuery(Product.find({ isDeleted: false }).populate(populateVariation), req.query);
     features.filter().sort().limitFields().search().paginate();
 
     const [data, totalDocs] = await Promise.all([features.query, features.count()]);
@@ -483,46 +421,31 @@ export const addNewVariationToProduct = async (req: Request, res: Response, next
     );
 };
 
-// @Delete: deleteProduct
-export const deleteProduct = async (req: Request, res: Response, next: NextFunction) => {
-    const product = await Product.findOneAndUpdate(
-        { _id: req.params.id, isDeleted: false },
-        { isDeleted: false },
-        { new: true },
-    )
-        .populate({
-            path: 'variationIds',
-            select: '_id',
-            model: 'ProductVariation',
-            options: { sort: 'createdAt' },
-        })
-        .populate(populateCategory)
-        .populate(populateBrand)
-        .lean();
+// @PATCH: hiddenProduct
+export const hiddenProduct = async (req: Request, res: Response, next: NextFunction) => {
+    const productId = req.params.productId;
+    const product = await Product.findOneAndUpdate({ _id: productId, isHide: false }, { isHide: true }, { new: true });
 
     if (!product) {
-        throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${req.params.id}`);
-    }
-
-    const carts = await Cart.find({}).lean();
-    const variationsIds = product?.variationIds;
-    if (variationsIds) {
-        for (const cart of carts) {
-            const updatedItems = cart.items.filter((item) => {
-                return !variationsIds.some(
-                    (variation: any) => item.productVariation.toString() === variation._id.toString(),
-                );
-            });
-
-            if (cart.items.length !== updatedItems.length) {
-                await Cart.updateOne({ userId: cart.userId }, { items: updatedItems });
-            }
-        }
+        throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${productId}`);
     }
 
     return res
         .status(StatusCodes.OK)
-        .json(customResponse({ data: null, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+        .json(customResponse({ data: product, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+};
+// @PATCH: showProduct
+export const showProduct = async (req: Request, res: Response, next: NextFunction) => {
+    const productId = req.params.productId;
+    const product = await Product.findOneAndUpdate({ _id: productId, isHide: true }, { isHide: false }, { new: true });
+
+    if (!product) {
+        throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${productId}`);
+    }
+
+    return res
+        .status(StatusCodes.OK)
+        .json(customResponse({ data: product, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
 };
 
 //GET: filterProductsBycategory

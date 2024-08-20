@@ -5,7 +5,6 @@ export * as productController from './product.controllers';
 export * as checkoutController from './checkout.controllers';
 export * as cartController from './cart.controllers';
 export * as orderController from './order.controllers';
-export * as locationController from './location.controllers';
 export * as statsController from './stats.controllers';
 export * as attributeController from './attribute.controllers';
 export * as userController from './user.controllers';
