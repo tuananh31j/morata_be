@@ -507,7 +507,7 @@ export const findTop5Buyers = async (req: Request, res: Response, next: NextFunc
         return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid date filter' });
     }
 
-    const pipeline: any[] = [
+    const topBuyersPipeline: any[] = [
         {
             $match: {
                 createdAt: { $gte: start, $lte: end },
@@ -556,10 +556,49 @@ export const findTop5Buyers = async (req: Request, res: Response, next: NextFunc
         },
     ];
 
-    const topBuyers = await Order.aggregate(pipeline);
+    const topBuyers = await Order.aggregate(topBuyersPipeline);
+
+    const latestOrdersPipeline: any[] = [
+        {
+            $match: {
+                createdAt: { $gte: start, $lte: end },
+            },
+        },
+        {
+            $sort: { createdAt: -1 },
+        },
+        {
+            $limit: 2,
+        },
+        {
+            $lookup: {
+                from: 'users',
+                localField: 'userId',
+                foreignField: '_id',
+                as: 'userInfo',
+            },
+        },
+        {
+            $unwind: '$userInfo',
+        },
+        {
+            $project: {
+                _id: 1,
+                customerName: '$userInfo.name',
+                customerAvatar: '$userInfo.avatar',
+                paymentMethod: 1,
+                totalPrice: 1,
+                orderStatus: 1,
+                createdAt: 1,
+            },
+        },
+    ];
+
+    const latestOrders = await Order.aggregate(latestOrdersPipeline);
 
     return {
         topBuyers,
+        latestOrders,
         dateRange: {
             start: moment(start).format('DD-MM-YYYY'),
             end: moment(end).format('DD-MM-YYYY'),
