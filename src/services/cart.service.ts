@@ -18,10 +18,7 @@ export const getCartByUser = async (req: Request, res: Response, next: NextFunct
         .lean();
     if (!cartUser) throw new NotFoundError('Not found cart or cart is not exist.');
     const filteredProducts = cartUser.items.filter(
-        (item) =>
-            (item.productVariation as any).isActive !== false &&
-            (item.productVariation as any).stock > 0 &&
-            (item.productVariation as any).productId.isHide !== true,
+        (item) => (item.productVariation as any).stock > 0 && (item.productVariation as any).productId.isHide !== true,
     );
     cartUser.items = filteredProducts;
     return res
