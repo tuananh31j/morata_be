@@ -21,6 +21,9 @@ export const getAllReviewByFilters = asyncHandler(async (req: Request, res: Resp
 export const getDetailReivewOfProduct = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     return await reviewService.getDetailReviewsOfProduct(req, res, next);
 });
+export const getAllStarsReview = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    return await reviewService.getAllStarsReview(req, res, next);
+});
 export const updateReview = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     return await reviewService.updateReview(req, res, next);
 });

@@ -45,7 +45,6 @@ reviewSchema.post('save', async function (doc) {
             await mongoose.model('Product').findByIdAndUpdate(
                 doc.productId,
                 {
-                    $push: { reviewIds: doc._id },
                     rating: averageRating,
                     reviewCount: reviewCount,
                 },

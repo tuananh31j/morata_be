@@ -3,6 +3,7 @@ import APIQuery from '@/helpers/apiQuery';
 import customResponse from '@/helpers/response';
 import { ItemOrder } from '@/interfaces/schema/order';
 import Order from '@/models/Order';
+import Product from '@/models/Product';
 import ReportReview from '@/models/ReportReview';
 import Review from '@/models/Review';
 import { NextFunction, Request, Response } from 'express';
@@ -74,7 +75,7 @@ export const getAllReviews = async (req: Request, res: Response, next: NextFunct
                 rating: 1,
                 userId: 1,
                 productId: 1,
-                createAt: 1,
+                createdAt: 1,
             })
             .populate('userId', 'name  _id'),
         req.query,
@@ -111,7 +112,7 @@ export const getAllReviewsIsReported = async (req: Request, res: Response, next:
                 reason: 1,
                 userId: 1,
                 reviewId: 1,
-                createAt: 1,
+                createdAt: 1,
             })
             .populate('userId', 'name _id'),
         req.query,
@@ -146,13 +147,65 @@ export const getAllReviewsByFilters = async (req: Request, res: Response, next: 
 
 // @Get all review of product
 export const getAllReviewsOfProduct = async (req: Request, res: Response, next: NextFunction) => {
-    const listReviews = await Review.find({ productId: req.query.productId as string })
-        .populate('userId', 'name avatar _id')
-        .lean();
+    // const listReviews = await Review.find({ productId: req.query.productId as string, rating: { $gte: 4 } })
+    //     .populate('userId', 'name avatar _id')
+    //     .sort({ createdAt: -1 })
+    //     .lean();
+    const limit = 1;
+    req.query.limit = String(req.query.limit || limit);
 
-    return res
-        .status(StatusCodes.OK)
-        .json(customResponse({ data: listReviews, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+    const features = new APIQuery(
+        Review.find({ productId: req.query.productId as string })
+            .populate('userId', 'name  avatar _id')
+            .sort({ createdAt: -1 }),
+        req.query,
+    );
+    features.paginate().sort().filter();
+
+    const [data, totalDocs] = await Promise.all([features.query, features.count()]);
+    return res.status(StatusCodes.OK).json(
+        customResponse({
+            data: {
+                reviewList: data,
+                totalDocs,
+                limit,
+            },
+            success: true,
+            status: StatusCodes.OK,
+            message: ReasonPhrases.OK,
+        }),
+    );
+};
+
+// @Get 1 star to 5 star review of product
+export const getAllStarsReview = async (req: Request, res: Response, next: NextFunction) => {
+    const listReviews = await Review.find({ productId: req.params.productId }).lean();
+
+    if (!listReviews) throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} with product id ${req.query.productId}`);
+
+    const fiveRatingCount = listReviews?.filter((item) => item.rating > 4).length;
+    const fourRatingCount = listReviews?.filter((item) => item.rating < 5 && item.rating > 3).length;
+    const threeRatingCount = listReviews?.filter((item) => item.rating < 4 && item.rating > 2).length;
+    const twoRatingCount = listReviews?.filter((item) => item.rating < 3 && item.rating > 1).length;
+    const oneRatingCount = listReviews?.filter((item) => item.rating < 2 && item.rating > 0).length;
+
+    return res.status(StatusCodes.OK).json(
+        customResponse({
+            data: {
+                countReview: listReviews.length,
+                starsReview: [
+                    { count: fiveRatingCount, star: 5 },
+                    { count: fourRatingCount, star: 4 },
+                    { count: threeRatingCount, star: 3 },
+                    { count: twoRatingCount, star: 2 },
+                    { count: oneRatingCount, star: 1 },
+                ],
+            },
+            success: true,
+            status: StatusCodes.OK,
+            message: ReasonPhrases.OK,
+        }),
+    );
 };
 
 // @Get detail review
@@ -167,15 +220,28 @@ export const getDetailReviewsOfProduct = async (req: Request, res: Response, nex
 
 // @Delete review
 export const deleteReview = async (req: Request, res: Response, next: NextFunction) => {
-    const review = await Review.deleteOne({ _id: req.params.id });
-    // const reportReview = await ReportReview.deleteMany({ reviewId: req.params.id });
+    const review = await Review.findByIdAndDelete(req.params.id);
+
+    const product = await Product.findById(review?.productId);
+    const reviews = await Review.find({ productId: review?.productId });
+
+    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+    const averageRating = reviews.length > 0 ? totalRating / reviews.length : 0;
+    const reviewCount = reviews.length;
 
     if (!review) throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} review with id: ${req.params.id}`);
-    // if (!reportReview) throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} report review with id: ${req.params.id}`);
+    if (!product) throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${review?.productId}`);
 
-    return res
-        .status(StatusCodes.OK)
-        .json(customResponse({ data: null, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+    await Product.updateOne({ _id: review?.productId }, { rating: averageRating, reviewCount: reviewCount });
+
+    return res.status(StatusCodes.OK).json(
+        customResponse({
+            data: null,
+            success: true,
+            status: StatusCodes.OK,
+            message: ReasonPhrases.OK,
+        }),
+    );
 };
 
 // @Delete report review

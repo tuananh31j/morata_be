@@ -7,3 +7,8 @@ export enum ReportReason {
     Misinformation = 'Thông tin sai lệch',
     advertisement = 'Quảng cáo',
 }
+export enum ReportStatus {
+    UnderReview = 'Đang xem xét',
+    ContentRemoved = 'Đã xóa nội dung vi phạm',
+    NoViolation = 'Nội dung không vi phạm',
+}
