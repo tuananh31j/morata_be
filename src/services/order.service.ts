@@ -11,6 +11,7 @@ import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import _ from 'lodash';
 import { inventoryService } from '.';
 import APIQuery from '@/helpers/apiQuery';
+import ProductVariation from '@/models/ProductVariation';
 
 // @GET:  Get all orders
 export const getAllOrders = async (req: Request, res: Response, next: NextFunction) => {
@@ -73,12 +74,27 @@ export const getDetailedOrder = async (req: Request, res: Response, next: NextFu
     if (!order) {
         throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} order with id: ${req.params.id}`);
     }
-
+    const addVariantResponse = async (product: any[]) => {
+        return Promise.all(
+            product.map(async (product) => {
+                const variant = await ProductVariation.findById(product.productVariationId).select('variantAttributes');
+                return {
+                    ...product,
+                    variant,
+                };
+            }),
+        );
+    };
+    const items = await addVariantResponse(order.items);
     const result = _.omit(order, ['updatedAt']);
+    const response = {
+        ...result,
+        items,
+    };
 
     return res
         .status(StatusCodes.OK)
-        .json(customResponse({ data: result, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+        .json(customResponse({ data: response, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
 };
 
 // @POST: Create new order
@@ -133,10 +149,14 @@ export const cancelOrder = async (req: Request, res: Response, next: NextFunctio
         throw new NotAcceptableError(`You cannot cancel this order because it was cancelled before. `);
     }
 
-    if (foundedOrder.orderStatus === ORDER_STATUS.PENDING) {
+    if (foundedOrder.orderStatus !== ORDER_STATUS.DELIVERED && foundedOrder.orderStatus !== ORDER_STATUS.DONE) {
+        if (req.role !== ROLE.ADMIN && foundedOrder.orderStatus !== ORDER_STATUS.PENDING) {
+            throw new NotAcceptableError('Bạn không được phép hủy đơn vui lòng liên hệ nếu có vấn đề');
+        }
         if (req.role === ROLE.ADMIN) {
             foundedOrder.canceledBy = ROLE.ADMIN;
         }
+
         foundedOrder.orderStatus = ORDER_STATUS.CANCELLED;
         foundedOrder.description = req.body.description ?? '';
         foundedOrder.save();
@@ -181,7 +201,7 @@ export const cancelOrder = async (req: Request, res: Response, next: NextFunctio
         };
         await sendMail({ email: foundedOrder.customerInfo.email, template, type: 'UpdateStatusOrder' });
     } else {
-        throw new NotAcceptableError(`Your order is shipping , you can not cancel.`);
+        throw new NotAcceptableError(`Đơn hàng của bạn đã được giao không thể hủy đơn`);
     }
 
     return res
@@ -385,10 +405,6 @@ export const deliverOrder = async (req: Request, res: Response, next: NextFuncti
 
 // @Set order status to done
 export const finishOrder = async (req: Request, res: Response, next: NextFunction) => {
-    if (!req.role || req.role !== 'admin') {
-        throw new NotAcceptableError('Only admin can access.');
-    }
-
     const foundedOrder = await Order.findOne({ _id: req.body.orderId });
 
     if (!foundedOrder) {
