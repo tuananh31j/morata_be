@@ -35,11 +35,8 @@ class APIQuery<T extends Document> {
                 delete queryObj[el];
             }
         });
-        console.log(queryObj, 'queryObj');
         Object.keys(queryObj).forEach((el) => {
-            console.log(el, 'el');
-            if (queryObj[el].includes(',')) {
-                console.log(el);
+            if (String(queryObj[el]).includes(',')) {
                 queryObj[el] = { $in: queryObj[el].split(',') };
             }
         });

@@ -90,7 +90,6 @@ export const getAllAttributes = async (req: Request, res: Response, next: NextFu
 // @Get: create attibute
 export const createAttibute = async (req: Request, res: Response, next: NextFunction) => {
     const newAttributes = new Attribute(req.body);
-    console.log(req.body);
     await newAttributes.save();
     return res.status(StatusCodes.OK).json(
         customResponse({

@@ -6,4 +6,3 @@ export * from './Cart';
 export * from './Review';
 export * from './User';
 export * from './Token';
-export * from './Location';

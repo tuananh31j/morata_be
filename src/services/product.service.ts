@@ -312,7 +312,7 @@ export const createNewProduct = async (req: Request, res: Response, next: NextFu
     const newVariations = await ProductVariation.insertMany(variations);
     const variationIds = newVariations.map((variation) => variation._id);
     newProduct.set({ variationIds: variationIds });
-    newProduct.save();
+    await newProduct.save();
 
     return res.status(StatusCodes.CREATED).json(
         customResponse({
@@ -370,7 +370,6 @@ export const updateProductVariation = async (req: Request, res: Response, next: 
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
     const productVariation = await ProductVariation.findById(req.params.variationId);
     const variant = req.body.variantString ? JSON.parse(req.body.variantString) : {};
-    console.log(variant);
     if (!productVariation)
         throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product variation with id: ${req.params.variationId}`);
 

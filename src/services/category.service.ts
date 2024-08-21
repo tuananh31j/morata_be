@@ -112,8 +112,6 @@ export const createNewCategory = async (req: Request, res: Response, next: NextF
 
     const category = await Category.create({ name, attributeIds });
 
-    console.log(req.body);
-
     return res.status(StatusCodes.CREATED).json(
         customResponse({
             data: category,
