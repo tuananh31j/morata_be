@@ -1,7 +1,7 @@
 import { ROLE } from '@/constant/allowedRoles';
 import Joi from 'joi';
 
-const brandSchema = {
+const userSchema = {
     createUser: Joi.object({
         name: Joi.string().min(3).max(50).required(),
         email: Joi.string().email().required(),
@@ -18,4 +18,4 @@ const brandSchema = {
     }),
 };
 
-export default brandSchema;
+export default userSchema;

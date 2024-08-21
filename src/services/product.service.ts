@@ -284,7 +284,7 @@ export const createNewProduct = async (req: Request, res: Response, next: NextFu
     if (files && files['variationImages']) {
         const { fileUrls, fileUrlRefs, originNames } = await uploadFiles(files['variationImages']);
         variationObjs = fileUrls.map((item, i) => {
-            const variation = JSON.parse(req.body.variationsString).find((obj: IVariationPlayload) => {
+            const variation = req.body.variationsString.find((obj: IVariationPlayload) => {
                 const originName = originNames[i];
                 const fileName = obj.imageUrlRef;
                 return fileName === originName;
@@ -295,8 +295,7 @@ export const createNewProduct = async (req: Request, res: Response, next: NextFu
         });
     }
 
-    const attributes = JSON.parse(req.body.attributes);
-    const kk = JSON.parse(req.body.variationsString);
+    const attributes = req.body.attributes;
     delete req.body.variationImages;
     delete req.body.variationsString;
 
@@ -316,7 +315,7 @@ export const createNewProduct = async (req: Request, res: Response, next: NextFu
 
     return res.status(StatusCodes.CREATED).json(
         customResponse({
-            data: { newProduct, kk, variationObjs, variations },
+            data: { newProduct, variationObjs, variations },
             success: true,
             status: StatusCodes.CREATED,
             message: ReasonPhrases.CREATED,
@@ -328,8 +327,10 @@ export const createNewProduct = async (req: Request, res: Response, next: NextFu
 export const updateProduct = async (req: Request, res: Response, next: NextFunction) => {
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
     const product = await Product.findById(req.params.id);
-    const oldImageRefs = req.body.oldImageRefs ? JSON.parse(req.body.oldImageRefs) : [];
-    const oldImages = req.body.oldImages ? JSON.parse(req.body.oldImages) : [];
+
+    // @Keep old images
+    const { oldImageRefs, oldImages } = req.body;
+
     if (!product) throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${req.params.id}`);
 
     if (files && files['thumbnail']) {
@@ -339,9 +340,6 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
         req.body.thumbnail = fileUrls[0];
         req.body.thumbnailUrlRef = fileUrlRefs[0];
     }
-    if (req.body.attributes) {
-        req.body.attributes = JSON.parse(req.body.attributes);
-    }
 
     if (files && files['images']) {
         const { fileUrlRefs, fileUrls } = await uploadFiles(files['images']);
@@ -349,10 +347,12 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
         req.body.imageUrlRefs = [...oldImageRefs, ...fileUrlRefs];
     } else {
         if (product.imageUrlRefs && product.imageUrlRefs.length) {
-            for (let i = 0; i < product.imageUrlRefs.length; i++) {
-                if (oldImageRefs.includes(product.imageUrlRefs[i])) continue;
-                await removeUploadedFile(product.imageUrlRefs[i]);
-            }
+            // @Remove images not in oldImageRefs
+            await Promise.all(
+                product.imageUrlRefs
+                    .filter((imageUrlRef) => !oldImageRefs.includes(imageUrlRef))
+                    .map((imageUrlRef) => removeUploadedFile(imageUrlRef)),
+            );
             req.body.images = oldImages;
             req.body.imageUrlRefs = oldImageRefs;
         }

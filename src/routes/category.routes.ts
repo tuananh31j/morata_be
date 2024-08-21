@@ -12,19 +12,12 @@ router.get('/all', categoryController.getAllCategories);
 router.get('/menu', categoryController.getAllCategoriesForMenu);
 router.get('/popular', categoryController.getPopularCategories);
 router.get('/:id', [validateObjectId], categoryController.getDetailedCategory);
-router.post(
-    '/',
-    authenticate,
-    authenticate,
-    authorize(ROLE.ADMIN),
-    [createCategoryValidation],
-    categoryController.createNewCategory,
-);
+router.post('/', authenticate, authorize(ROLE.ADMIN), [createCategoryValidation], categoryController.createNewCategory);
 router.patch(
     '/:id',
     authenticate,
     authorize(ROLE.ADMIN),
-    // [validateObjectId, updateCategoryValidation],
+    [validateObjectId, updateCategoryValidation],
     categoryController.updateCateGory,
 );
 
