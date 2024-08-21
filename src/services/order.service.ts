@@ -103,6 +103,9 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
         ...req.body,
         userId: req.userId,
     });
+    // Check stock before create order
+    await inventoryService.checkProductStatus(req.body.items);
+
     const template: Content = {
         content: {
             title: 'Đơn hàng mới của bạn',
