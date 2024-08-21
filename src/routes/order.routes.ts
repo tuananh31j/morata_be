@@ -14,6 +14,6 @@ router.patch('/cancel', authenticate, orderController.cancelOrder);
 router.patch('/confirm', authenticate, authorize(ROLE.ADMIN), orderController.confirmOrder);
 router.patch('/shipping', authenticate, orderController.shippingOrder);
 router.patch('/delivered', authenticate, orderController.deliverOrder);
-router.patch('/done', authenticate, authorize(ROLE.ADMIN), orderController.finishOrder);
+router.patch('/done', authenticate, orderController.finishOrder);
 
 export default router;
