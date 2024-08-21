@@ -461,7 +461,10 @@ export const getProductStats = async (req: Request, res: Response, next: NextFun
                 const productTotalStock = productVariations.reduce((sum, variation) => sum + (variation.stock ?? 0), 0);
                 return {
                     ...product,
-                    percentageOfTotal: ((product.totalQuantity / productTotalStock) * 100).toFixed(2),
+                    percentageOfTotal: (
+                        (product.totalQuantity / (product.totalQuantity + productTotalStock)) *
+                        100
+                    ).toFixed(2),
                     percentageOfAllProducts: ((productTotalStock / totalStockValue) * 100).toFixed(2),
                 };
             }),

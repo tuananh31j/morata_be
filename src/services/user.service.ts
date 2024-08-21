@@ -13,14 +13,9 @@ export const getUserProfile = async (req: Request, res: Response) => {
     const profileData = await User.findById(userId)
         .select(['name', 'email', 'avatar', 'phone', 'role', 'isActive'])
         .lean();
-    return res.status(StatusCodes.OK).json(
-        customResponse({
-            data: profileData,
-            success: true,
-            status: StatusCodes.OK,
-            message: ReasonPhrases.OK,
-        }),
-    );
+    return {
+        data: profileData,
+    };
 };
 
 // @Get: getAllUsers

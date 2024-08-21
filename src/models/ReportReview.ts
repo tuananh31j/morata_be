@@ -1,21 +1,17 @@
 import { IReportSchema } from '@/interfaces/schema/review';
 import mongoose from 'mongoose';
-import { ReportReason } from '@/constant/ReasonReport';
+import { ReportReason, ReportStatus } from '@/constant/ReasonReport';
 
 const reportSchema = new mongoose.Schema(
     {
         reason: {
             type: String,
             required: true,
-            enum: [
-                ReportReason.InappropriateContent,
-                ReportReason.Spam,
-                ReportReason.OffensiveLanguage,
-                ReportReason.Other,
-                ReportReason.Harassment,
-                ReportReason.Misinformation,
-                ReportReason.advertisement,
-            ],
+        },
+        status: {
+            type: String,
+            default: ReportStatus.UnderReview,
+            enum: [ReportStatus.UnderReview, ReportStatus.NoViolation, ReportStatus.ContentRemoved],
         },
         content: {
             type: String,
@@ -32,7 +28,7 @@ const reportSchema = new mongoose.Schema(
             ref: 'User',
             required: true,
         },
-        createAt: {
+        createdAt: {
             type: Date,
             default: Date.now,
         },
