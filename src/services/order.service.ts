@@ -11,6 +11,7 @@ import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import _ from 'lodash';
 import { inventoryService } from '.';
 import APIQuery from '@/helpers/apiQuery';
+import ProductVariation from '@/models/ProductVariation';
 
 // @GET:  Get all orders
 export const getAllOrders = async (req: Request, res: Response, next: NextFunction) => {
@@ -73,12 +74,27 @@ export const getDetailedOrder = async (req: Request, res: Response, next: NextFu
     if (!order) {
         throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} order with id: ${req.params.id}`);
     }
-
+    const addVariantResponse = async (product: any[]) => {
+        return Promise.all(
+            product.map(async (product) => {
+                const variant = await ProductVariation.findById(product.productVariationId).select('variantAttributes');
+                return {
+                    ...product,
+                    variant,
+                };
+            }),
+        );
+    };
+    const items = await addVariantResponse(order.items);
     const result = _.omit(order, ['updatedAt']);
+    const response = {
+        ...result,
+        items,
+    };
 
     return res
         .status(StatusCodes.OK)
-        .json(customResponse({ data: result, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+        .json(customResponse({ data: response, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
 };
 
 // @POST: Create new order
