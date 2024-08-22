@@ -9,15 +9,13 @@ import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import { generateToken, saveToken, verifyToken } from './token.service';
 import _ from 'lodash';
 import { sendMail } from '@/utils/sendMail';
-import Token from '@/models/Token';
 import jwt, { JwtPayload } from 'jsonwebtoken';
-import { ppid } from 'process';
 
 // @Register
 export const register = async (req: Request, res: Response, next: NextFunction) => {
     const foundedUser = await User.findOne({ email: req.body.email });
     if (foundedUser) {
-        throw new DuplicateError('This email is taken.');
+        throw new DuplicateError('Email đã tồn tại.');
     }
 
     const newUser = await User.create({ ...req.body });
@@ -36,13 +34,13 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
     const foundedUser = await User.findOne({ email: req.body.email });
     if (!foundedUser) {
-        throw new BadRequestError('Incorrect email or password');
+        throw new BadRequestError('Thông tin đăng nhập không sai!');
     }
 
     const isMatchedPassword = await bcrypt.compare(req.body.password, foundedUser?.password);
 
     if (!isMatchedPassword) {
-        throw new BadRequestError('Incorrect email or password');
+        throw new BadRequestError('Thông tin đăng nhập không sai!');
     }
     if (!foundedUser.isActive) {
         return res.status(StatusCodes.NOT_ACCEPTABLE).json(

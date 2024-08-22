@@ -2,23 +2,28 @@ import { BadRequestError, NotFoundError } from '@/error/customError';
 import customResponse from '@/helpers/response';
 import Cart from '@/models/Cart';
 import ProductVariation from '@/models/ProductVariation';
+import { ca } from 'date-fns/locale';
 import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 
 // @Get cart by user
 export const getCartByUser = async (req: Request, res: Response, next: NextFunction) => {
-    const cartUser = await Cart.findOne({ userId: req.params.id })
-        .populate({
-            path: 'items.productVariation',
-            populate: {
-                path: 'productId',
-                select: { name: 1, isHide: 1 },
-            },
-        })
-        .lean();
+    const cartUser = await Cart.findOne({ userId: req.params.id }).populate({
+        path: 'items.productVariation',
+        populate: {
+            path: 'productId',
+            select: { name: 1, isHide: 1 },
+        },
+    });
     if (!cartUser) throw new NotFoundError('Not found cart or cart is not exist.');
-    const filteredProducts = cartUser.items.filter((item) => (item.productVariation as any).productId.isHide !== true);
+    const filteredProducts = cartUser.items.filter((item) => {
+        if (item.quantity > (item.productVariation as any).stock) {
+            item.quantity = (item.productVariation as any).stock;
+        }
+        return (item.productVariation as any).productId.isHide !== true;
+    });
     cartUser.items = filteredProducts;
+    await cartUser.save();
     return res
         .status(StatusCodes.OK)
         .json(customResponse({ data: cartUser, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));

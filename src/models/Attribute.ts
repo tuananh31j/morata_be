@@ -27,10 +27,6 @@ const attributeSchema = new mongoose.Schema(
     { versionKey: false, timestamps: true },
 );
 
-attributeSchema.pre('save', async function (next) {
-    this.attributeKey = convertString(this.name as string);
-    next();
-});
 const Attribute = mongoose.model<IAttributeSchema>('Attribute', attributeSchema);
 
 export default Attribute;

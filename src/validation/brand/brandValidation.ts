@@ -14,9 +14,9 @@ export const createBrandValidation: RequestHandler = async (req: Request, res: R
 export const updateBrandValidation: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
     const { name } = req.body;
     const checkUniqueName = await Brand.findOne({ name }).select('_id').lean();
-    const isThisCategory = req.params.id == String(checkUniqueName?._id);
+    const isThisBrand = !checkUniqueName || req.params.id == String(checkUniqueName?._id);
 
-    if (!isThisCategory) {
+    if (!isThisBrand) {
         next(new BadRequestError('Tên thương hiệu đã tồn tại!'));
     }
     return validator(brandSchema.updateBrand, { name }, next);
