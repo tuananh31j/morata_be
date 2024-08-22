@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { productController } from '@/controllers';
 import { validateObjectId } from '@/validation';
 import upload from '@/middlewares/multerMiddleware';
-import { addProductValidation } from '@/validation/product';
+import { addProductValidation, updateProductValidation } from '@/validation/product';
 import { authenticate } from '@/middlewares/authenticateMiddleware';
 import { authorize } from '@/middlewares/authorizeMiddleware';
 import { ROLE } from '@/constant/allowedRoles';
@@ -31,6 +31,7 @@ router.post(
         { name: 'images', maxCount: 5 },
         { name: 'variationImages', maxCount: 5 },
     ]),
+    [addProductValidation],
     productController.createNewProduct,
 );
 router.post(
@@ -47,6 +48,7 @@ router.patch(
         { name: 'thumbnail', maxCount: 1 },
         { name: 'images', maxCount: 5 },
     ]),
+    [updateProductValidation],
     productController.updateProduct,
 );
 router.patch(

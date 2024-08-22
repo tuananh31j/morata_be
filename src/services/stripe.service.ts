@@ -1,5 +1,5 @@
 import config from '@/config/env.config';
-import { BadRequestError } from '@/error/customError';
+import { BadRequestError, NotAcceptableError, NotFoundError } from '@/error/customError';
 import { ItemOrder } from '@/interfaces/schema/order';
 import Order from '@/models/Order';
 import { Content } from '@/template/Mailtemplate';
@@ -7,6 +7,7 @@ import { sendMail } from '@/utils/sendMail';
 import { NextFunction, Request, Response } from 'express';
 import Stripe from 'stripe';
 import { inventoryService } from '.';
+import ProductVariation from '@/models/ProductVariation';
 
 const stripe = new Stripe(config.stripeConfig.secretKey);
 
@@ -78,6 +79,9 @@ const createOrder = async (session: Stripe.Checkout.Session) => {
             productId: item.productId,
             productVariationId: item.productVariationId,
         })) as ItemOrder[];
+
+        // Check stock before create order
+        await inventoryService.checkProductStatus(dataItems);
 
         // Create a new order
         if (session) {

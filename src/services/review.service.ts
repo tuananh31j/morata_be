@@ -105,8 +105,10 @@ export const getAllReviewsIsReported = async (req: Request, res: Response, next:
     const page = req.query.page ? +req.query.page : 1;
     req.query.limit = String(req.query.limit || 10);
 
+    const query = req.query.rawsearch ? { reviewId: req.query.rawsearch } : {};
+
     const features = new APIQuery(
-        ReportReview.find({})
+        ReportReview.find(query)
             .select({
                 content: 1,
                 reason: 1,
