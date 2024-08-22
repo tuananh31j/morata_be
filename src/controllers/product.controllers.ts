@@ -18,6 +18,10 @@ export const getDetailedProduct = asyncHandler(async (req: Request, res: Respons
         .status(StatusCodes.OK)
         .json(customResponse({ data: product, message: ReasonPhrases.OK, status: StatusCodes.OK, success: true }));
 });
+// @Get getDetailedProduct review
+export const getDetailedProductReview = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    return await productService.getDetailedProductReview(req, res, next);
+});
 
 // @Get Top Latest Products
 export const getTopLatestProducts = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {

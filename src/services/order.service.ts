@@ -12,6 +12,7 @@ import _ from 'lodash';
 import { inventoryService } from '.';
 import APIQuery from '@/helpers/apiQuery';
 import ProductVariation from '@/models/ProductVariation';
+import Product from '@/models/Product';
 
 // @GET:  Get all orders
 export const getAllOrders = async (req: Request, res: Response, next: NextFunction) => {
@@ -463,19 +464,47 @@ export const finishOrder = async (req: Request, res: Response, next: NextFunctio
         .json(customResponse({ data: null, success: true, status: StatusCodes.OK, message: 'Your order is done.' }));
 };
 
-//@ update item to is reviewed in order
-export const updateItemToIsReviewed = async (req: Request, res: Response, next: NextFunction) => {
+//@ update item to isReviewDisabled in order
+export const disabledReview = async (req: Request, res: Response, next: NextFunction) => {
+    const product = await Product.findOne({ _id: req.body.productId })
+        .select({
+            isHide: 1,
+            isDeleted: 1,
+        })
+        .lean();
+
+    if (!product) throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${req.body.productId}`);
+
+    if (!product.isDeleted && !product.isHide) {
+        return res.status(StatusCodes.OK).json(
+            customResponse({
+                data: { isReviewable: true },
+                success: true,
+                status: StatusCodes.OK,
+                message: ReasonPhrases.OK,
+            }),
+        );
+    }
+
     const order = await Order.findById(req.body.orderId).lean();
 
-    if (!order) throw new BadRequestError(`Not found order with id ${req.body.orderId}`);
+    if (!order) throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} order with id: ${req.body.orderId}`);
 
     const newItems = order?.items?.map((item: ItemOrder) =>
-        item.productId === req.body.productId ? { ...item, isReviewed: true } : item,
+        item.productVariationId === req.body.productVariationId ? { ...item, isReviewDisabled: true } : item,
     );
 
     await Order.updateOne({ _id: req.body.orderId }, { items: newItems }, { new: true });
 
-    return res
-        .status(StatusCodes.OK)
-        .json(customResponse({ data: req.body, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
+    return res.status(StatusCodes.OK).json(
+        customResponse({
+            data: {
+                orderId: req.body.orderId,
+                isReviewable: false,
+            },
+            success: true,
+            status: StatusCodes.NOT_FOUND,
+            message: 'Sản phẩm đã bị ẩn hoặc không còn bán nữa',
+        }),
+    );
 };

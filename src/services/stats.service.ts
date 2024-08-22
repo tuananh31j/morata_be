@@ -6,48 +6,60 @@ import { NextFunction, Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import moment from 'moment-timezone';
 
-
 export const totalStats = async (req: Request, res: Response, next: NextFunction) => {
     const { dateFilter, startDate, endDate, month, year } = req.query;
 
+    const vietnamTZ = 'Asia/Ho_Chi_Minh';
     let start: Date, end: Date;
 
     if (dateFilter === 'range' && startDate && endDate) {
-        start = moment.tz(startDate as string, 'DD-MM-YYYY', 'Asia/Ho_Chi_Minh').startOf('day').toDate();
-        end = moment.tz(endDate as string, 'DD-MM-YYYY', 'Asia/Ho_Chi_Minh').endOf('day').toDate();
+        start = moment
+            .tz(startDate as string, 'DD-MM-YYYY', vietnamTZ)
+            .startOf('day')
+            .toDate();
+        end = moment
+            .tz(endDate as string, 'DD-MM-YYYY', vietnamTZ)
+            .endOf('day')
+            .toDate();
     } else if (month && year) {
-        start = moment.tz(`01-${month}-${year}`, 'DD-MM-YYYY', 'Asia/Ho_Chi_Minh').startOf('month').toDate();
-        end = moment.tz(`01-${month}-${year}`, 'DD-MM-YYYY', 'Asia/Ho_Chi_Minh').endOf('month').toDate();
+        start = moment.tz(`01-${month}-${year}`, 'DD-MM-YYYY', vietnamTZ).startOf('month').toDate();
+        end = moment.tz(`01-${month}-${year}`, 'DD-MM-YYYY', vietnamTZ).endOf('month').toDate();
     } else if (year) {
-        start = moment.tz(`01-01-${year}`, 'DD-MM-YYYY', 'Asia/Ho_Chi_Minh').startOf('year').toDate();
-        end = moment.tz(`31-12-${year}`, 'DD-MM-YYYY', 'Asia/Ho_Chi_Minh').endOf('year').toDate();
+        start = moment.tz(`01-01-${year}`, 'DD-MM-YYYY', vietnamTZ).startOf('year').toDate();
+        end = moment.tz(`31-12-${year}`, 'DD-MM-YYYY', vietnamTZ).endOf('year').toDate();
     } else if (dateFilter === 'single' && startDate) {
-        start = moment.tz(startDate as string, 'DD-MM-YYYY', 'Asia/Ho_Chi_Minh').startOf('day').toDate();
-        end = moment.tz(startDate as string, 'DD-MM-YYYY', 'Asia/Ho_Chi_Minh').endOf('day').toDate();
+        start = moment
+            .tz(startDate as string, 'DD-MM-YYYY', vietnamTZ)
+            .startOf('day')
+            .toDate();
+        end = moment
+            .tz(startDate as string, 'DD-MM-YYYY', vietnamTZ)
+            .endOf('day')
+            .toDate();
     } else {
         return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid date filter' });
     }
 
     const [totalOrders, cancelledOrders, totalRevenue, newUsers, newProducts] = await Promise.all([
-        Order.countDocuments({ 
-            createdAt: { 
-                $gte: moment(start).subtract(7, 'hours').toDate(), 
-                $lte: moment(end).subtract(7, 'hours').toDate() 
-            } 
+        Order.countDocuments({
+            createdAt: {
+                $gte: start,
+                $lte: end,
+            },
         }),
-        Order.countDocuments({ 
-            createdAt: { 
-                $gte: moment(start).subtract(7, 'hours').toDate(), 
-                $lte: moment(end).subtract(7, 'hours').toDate() 
-            }, 
-            orderStatus: 'cancelled' 
+        Order.countDocuments({
+            createdAt: {
+                $gte: start,
+                $lte: end,
+            },
+            orderStatus: 'cancelled',
         }),
         Order.aggregate([
             {
                 $match: {
-                    createdAt: { 
-                        $gte: moment(start).subtract(7, 'hours').toDate(), 
-                        $lte: moment(end).subtract(7, 'hours').toDate() 
+                    createdAt: {
+                        $gte: start,
+                        $lte: end,
                     },
                     orderStatus: 'done',
                 },
@@ -75,17 +87,17 @@ export const totalStats = async (req: Request, res: Response, next: NextFunction
             total: result[0]?.adjustedTotal || 0,
             count: result[0]?.count || 0,
         })),
-        User.countDocuments({ 
-            createdAt: { 
-                $gte: moment(start).subtract(7, 'hours').toDate(), 
-                $lte: moment(end).subtract(7, 'hours').toDate() 
-            } 
+        User.countDocuments({
+            createdAt: {
+                $gte: start,
+                $lte: end,
+            },
         }),
-        Product.countDocuments({ 
-            createdAt: { 
-                $gte: moment(start).subtract(7, 'hours').toDate(), 
-                $lte: moment(end).subtract(7, 'hours').toDate() 
-            } 
+        Product.countDocuments({
+            createdAt: {
+                $gte: start,
+                $lte: end,
+            },
         }),
     ]);
 
@@ -200,7 +212,7 @@ export const orderByMonthStats = async (req: Request, res: Response, next: NextF
             $match: {
                 createdAt: {
                     $gte: startDate.toDate(),
-                    $lte: endDate.toDate()
+                    $lte: endDate.toDate(),
                 },
                 orderStatus: 'done',
                 isPaid: true,
@@ -213,10 +225,10 @@ export const orderByMonthStats = async (req: Request, res: Response, next: NextF
                     $dateToString: {
                         format: '%Y-%m-%d %H:%M:%S',
                         date: '$createdAt',
-                        timezone: '+07:00'
-                    }
-                }
-            }
+                        timezone: '+07:00',
+                    },
+                },
+            },
         },
         {
             $group: {
@@ -309,10 +321,10 @@ export const orderByYearStats = async (req: Request, res: Response, next: NextFu
                     $dateToString: {
                         format: '%Y-%m-%d %H:%M:%S',
                         date: '$createdAt',
-                        timezone: '+07:00'
-                    }
-                }
-            }
+                        timezone: '+07:00',
+                    },
+                },
+            },
         },
         {
             $group: {
@@ -464,11 +476,13 @@ export const getProductStats = async (req: Request, res: Response, next: NextFun
 
     if (startDate && endDate) {
         // Convert input dates to Vietnam time zone
-        start = moment.tz(startDate as string, 'DD-MM-YYYY', 'Asia/Ho_Chi_Minh')
+        start = moment
+            .tz(startDate as string, 'DD-MM-YYYY', 'Asia/Ho_Chi_Minh')
             .startOf('day')
             .utc()
             .toDate();
-        end = moment.tz(endDate as string, 'DD-MM-YYYY', 'Asia/Ho_Chi_Minh')
+        end = moment
+            .tz(endDate as string, 'DD-MM-YYYY', 'Asia/Ho_Chi_Minh')
             .endOf('day')
             .utc()
             .toDate();
@@ -489,10 +503,10 @@ export const getProductStats = async (req: Request, res: Response, next: NextFun
                     $dateToString: {
                         format: '%Y-%m-%d',
                         date: '$createdAt',
-                        timezone: '+07:00'
-                    }
-                }
-            }
+                        timezone: '+07:00',
+                    },
+                },
+            },
         },
         { $unwind: '$items' },
         {
@@ -567,8 +581,16 @@ export const findTop5Buyers = async (req: Request, res: Response, next: NextFunc
     let start: Date, end: Date;
 
     if (dateFilter === 'range' && startDate && endDate) {
-        start = moment.tz(startDate as string, 'DD-MM-YYYY', vietnamTZ).startOf('day').utc().toDate();
-        end = moment.tz(endDate as string, 'DD-MM-YYYY', vietnamTZ).endOf('day').utc().toDate();
+        start = moment
+            .tz(startDate as string, 'DD-MM-YYYY', vietnamTZ)
+            .startOf('day')
+            .utc()
+            .toDate();
+        end = moment
+            .tz(endDate as string, 'DD-MM-YYYY', vietnamTZ)
+            .endOf('day')
+            .utc()
+            .toDate();
     } else if (month && year) {
         start = moment.tz(`01-${month}-${year}`, 'DD-MM-YYYY', vietnamTZ).startOf('month').utc().toDate();
         end = moment.tz(`01-${month}-${year}`, 'DD-MM-YYYY', vietnamTZ).endOf('month').utc().toDate();
@@ -593,10 +615,10 @@ export const findTop5Buyers = async (req: Request, res: Response, next: NextFunc
                     $dateToString: {
                         format: '%Y-%m-%d %H:%M:%S',
                         date: '$createdAt',
-                        timezone: '+07:00'
-                    }
-                }
-            }
+                        timezone: '+07:00',
+                    },
+                },
+            },
         },
         {
             $group: {
@@ -651,10 +673,10 @@ export const findTop5Buyers = async (req: Request, res: Response, next: NextFunc
                     $dateToString: {
                         format: '%Y-%m-%d %H:%M:%S',
                         date: '$createdAt',
-                        timezone: '+07:00'
-                    }
-                }
-            }
+                        timezone: '+07:00',
+                    },
+                },
+            },
         },
         {
             $sort: { createdAtVN: -1 },

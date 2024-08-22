@@ -37,4 +37,7 @@ export const deliverOrder = asyncHandler(async (req: any, res: Response, next: N
 export const finishOrder = asyncHandler(async (req: any, res: Response, next: NextFunction) => {
     return await orderService.finishOrder(req, res, next);
 });
+export const disabledReview = asyncHandler(async (req: any, res: Response, next: NextFunction) => {
+    return await orderService.disabledReview(req, res, next);
+});
 

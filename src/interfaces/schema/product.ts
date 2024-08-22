@@ -19,6 +19,7 @@ export interface IProductSchema extends Document {
     discountPercentage: number;
     isAvailable: boolean;
     isDeleted: boolean;
+    isHide: boolean;
     parentSku: string;
     status: string;
 }
