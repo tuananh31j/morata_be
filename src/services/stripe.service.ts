@@ -8,6 +8,7 @@ import { NextFunction, Request, Response } from 'express';
 import Stripe from 'stripe';
 import { inventoryService } from '.';
 import ProductVariation from '@/models/ProductVariation';
+import Cart from '@/models/Cart';
 
 const stripe = new Stripe(config.stripeConfig.secretKey);
 
@@ -131,6 +132,15 @@ const createOrder = async (session: Stripe.Checkout.Session) => {
             };
             await inventoryService.updateStockOnCreateOrder(dataItems);
             await sendMail({ email: session.customer_details?.email!, template, type: 'UpdateStatusOrder' });
+            await Promise.all(
+                dataItems.map(async (product: any) => {
+                    await Cart.findOneAndUpdate(
+                        { userId: session.metadata && session.metadata?.userId },
+                        { $pull: { items: { productVariation: product.productVariationId } } },
+                        { new: true },
+                    );
+                }),
+            );
         }
 
         console.log('Order saved successfully');

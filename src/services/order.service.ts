@@ -12,6 +12,7 @@ import _ from 'lodash';
 import { inventoryService } from '.';
 import APIQuery from '@/helpers/apiQuery';
 import ProductVariation from '@/models/ProductVariation';
+import Cart from '@/models/Cart';
 
 // @GET:  Get all orders
 export const getAllOrders = async (req: Request, res: Response, next: NextFunction) => {
@@ -133,8 +134,17 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
 
     // Update stock
     await inventoryService.updateStockOnCreateOrder(req.body.items);
-
     await sendMail({ email: req.body.customerInfo.email, template, type: 'UpdateStatusOrder' });
+    await Promise.all(
+        req.body.items.map(async (product: any) => {
+            await Cart.findOneAndUpdate(
+                { userId: req.userId },
+                { $pull: { items: { productVariation: product.productVariationId } } },
+                { new: true },
+            );
+        }),
+    );
+
     return res
         .status(StatusCodes.OK)
         .json(customResponse({ data: req.body, success: true, status: StatusCodes.OK, message: ReasonPhrases.OK }));
