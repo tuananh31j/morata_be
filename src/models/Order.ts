@@ -32,6 +32,11 @@ const OrderItemSchema = new mongoose.Schema(
         },
         isReviewed: {
             type: Boolean,
+            default: false,
+        },
+        isReviewDisabled: {
+            type: Boolean,
+            default: false,
         },
     },
     {

@@ -15,6 +15,7 @@ router.get('/deals', productController.getTopDealsOfTheDay);
 router.get('/reviews', productController.getTopReviewsProducts);
 router.get('/related', productController.getTopRelatedProducts);
 router.get('/:id', [validateObjectId], productController.getDetailedProduct);
+// router.get('/reviews/:id', productController.getDetailedProductReview);
 router.get('/filter/:categoryId', productController.filterProductsBycategory);
 
 // @admin

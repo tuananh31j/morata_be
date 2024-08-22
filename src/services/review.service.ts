@@ -18,7 +18,7 @@ export const createNewReview = async (req: Request, res: Response, next: NextFun
     if (!order) throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} order with id: ${req.body.productId}`);
 
     const newItems = order?.items?.map((item: ItemOrder) =>
-        item.productId === req.body.productId ? { ...item, isReviewed: true } : item,
+        item.productVariationId === req.body.productVariationId ? { ...item, isReviewed: true } : item,
     );
 
     await Order.updateOne({ _id: req.body.orderId }, { items: newItems }, { new: true });
@@ -151,7 +151,7 @@ export const getAllReviewsOfProduct = async (req: Request, res: Response, next: 
     //     .populate('userId', 'name avatar _id')
     //     .sort({ createdAt: -1 })
     //     .lean();
-    const limit = 1;
+    const limit = 10;
     req.query.limit = String(req.query.limit || limit);
 
     const features = new APIQuery(

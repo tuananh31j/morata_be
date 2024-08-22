@@ -239,6 +239,24 @@ export const getDetailedProductAdmin = async (req: Request, res: Response, next:
         }),
     );
 };
+// @Get: getDetailed Product for review
+export const getDetailedProductReview = async (req: Request, res: Response, next: NextFunction) => {
+    const product = await Product.findOne({ _id: req.params.id }).select({
+        isHide: 1,
+        isDeleted: 1,
+    });
+
+    if (!product) throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${req.params.id}`);
+
+    return res.status(StatusCodes.OK).json(
+        customResponse({
+            data: product,
+            success: true,
+            status: StatusCodes.OK,
+            message: ReasonPhrases.OK,
+        }),
+    );
+};
 
 // @Get all products for admin
 export const getAllProductAdmin = async (req: Request, res: Response, next: NextFunction) => {
