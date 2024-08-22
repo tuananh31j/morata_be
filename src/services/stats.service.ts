@@ -4,7 +4,8 @@ import ProductVariation from '@/models/ProductVariation';
 import User from '@/models/User';
 import { NextFunction, Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import moment from 'moment';
+import moment from 'moment-timezone';
+
 
 export const totalStats = async (req: Request, res: Response, next: NextFunction) => {
     const { dateFilter, startDate, endDate, month, year } = req.query;
@@ -12,39 +13,42 @@ export const totalStats = async (req: Request, res: Response, next: NextFunction
     let start: Date, end: Date;
 
     if (dateFilter === 'range' && startDate && endDate) {
-        start = moment(startDate as string, 'DD-MM-YYYY')
-            .startOf('day')
-            .toDate();
-        end = moment(endDate as string, 'DD-MM-YYYY')
-            .endOf('day')
-            .toDate();
+        start = moment.tz(startDate as string, 'DD-MM-YYYY', 'Asia/Ho_Chi_Minh').startOf('day').toDate();
+        end = moment.tz(endDate as string, 'DD-MM-YYYY', 'Asia/Ho_Chi_Minh').endOf('day').toDate();
     } else if (month && year) {
-        start = moment(`01-${month}-${year}`, 'DD-MM-YYYY').startOf('day').toDate();
-        end = moment(`01-${+month + 1}-${year}`, 'DD-MM-YYYY')
-            .subtract(1, 'days')
-            .endOf('day')
-            .toDate();
+        start = moment.tz(`01-${month}-${year}`, 'DD-MM-YYYY', 'Asia/Ho_Chi_Minh').startOf('month').toDate();
+        end = moment.tz(`01-${month}-${year}`, 'DD-MM-YYYY', 'Asia/Ho_Chi_Minh').endOf('month').toDate();
     } else if (year) {
-        start = moment(`01-01-${year}`, 'DD-MM-YYYY').startOf('day').toDate();
-        end = moment(`31-12-${year}`, 'DD-MM-YYYY').endOf('day').toDate();
+        start = moment.tz(`01-01-${year}`, 'DD-MM-YYYY', 'Asia/Ho_Chi_Minh').startOf('year').toDate();
+        end = moment.tz(`31-12-${year}`, 'DD-MM-YYYY', 'Asia/Ho_Chi_Minh').endOf('year').toDate();
     } else if (dateFilter === 'single' && startDate) {
-        start = moment(startDate as string, 'DD-MM-YYYY')
-            .startOf('day')
-            .toDate();
-        end = moment(startDate as string, 'DD-MM-YYYY')
-            .endOf('day')
-            .toDate();
+        start = moment.tz(startDate as string, 'DD-MM-YYYY', 'Asia/Ho_Chi_Minh').startOf('day').toDate();
+        end = moment.tz(startDate as string, 'DD-MM-YYYY', 'Asia/Ho_Chi_Minh').endOf('day').toDate();
     } else {
         return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid date filter' });
     }
 
     const [totalOrders, cancelledOrders, totalRevenue, newUsers, newProducts] = await Promise.all([
-        Order.countDocuments({ createdAt: { $gte: start, $lte: end } }),
-        Order.countDocuments({ createdAt: { $gte: start, $lte: end }, orderStatus: 'cancelled' }),
+        Order.countDocuments({ 
+            createdAt: { 
+                $gte: moment(start).subtract(7, 'hours').toDate(), 
+                $lte: moment(end).subtract(7, 'hours').toDate() 
+            } 
+        }),
+        Order.countDocuments({ 
+            createdAt: { 
+                $gte: moment(start).subtract(7, 'hours').toDate(), 
+                $lte: moment(end).subtract(7, 'hours').toDate() 
+            }, 
+            orderStatus: 'cancelled' 
+        }),
         Order.aggregate([
             {
                 $match: {
-                    createdAt: { $gte: start, $lte: end },
+                    createdAt: { 
+                        $gte: moment(start).subtract(7, 'hours').toDate(), 
+                        $lte: moment(end).subtract(7, 'hours').toDate() 
+                    },
                     orderStatus: 'done',
                 },
             },
@@ -60,8 +64,8 @@ export const totalStats = async (req: Request, res: Response, next: NextFunction
                 $project: {
                     adjustedTotal: {
                         $subtract: [
-                            { $subtract: ['$total', '$totalShipping'] }, // Trừ phí ship
-                            { $multiply: [{ $subtract: ['$total', '$totalShipping'] }, 0.1] }, // Trừ 10% thuế
+                            { $subtract: ['$total', '$totalShipping'] },
+                            { $multiply: [{ $subtract: ['$total', '$totalShipping'] }, 0.1] },
                         ],
                     },
                     count: 1,
@@ -71,17 +75,25 @@ export const totalStats = async (req: Request, res: Response, next: NextFunction
             total: result[0]?.adjustedTotal || 0,
             count: result[0]?.count || 0,
         })),
-        User.countDocuments({ createdAt: { $gte: start, $lte: end } }),
-        Product.countDocuments({ createdAt: { $gte: start, $lte: end } }),
+        User.countDocuments({ 
+            createdAt: { 
+                $gte: moment(start).subtract(7, 'hours').toDate(), 
+                $lte: moment(end).subtract(7, 'hours').toDate() 
+            } 
+        }),
+        Product.countDocuments({ 
+            createdAt: { 
+                $gte: moment(start).subtract(7, 'hours').toDate(), 
+                $lte: moment(end).subtract(7, 'hours').toDate() 
+            } 
+        }),
     ]);
 
     const successfulOrders = totalRevenue.count;
 
-    // Tính các tỷ lệ
     const orderSuccessRate = totalOrders > 0 ? (successfulOrders / totalOrders) * 100 : 0;
     const orderCancelRate = totalOrders > 0 ? (cancelledOrders / totalOrders) * 100 : 0;
 
-    // Tính trung bình doanh thu mỗi ngày
     const daysDiff = moment(end).diff(moment(start), 'days') + 1;
     const averageDailyRevenue = totalRevenue.total / daysDiff;
 
@@ -176,26 +188,41 @@ export const orderByMonthStats = async (req: Request, res: Response, next: NextF
         return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Year is required' });
     }
 
-    const startDate = moment(`01-01-${year as string}`, 'DD-MM-YYYY')
-        .startOf('day')
-        .toDate();
-    const endDate = moment(`31-12-${year as string}`, 'DD-MM-YYYY')
-        .endOf('day')
-        .toDate();
+    // Đặt múi giờ Việt Nam
+    const vietnamTZ = 'Asia/Ho_Chi_Minh';
 
-    const data = await Order.aggregate([
+    // Tạo ngày bắt đầu và kết thúc của năm theo múi giờ Việt Nam
+    const startDate = moment.tz(`01-01-${year}`, 'DD-MM-YYYY', vietnamTZ).startOf('year');
+    const endDate = moment.tz(`31-12-${year}`, 'DD-MM-YYYY', vietnamTZ).endOf('year');
+
+    const pipeline: any[] = [
         {
             $match: {
-                createdAt: { $gte: startDate, $lte: endDate },
+                createdAt: {
+                    $gte: startDate.toDate(),
+                    $lte: endDate.toDate()
+                },
                 orderStatus: 'done',
                 isPaid: true,
             },
         },
         {
+            $addFields: {
+                // Chuyển đổi createdAt sang múi giờ Việt Nam
+                createdAtVN: {
+                    $dateToString: {
+                        format: '%Y-%m-%d %H:%M:%S',
+                        date: '$createdAt',
+                        timezone: '+07:00'
+                    }
+                }
+            }
+        },
+        {
             $group: {
                 _id: {
-                    month: { $month: '$createdAt' },
-                    year: { $year: '$createdAt' },
+                    month: { $month: { $toDate: '$createdAtVN' } },
+                    year: { $year: { $toDate: '$createdAtVN' } },
                 },
                 totalOrders: { $sum: 1 },
                 totalPrice: { $sum: '$totalPrice' },
@@ -224,7 +251,9 @@ export const orderByMonthStats = async (req: Request, res: Response, next: NextF
         {
             $sort: { '_id.month': 1 },
         },
-    ]);
+    ];
+
+    const data = await Order.aggregate(pipeline);
 
     // Tạo mảng đầy đủ 12 tháng
     const fullYearData = Array.from({ length: 12 }, (_, i) => ({
@@ -255,20 +284,40 @@ export const orderByYearStats = async (req: Request, res: Response, next: NextFu
         return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Year is required' });
     }
 
-    const start = moment(`01-01-${year}`, 'DD-MM-YYYY').startOf('day').toDate();
-    const end = moment(`31-12-${year}`, 'DD-MM-YYYY').endOf('day').toDate();
+    // Đặt múi giờ Việt Nam
+    const vietnamTZ = 'Asia/Ho_Chi_Minh';
+
+    // Tạo ngày bắt đầu và kết thúc của năm theo múi giờ Việt Nam
+    const startDate = moment.tz(`01-01-${year}`, 'DD-MM-YYYY', vietnamTZ).startOf('year');
+    const endDate = moment.tz(`31-12-${year}`, 'DD-MM-YYYY', vietnamTZ).endOf('year');
+
+    // Chuyển đổi sang UTC để query trong MongoDB
+    const start = startDate.utc().toDate();
+    const end = endDate.utc().toDate();
 
     const pipeline: any[] = [
         {
             $match: {
                 createdAt: { $gte: start, $lte: end },
-                orderStatus: { $ne: 'cancelled' }, // Loại bỏ đơn hàng bị hủy
+                orderStatus: { $ne: 'cancelled' },
             },
+        },
+        {
+            $addFields: {
+                // Chuyển đổi createdAt sang múi giờ Việt Nam
+                createdAtVN: {
+                    $dateToString: {
+                        format: '%Y-%m-%d %H:%M:%S',
+                        date: '$createdAt',
+                        timezone: '+07:00'
+                    }
+                }
+            }
         },
         {
             $group: {
                 _id: {
-                    month: { $month: '$createdAt' },
+                    month: { $month: { $toDate: '$createdAtVN' } },
                 },
                 totalOrders: { $sum: 1 },
                 totalRevenue: {
@@ -321,10 +370,15 @@ export const orderByDateRangeStats = async (req: Request, res: Response, next: N
     let start: Date, end: Date;
 
     if (startDate && endDate) {
-        start = moment(startDate as string, 'DD-MM-YYYY')
+        // Chuyển đổi ngày bắt đầu và kết thúc sang múi giờ Việt Nam
+        start = moment
+            .utc(startDate as string, 'DD-MM-YYYY')
+            .tz('Asia/Ho_Chi_Minh')
             .startOf('day')
             .toDate();
-        end = moment(endDate as string, 'DD-MM-YYYY')
+        end = moment
+            .utc(endDate as string, 'DD-MM-YYYY')
+            .tz('Asia/Ho_Chi_Minh')
             .endOf('day')
             .toDate();
     } else {
@@ -339,13 +393,20 @@ export const orderByDateRangeStats = async (req: Request, res: Response, next: N
             },
         },
         {
-            $group: {
-                _id: {
+            $addFields: {
+                // Chuyển đổi createdAt sang múi giờ Việt Nam
+                createdAtVN: {
                     $dateToString: {
                         format: '%Y-%m-%d',
-                        date: '$createdAt',
+                        date: { $add: ['$createdAt', 7 * 60 * 60 * 1000] }, // Thêm 7 giờ
+                        timezone: '+07:00',
                     },
                 },
+            },
+        },
+        {
+            $group: {
+                _id: '$createdAtVN',
                 totalOrders: { $sum: 1 },
                 totalRevenue: {
                     $sum: {
@@ -377,8 +438,8 @@ export const orderByDateRangeStats = async (req: Request, res: Response, next: N
     const data = await Order.aggregate(pipeline);
 
     const allDates = [];
-    const currentDate = moment(start);
-    const lastDate = moment(end);
+    const currentDate = moment(start).tz('Asia/Ho_Chi_Minh');
+    const lastDate = moment(end).tz('Asia/Ho_Chi_Minh');
 
     while (currentDate <= lastDate) {
         const dateString = currentDate.format('DD-MM-YYYY');
@@ -402,11 +463,14 @@ export const getProductStats = async (req: Request, res: Response, next: NextFun
     let start: Date, end: Date;
 
     if (startDate && endDate) {
-        start = moment(startDate as string, 'DD-MM-YYYY')
+        // Convert input dates to Vietnam time zone
+        start = moment.tz(startDate as string, 'DD-MM-YYYY', 'Asia/Ho_Chi_Minh')
             .startOf('day')
+            .utc()
             .toDate();
-        end = moment(endDate as string, 'DD-MM-YYYY')
+        end = moment.tz(endDate as string, 'DD-MM-YYYY', 'Asia/Ho_Chi_Minh')
             .endOf('day')
+            .utc()
             .toDate();
     } else {
         return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid date range' });
@@ -418,6 +482,17 @@ export const getProductStats = async (req: Request, res: Response, next: NextFun
                 createdAt: { $gte: start, $lte: end },
                 orderStatus: 'done',
             },
+        },
+        {
+            $addFields: {
+                createdAtVN: {
+                    $dateToString: {
+                        format: '%Y-%m-%d',
+                        date: '$createdAt',
+                        timezone: '+07:00'
+                    }
+                }
+            }
         },
         { $unwind: '$items' },
         {
@@ -479,8 +554,8 @@ export const getProductStats = async (req: Request, res: Response, next: NextFun
             topSellingProducts: topSellingWithPercentage,
             leastSellingProducts: leastSellingWithPercentage,
             dateRange: {
-                start: moment(start).format('DD-MM-YYYY'),
-                end: moment(end).format('DD-MM-YYYY'),
+                start: moment(start).tz('Asia/Ho_Chi_Minh').format('DD-MM-YYYY'),
+                end: moment(end).tz('Asia/Ho_Chi_Minh').format('DD-MM-YYYY'),
             },
         },
     };
@@ -488,24 +563,18 @@ export const getProductStats = async (req: Request, res: Response, next: NextFun
 export const findTop5Buyers = async (req: Request, res: Response, next: NextFunction) => {
     const { dateFilter, startDate, endDate, month, year } = req.query;
 
+    const vietnamTZ = 'Asia/Ho_Chi_Minh';
     let start: Date, end: Date;
 
     if (dateFilter === 'range' && startDate && endDate) {
-        start = moment(startDate as string, 'DD-MM-YYYY')
-            .startOf('day')
-            .toDate();
-        end = moment(endDate as string, 'DD-MM-YYYY')
-            .endOf('day')
-            .toDate();
+        start = moment.tz(startDate as string, 'DD-MM-YYYY', vietnamTZ).startOf('day').utc().toDate();
+        end = moment.tz(endDate as string, 'DD-MM-YYYY', vietnamTZ).endOf('day').utc().toDate();
     } else if (month && year) {
-        start = moment(`01-${month}-${year}`, 'DD-MM-YYYY').startOf('day').toDate();
-        end = moment(`01-${+month + 1}-${year}`, 'DD-MM-YYYY')
-            .subtract(1, 'days')
-            .endOf('day')
-            .toDate();
+        start = moment.tz(`01-${month}-${year}`, 'DD-MM-YYYY', vietnamTZ).startOf('month').utc().toDate();
+        end = moment.tz(`01-${month}-${year}`, 'DD-MM-YYYY', vietnamTZ).endOf('month').utc().toDate();
     } else if (year) {
-        start = moment(`01-01-${year}`, 'DD-MM-YYYY').startOf('day').toDate();
-        end = moment(`31-12-${year}`, 'DD-MM-YYYY').endOf('day').toDate();
+        start = moment.tz(`01-01-${year}`, 'DD-MM-YYYY', vietnamTZ).startOf('year').utc().toDate();
+        end = moment.tz(`31-12-${year}`, 'DD-MM-YYYY', vietnamTZ).endOf('year').utc().toDate();
     } else {
         return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid date filter' });
     }
@@ -519,12 +588,23 @@ export const findTop5Buyers = async (req: Request, res: Response, next: NextFunc
             },
         },
         {
+            $addFields: {
+                createdAtVN: {
+                    $dateToString: {
+                        format: '%Y-%m-%d %H:%M:%S',
+                        date: '$createdAt',
+                        timezone: '+07:00'
+                    }
+                }
+            }
+        },
+        {
             $group: {
                 _id: '$userId',
                 totalOrders: { $sum: 1 },
                 totalSpent: { $sum: '$totalPrice' },
                 totalItems: { $sum: { $sum: '$items.quantity' } },
-                lastOrderDate: { $max: '$createdAt' },
+                lastOrderDate: { $max: '$createdAtVN' },
             },
         },
         {
@@ -559,8 +639,6 @@ export const findTop5Buyers = async (req: Request, res: Response, next: NextFunc
         },
     ];
 
-    const topBuyers = await Order.aggregate(topBuyersPipeline);
-
     const latestOrdersPipeline: any[] = [
         {
             $match: {
@@ -568,7 +646,18 @@ export const findTop5Buyers = async (req: Request, res: Response, next: NextFunc
             },
         },
         {
-            $sort: { createdAt: -1 },
+            $addFields: {
+                createdAtVN: {
+                    $dateToString: {
+                        format: '%Y-%m-%d %H:%M:%S',
+                        date: '$createdAt',
+                        timezone: '+07:00'
+                    }
+                }
+            }
+        },
+        {
+            $sort: { createdAtVN: -1 },
         },
         {
             $limit: 2,
@@ -592,19 +681,20 @@ export const findTop5Buyers = async (req: Request, res: Response, next: NextFunc
                 paymentMethod: 1,
                 totalPrice: 1,
                 orderStatus: 1,
-                createdAt: 1,
+                createdAt: '$createdAtVN',
             },
         },
     ];
 
+    const topBuyers = await Order.aggregate(topBuyersPipeline);
     const latestOrders = await Order.aggregate(latestOrdersPipeline);
 
     return {
         topBuyers,
         latestOrders,
         dateRange: {
-            start: moment(start).format('DD-MM-YYYY'),
-            end: moment(end).format('DD-MM-YYYY'),
+            start: moment(start).tz(vietnamTZ).format('DD-MM-YYYY'),
+            end: moment(end).tz(vietnamTZ).format('DD-MM-YYYY'),
         },
     };
 };
