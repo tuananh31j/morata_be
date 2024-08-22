@@ -12,12 +12,8 @@ import _ from 'lodash';
 import { inventoryService } from '.';
 import APIQuery from '@/helpers/apiQuery';
 import ProductVariation from '@/models/ProductVariation';
-<<<<<<< HEAD
 import Cart from '@/models/Cart';
-=======
 import Product from '@/models/Product';
->>>>>>> 0c257a0046ecc436f3d58ff03961f077054f996a
-
 // @GET:  Get all orders
 export const getAllOrders = async (req: Request, res: Response, next: NextFunction) => {
     const page = req.query.page ? +req.query.page : 1;
