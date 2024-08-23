@@ -9,6 +9,9 @@ const attributeSchema = {
         isVariant: Joi.boolean().default(false).messages({
             'boolean.base': 'Trường isVariant phải là kiểu boolean.',
         }),
+        isFilter: Joi.boolean().default(false).messages({
+            'boolean.base': 'Trường isFilter phải là kiểu boolean.',
+        }),
         name: Joi.string().required().messages({
             'string.base': 'Trường name phải là kiểu chuỗi.',
             'any.required': 'Trường name là bắt buộc.',

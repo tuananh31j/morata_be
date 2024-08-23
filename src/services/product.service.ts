@@ -471,7 +471,7 @@ export const filterProductsBycategory = async (req: Request, res: Response, next
     const category = await Category.findById(categoryId, { attributeIds: 1 }).populate('attributeIds').lean();
     if (!category) throw new NotFoundError('Category not found');
     const filteredAttributes = category.attributeIds.filter((attr: any) => {
-        return attr.type === AttributeType.Options;
+        return attr.isFilter === true;
     });
     return res.status(StatusCodes.OK).json(
         customResponse({

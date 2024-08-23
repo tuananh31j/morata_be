@@ -14,8 +14,9 @@ const attributeSchema = new mongoose.Schema(
             type: String,
             unique: true,
         },
-        isVariant: { type: Boolean, default: false },
         isRequired: { type: Boolean, default: false },
+        isVariant: { type: Boolean, default: false },
+        isFilter: { type: Boolean, default: false },
         type: { type: String, enum: Object.values(AttributeType), default: AttributeType.Manual },
         values: [
             {

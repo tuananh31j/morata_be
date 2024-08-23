@@ -7,5 +7,9 @@ function removeAccents(str: string) {
 }
 
 export function convertString(str: string) {
-    return removeAccents(str).replace(/\s+/g, '_').toLowerCase();
+    const noAccents = removeAccents(str).toLowerCase();
+
+    const withUnderscores = noAccents.replace(/[^a-z0-9\s]/g, '_');
+
+    return withUnderscores.replace(/\s+/g, '_');
 }
