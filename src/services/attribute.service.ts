@@ -10,7 +10,7 @@ import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 const populateAttributesVariant = {
     path: 'attributeIds',
     model: 'Attribute',
-    match: { isVariant: true },
+    match: { isVariant: true, type: { $in: [AttributeType.Manual, AttributeType.Options] } },
 };
 const populateAttributesProduct = {
     path: 'attributeIds',
