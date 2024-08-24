@@ -32,10 +32,12 @@ export const updateAttributeValidation: RequestHandler = async (req: Request, re
     const attributeId = req.params.attributeId;
     const { name, type } = req.body;
     const isRequired = req.body.isRequired || false;
-    const isVariant = req.body.isVariant || false;
+    let isVariant = req.body.isVariant || false;
     const isFilter = req.body.isFilter || false;
 
     const values = req.body.values || [];
+    if (type === AttributeType.Multiple) isVariant = false;
+
     const checkUniqueName = await Attribute.findOne({ name }).select('_id').lean();
     const isThisAttribute = !checkUniqueName || attributeId === String(checkUniqueName?._id);
 
