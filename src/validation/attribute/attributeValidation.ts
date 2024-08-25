@@ -49,7 +49,7 @@ export const updateAttributeValidation: RequestHandler = async (req: Request, re
     let attributeKey = convertString(name);
     const checkUniqueKey = await Attribute.findOne({ attributeKey }).select('_id').lean();
 
-    if (checkUniqueKey) attributeKey = `${attributeKey}_${Date.now()}`;
+    if (checkUniqueKey && String(checkUniqueKey.id) === attributeId) attributeKey = `${attributeKey}${Date.now()}`;
 
     req.body = { name, attributeKey, isRequired, isVariant, type, values, isFilter };
     return validator(attributeSchema.updateAttibute, { ...req.body }, next);
