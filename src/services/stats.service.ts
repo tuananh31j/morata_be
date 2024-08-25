@@ -62,6 +62,7 @@ export const totalStats = async (req: Request, res: Response, next: NextFunction
                         $lte: end,
                     },
                     orderStatus: 'done',
+                    isPaid: true,
                 },
             },
             {
@@ -312,6 +313,7 @@ export const orderByYearStats = async (req: Request, res: Response, next: NextFu
             $match: {
                 createdAt: { $gte: start, $lte: end },
                 orderStatus: { $ne: 'cancelled' },
+                isPaid: true,
             },
         },
         {
@@ -402,6 +404,7 @@ export const orderByDateRangeStats = async (req: Request, res: Response, next: N
             $match: {
                 createdAt: { $gte: start, $lte: end },
                 orderStatus: { $ne: 'cancelled' },
+                isPaid: true,
             },
         },
         {
