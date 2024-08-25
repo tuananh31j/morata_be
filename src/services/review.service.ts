@@ -50,8 +50,10 @@ export const createNewReport = async (req: Request, res: Response, next: NextFun
 
 // @Patch update review
 export const updateReview = async (req: Request, res: Response, next: NextFunction) => {
-    const review = await Review.findByIdAndUpdate(req.params.id, req.body, { new: true }).lean();
+    const review = await Review.findById(req.params.id);
     if (!review) throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} review with id: ${req.params.id}`);
+    review.set(req.body);
+    await review.save();
 
     return res.status(StatusCodes.OK).json(
         customResponse({
