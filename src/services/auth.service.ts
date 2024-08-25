@@ -59,7 +59,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
 export const refresh = async (req: Request, res: Response, next: NextFunction) => {
     const cookie = req.cookies;
-
+    console.log(cookie);
     if (!cookie.jwt) {
         throw new NotAcceptableError('Not Acceptable: Invalid token refresh.');
     }

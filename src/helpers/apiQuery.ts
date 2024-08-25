@@ -1,5 +1,6 @@
 import { de } from 'date-fns/locale';
 import e from 'express';
+import { toLower } from 'lodash';
 import mongoose, { Query, Document } from 'mongoose';
 
 interface QueryString {
@@ -93,7 +94,7 @@ class APIQuery<T extends Document> {
                 const search = this.queryString.search;
                 this.query = this.query.find({ _id: search });
             } else {
-                const search = this.queryString.search;
+                const search = toLower(this.queryString.search);
                 this.query = this.query.find({ name: { $regex: search, $options: 'i' } });
             }
         }
