@@ -482,12 +482,18 @@ export const disabledReview = async (req: Request, res: Response, next: NextFunc
         })
         .lean();
 
+    console.log(req.body.productId);
     if (!product) throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${req.body.productId}`);
 
     if (!product.isDeleted && !product.isHide) {
         return res.status(StatusCodes.OK).json(
             customResponse({
-                data: { isReviewable: true },
+                data: {
+                    isReviewable: true,
+                    productId: req.body.productId,
+                    orderId: req.body.orderId,
+                    productVariationId: req.body.productVariationId,
+                },
                 success: true,
                 status: StatusCodes.OK,
                 message: ReasonPhrases.OK,
@@ -510,10 +516,12 @@ export const disabledReview = async (req: Request, res: Response, next: NextFunc
             data: {
                 orderId: req.body.orderId,
                 isReviewable: false,
+                productId: req.body.productId,
+                productVariationId: req.body.productVariationId,
             },
             success: true,
-            status: StatusCodes.NOT_FOUND,
-            message: 'Sản phẩm đã bị ẩn hoặc không còn bán nữa',
+            status: StatusCodes.OK,
+            message: 'Sản phẩm đã bị ẩn hoặc hiện tại đang tạm dừng bán!',
         }),
     );
 };
