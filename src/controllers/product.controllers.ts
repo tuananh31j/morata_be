@@ -9,6 +9,10 @@ import _ from 'lodash';
 export const getAllProducts = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     return await productService.getAllProducts(req, res, next);
 });
+// @Get: getTop10ProductSold
+export const getTop10ProductSold = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    return await productService.getTop10ProductSold(req, res, next);
+});
 
 // @Get: getDetailedProduct
 export const getDetailedProduct = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {

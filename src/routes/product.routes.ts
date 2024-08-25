@@ -10,6 +10,7 @@ import { ROLE } from '@/constant/allowedRoles';
 const router = Router();
 
 router.get('/all', productController.getAllProducts);
+router.get('/top-sold', productController.getTop10ProductSold);
 router.get('/latest', productController.getTopLatestProducts);
 router.get('/deals', productController.getTopDealsOfTheDay);
 router.get('/reviews', productController.getTopReviewsProducts);

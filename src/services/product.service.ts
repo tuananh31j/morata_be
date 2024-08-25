@@ -220,6 +220,31 @@ export const getTopRelatedProducts = async (req: Request, res: Response, next: N
         }),
     );
 };
+// @Get Top 10 Product Sold
+export const getTop10ProductSold = async (req: Request, res: Response, next: NextFunction) => {
+    const products = await Product.find({
+        ...clientRequiredFields,
+    })
+        .select(queryClientFields)
+        .populate(populateVariation)
+        .lean();
+    const filteredData = products
+        .map((item) => {
+            const totalSold = item.variationIds.reduce((acc, curr) => acc + (curr as any).sold, 0);
+            return { ...item, totalSold };
+        })
+        .sort((a, b) => b.totalSold - a.totalSold)
+        .slice(0, 10);
+
+    return res.status(StatusCodes.OK).json(
+        customResponse({
+            data: filteredData,
+            success: true,
+            status: StatusCodes.OK,
+            message: ReasonPhrases.OK,
+        }),
+    );
+};
 
 // @Get: getDetailedProduct for admin
 export const getDetailedProductAdmin = async (req: Request, res: Response, next: NextFunction) => {
