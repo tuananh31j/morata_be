@@ -68,6 +68,15 @@ export const updateProductValidation: RequestHandler = async (req: Request, res:
         return next(new BadRequestError('Thuộc tính sản phẩm không được để trống!'));
     }
 
+    let attributeVariantForFilter = req.body.attributeVariantForFilter;
+    if (typeof attributeVariantForFilter === 'string') {
+        try {
+            attributeVariantForFilter = JSON.parse(attributeVariantForFilter);
+        } catch (error) {
+            console.error('Error parsing attributes:', error);
+            attributeVariantForFilter = [];
+        }
+    }
     let attributesRaw = req.body.attributes;
     if (typeof attributesRaw === 'string') {
         try {
@@ -101,7 +110,17 @@ export const updateProductValidation: RequestHandler = async (req: Request, res:
         value: item.value,
     }));
 
-    req.body = { brandId, isHide, categoryId, name, description, attributes, oldImages, oldImageRefs };
+    req.body = {
+        brandId,
+        isHide,
+        categoryId,
+        name,
+        description,
+        attributes,
+        oldImages,
+        oldImageRefs,
+        attributeVariantForFilter,
+    };
 
     return validator(
         productSchema.updateProduct,

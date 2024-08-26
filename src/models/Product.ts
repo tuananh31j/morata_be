@@ -80,6 +80,13 @@ export const ProductSchema = new Schema(
             type: Schema.Types.ObjectId,
             ref: 'Category',
         },
+        priceFilter: Number,
+        attributeVariantForFilter: [
+            {
+                type: { key: String, name: String, value: String },
+                _id: false,
+            },
+        ],
     },
     { timestamps: true, versionKey: false },
 );

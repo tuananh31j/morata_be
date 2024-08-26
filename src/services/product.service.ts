@@ -1,9 +1,7 @@
-import { AttributeType } from '@/constant/attributeType';
 import { queryClientFields } from '@/constant/queryField/product';
 import { NotFoundError } from '@/error/customError';
 import APIQuery from '@/helpers/apiQuery';
 import customResponse from '@/helpers/response';
-import Cart from '@/models/Cart';
 import Category from '@/models/Category';
 import Product from '@/models/Product';
 import ProductVariation from '@/models/ProductVariation';
@@ -13,6 +11,36 @@ import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import _ from 'lodash';
 
+const transformQuery = (query: any): { attributeQuery: any; variantQuery: any } => {
+    const queryCopy: any = { ...query };
+    //Delete key not attribute or variant
+
+    const attributeQueries: any[] = [];
+    const variantQueries: any[] = [];
+    console.log(queryCopy, 'queryCopy');
+    Object.keys(query).forEach((key) => {
+        const values = query[key].split(',');
+        console.log(values, 'values');
+        if (values[0] === 'variant') {
+            const variantValues = values.slice(1);
+            variantQueries.push({
+                attributeVariantForFilter: { $elemMatch: { key, value: { $in: variantValues } } },
+            });
+        } else {
+            attributeQueries.push({
+                attributes: { $elemMatch: { key, value: { $in: values } } },
+            });
+        }
+    });
+    const combinedVariantQuery = variantQueries.length > 0 ? { $and: variantQueries } : {};
+    const combinedAttributeQuery = attributeQueries.length > 0 ? { $and: attributeQueries } : {};
+    console.log(
+        JSON.stringify({ attributeQuery: combinedAttributeQuery, variantQuery: combinedVariantQuery }),
+        'query',
+    );
+
+    return { attributeQuery: combinedAttributeQuery, variantQuery: combinedVariantQuery };
+};
 const populateVariation = {
     path: 'variationIds',
     select: 'price image sku productId stock sold variantAttributes imageUrlRef isActive',
@@ -30,35 +58,6 @@ const populateBrand = {
 const clientRequiredFields = { isDeleted: false, isAvailable: true, isHide: false };
 
 // query attribute conversion function for attribute and variant
-const transformQuery = (query: any): { attributeQuery: any; variantQuery: any } => {
-    const queryCopy: any = { ...query };
-    //Delete key not attribute or variant
-    delete queryCopy['price'];
-    delete queryCopy['sort'];
-
-    const attributeQueries: any[] = [];
-    const variantQueries: any[] = [];
-
-    Object.keys(queryCopy).forEach((key) => {
-        const values = queryCopy[key].split(',').map((item: any) => item.split('-').join(' '));
-
-        if (values[0] === 'variant') {
-            const variantValues = values.slice(1);
-            variantQueries.push({
-                variantAttributes: { $elemMatch: { key, value: { $in: variantValues } } },
-            });
-        } else {
-            attributeQueries.push({
-                attributes: { $elemMatch: { key, value: { $in: values } } },
-            });
-        }
-    });
-
-    const combinedVariantQuery = variantQueries.length > 0 ? { $and: variantQueries } : {};
-    const combinedAttributeQuery = attributeQueries.length > 0 ? { $and: attributeQueries } : {};
-
-    return { attributeQuery: combinedAttributeQuery, variantQuery: combinedVariantQuery };
-};
 
 // @Get: getAllProducts
 export const getAllProducts = async (req: Request, res: Response, next: NextFunction) => {
@@ -79,18 +78,14 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
 
     // convert back to object
     const queryVariant = JSON.parse(queryStr);
-    const filterPrice = queryVariant.price ? { price: queryVariant.price } : {};
-    const sortPrice = queryVariant.sort ? { sort: queryVariant.sort } : { sort: 'price' };
     const queryTransformed = transformQuery(queryVariant);
 
     const populateVariantAndFilter = {
         ...populateVariation,
-        match: { ...queryTransformed.variantQuery, ...filterPrice },
-        options: sortPrice,
     };
-
+    console.log(queryVariant, 'queryVariant');
     const features = new APIQuery(
-        Product.find({ ...clientRequiredFields, ...queryTransformed.attributeQuery })
+        Product.find({ ...clientRequiredFields, ...queryTransformed.attributeQuery, ...queryTransformed.variantQuery })
             .populate(populateVariantAndFilter)
             .select(queryClientFields)
             .lean(),
@@ -99,29 +94,16 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
 
     features.filter().sort().limitFields().search().paginate();
     const [data, totalDocs] = await Promise.all([features.query, features.count()]);
-    const totalDocsValid = { value: totalDocs };
 
-    const filteredData = data.filter((item) => {
-        if (item.variationIds.length === 0) {
-            totalDocsValid.value -= 1;
-        }
-        return item.variationIds.length > 0;
-    });
-    filteredData.sort((a, b) => {
-        const priceA = (a.variationIds[0] as any).price;
-        const priceB = (b.variationIds[0] as any).price;
-        if (queryVariant.sort === 'price') return priceA - priceB;
-        return priceB - priceA;
-    });
-    const totalPages = Math.ceil(Number(totalDocsValid.value) / +req.query.limit);
+    const totalPages = Math.ceil(Number(totalDocs) / +req.query.limit);
 
     return res.status(StatusCodes.OK).json(
         customResponse({
             data: {
-                products: filteredData,
+                products: data,
                 length: data.length,
                 page: page,
-                totalDocs: totalDocsValid.value,
+                totalDocs: totalDocs,
                 totalPages: totalPages,
             },
             success: true,
@@ -337,13 +319,17 @@ export const createNewProduct = async (req: Request, res: Response, next: NextFu
             }
         });
     }
+    const attributeVariantForFilter = variationObjs.flatMap((item: any) =>
+        item.variantAttributes.map((attr: any) => ({ key: attr.key, value: attr.value })),
+    );
 
+    console.log(attributeVariantForFilter, 'ttttttt');
     const attributes = req.body.attributes;
     delete req.body.variationImages;
     delete req.body.variationsString;
 
     // @add product
-    const newProduct = new Product({ ...req.body, attributes });
+    const newProduct = new Product({ ...req.body, attributes, attributeVariantForFilter });
 
     // @generate variations
     const variations = variationObjs.map((item: IVariationPlayload) => {
@@ -370,7 +356,7 @@ export const createNewProduct = async (req: Request, res: Response, next: NextFu
 export const updateProduct = async (req: Request, res: Response, next: NextFunction) => {
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
     const product = await Product.findById(req.params.id);
-
+    const attributeVariantForFilter = req.body.attributeVariantForFilter;
     // @Keep old images
     const { oldImageRefs, oldImages } = req.body;
 
@@ -400,7 +386,7 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
             req.body.imageUrlRefs = oldImageRefs;
         }
     }
-    product.set({ ...req.body });
+    product.set({ ...req.body, attributeVariantForFilter });
     await product.save();
 
     return res
