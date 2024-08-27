@@ -376,7 +376,7 @@ export const deliverOrder = async (req: Request, res: Response, next: NextFuncti
                     foundedOrder.paymentMethod === PAYMENT_METHOD.CARD
                         ? foundedOrder.customerInfo.email
                         : foundedOrder.receiverInfo.email,
-                warning: 'Nếu bạn chưa nhận được hàng vui lòng liên hệ tới email của shop: morata@shop.com',
+                warning: `Nếu bạn chưa nhận được hàng vui lòng liên hệ tới email của shop: morata@shop.com. Nếu đã nhận được hàng bạn vui lòng lên xác nhận lại tại trang đơn hàng của bạn. Trong trường hợp bạn đã nhận được hàng dựa theo chính sách chúng tôi sẽ cập nhật đơn hàng sang trạng thái hoàn thành sau 3 ngày!`,
             },
             product: {
                 items: foundedOrder.items,
