@@ -1,1 +1,3 @@
-export const allowedOrigins = ['http://localhost:3000', 'http://localhost:5173'];
+import config from '@/config/env.config';
+
+export const allowedOrigins = [config.clientDomain.url, 'http://localhost:5173'];

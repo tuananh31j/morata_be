@@ -114,7 +114,7 @@ export const sendMailverifyAccount = async (req: Request, res: Response, next: N
         },
         link: {
             linkName: 'Kích Hoạt Tài Khoản',
-            linkHerf: `http://localhost:3000/verifyAccount/${verifyToken}?email=${checkedEmail.email}`,
+            linkHerf: `${config.clientDomain.url}/verifyAccount/${verifyToken}?email=${checkedEmail.email}`,
         },
     };
     sendMail({ email: req.body.email, template: contentEmail, type: 'Verify' });
@@ -184,7 +184,7 @@ export const sendMailForgotPassword = async (req: Request, res: Response, next: 
         },
         link: {
             linkName: 'Phục Hồi Mật Khẩu',
-            linkHerf: `http://localhost:3000/resetPassword/${verifyToken}?email=${checkedEmail.email}`,
+            linkHerf: `${config.clientDomain.url}/resetPassword/${verifyToken}?email=${checkedEmail.email}`,
         },
     };
     sendMail({ email: req.body.email, template: contentEmail, type: 'ResetPassword' });

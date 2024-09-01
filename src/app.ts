@@ -48,5 +48,4 @@ app.put('/test/:id', async (req, res) => {
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-console.log([].join(','));
 export default app;

@@ -1,0 +1,22 @@
+name: Docker Image CI
+
+on:
+    push:
+        branches: ['develop']
+    pull_request:
+        branches: ['develop']
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v4
+            - name: create env file
+              run: echo "${{secrets.MORATA_ENV_PRO}}" > .env
+            - name: Build the Docker image
+              run: docker build . --file Dockerfile --tag tuananh31j/morata:v1.0.0
+            - name: login to dockerhub
+              run: docker login -u ${{secrets.DOCKERHUB_USERNAME}} -p ${{secrets.DOCKERHUB_PASSWORD}}
+            - name: Push the Docker image
+              run: docker push tuananh31j/morata:v1.0.0

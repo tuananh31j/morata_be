@@ -14,6 +14,7 @@ import APIQuery from '@/helpers/apiQuery';
 import ProductVariation from '@/models/ProductVariation';
 import Cart from '@/models/Cart';
 import Product from '@/models/Product';
+import config from '@/config/env.config';
 // @GET:  Get all orders
 export const getAllOrders = async (req: Request, res: Response, next: NextFunction) => {
     const page = req.query.page ? +req.query.page : 1;
@@ -120,7 +121,7 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
         },
         subject: '[MORATA] - Đơn hàng mới của bạn',
         link: {
-            linkHerf: `http://localhost:3000/my-orders/${order._id}`,
+            linkHerf: `${config.clientDomain.url}/my-orders/${order._id}`,
             linkName: `Kiểm tra đơn hàng`,
         },
         user: {
@@ -193,7 +194,7 @@ export const cancelOrder = async (req: Request, res: Response, next: NextFunctio
             },
             subject: '[MORATA] - Đơn hàng của bạn đã bị hủy',
             link: {
-                linkHerf: `http://localhost:3000/my-orders/${req.body.orderId}`,
+                linkHerf: `${config.clientDomain.url}/my-orders/${req.body.orderId}`,
                 linkName: `Kiểm tra đơn hàng`,
             },
             user: {
@@ -255,7 +256,7 @@ export const confirmOrder = async (req: Request, res: Response, next: NextFuncti
             },
             subject: '[MORATA] - Đơn hàng của bạn đã được xác nhận',
             link: {
-                linkHerf: `http://localhost:3000/my-orders/${req.body.orderId}`,
+                linkHerf: `${config.clientDomain.url}/my-orders/${req.body.orderId}`,
                 linkName: `Kiểm tra đơn hàng`,
             },
             user: {
@@ -319,7 +320,7 @@ export const shippingOrder = async (req: Request, res: Response, next: NextFunct
             },
             subject: '[MORATA] - Đơn hàng của bạn đang được giao',
             link: {
-                linkHerf: `http://localhost:3000/my-orders/${req.body.orderId}`,
+                linkHerf: `${config.clientDomain.url}/my-orders/${req.body.orderId}`,
                 linkName: `Kiểm tra đơn hàng`,
             },
             user: {
@@ -385,7 +386,7 @@ export const deliverOrder = async (req: Request, res: Response, next: NextFuncti
             },
             subject: '[MORATA] - Đơn hàng của bạn đã được giao',
             link: {
-                linkHerf: `http://localhost:3000/my-orders/${req.body.orderId}`,
+                linkHerf: `${config.clientDomain.url}/my-orders/${req.body.orderId}`,
                 linkName: `Kiểm tra đơn hàng`,
             },
             user: {
@@ -444,7 +445,7 @@ export const finishOrder = async (req: Request, res: Response, next: NextFunctio
             },
             subject: '[MORATA] - Đơn hàng của bạn đã hoàn tất',
             link: {
-                linkHerf: `http://localhost:3000/my-orders/${req.body.orderId}`,
+                linkHerf: `${config.clientDomain.url}/my-orders/${req.body.orderId}`,
                 linkName: `Kiểm tra đơn hàng`,
             },
             user: {

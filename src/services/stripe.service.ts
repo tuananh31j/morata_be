@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
 import config from '@/config/env.config';
-import { BadRequestError, NotAcceptableError, NotFoundError } from '@/error/customError';
+import { BadRequestError } from '@/error/customError';
 import { ItemOrder } from '@/interfaces/schema/order';
 import Order from '@/models/Order';
 import { Content } from '@/template/Mailtemplate';
@@ -7,7 +8,6 @@ import { sendMail } from '@/utils/sendMail';
 import { NextFunction, Request, Response } from 'express';
 import Stripe from 'stripe';
 import { inventoryService } from '.';
-import ProductVariation from '@/models/ProductVariation';
 import Cart from '@/models/Cart';
 
 const stripe = new Stripe(config.stripeConfig.secretKey);
@@ -120,7 +120,7 @@ const createOrder = async (session: Stripe.Checkout.Session) => {
                 },
                 subject: '[MORATA] - Đơn hàng mới của bạn',
                 link: {
-                    linkHerf: `http://localhost:3000/my-orders/${newOrder._id}`,
+                    linkHerf: `${config.clientDomain.url}/my-orders/${newOrder._id}`,
                     linkName: `Kiểm tra đơn hàng`,
                 },
                 user: {
