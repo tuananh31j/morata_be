@@ -17,7 +17,6 @@ export const createNewReview = async (req: Request, res: Response, next: NextFun
 
     if (!order) throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} order with id: ${req.body.orderId}`);
 
-    console.log('productVariationId', req.body.productVariationId);
     const newItems = order?.items?.map((item: ItemOrder) =>
         item.productVariationId === req.body.productVariationId ? { ...item, isReviewed: true } : item,
     );

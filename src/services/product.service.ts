@@ -17,10 +17,8 @@ const transformQuery = (query: any): { attributeQuery: any; variantQuery: any } 
 
     const attributeQueries: any[] = [];
     const variantQueries: any[] = [];
-    console.log(queryCopy, 'queryCopy');
     Object.keys(query).forEach((key) => {
         const values = query[key].split(',');
-        console.log(values, 'values');
         if (values[0] === 'variant') {
             const variantValues = values.slice(1);
             variantQueries.push({
@@ -34,10 +32,6 @@ const transformQuery = (query: any): { attributeQuery: any; variantQuery: any } 
     });
     const combinedVariantQuery = variantQueries.length > 0 ? { $and: variantQueries } : {};
     const combinedAttributeQuery = attributeQueries.length > 0 ? { $and: attributeQueries } : {};
-    console.log(
-        JSON.stringify({ attributeQuery: combinedAttributeQuery, variantQuery: combinedVariantQuery }),
-        'query',
-    );
 
     return { attributeQuery: combinedAttributeQuery, variantQuery: combinedVariantQuery };
 };
@@ -83,7 +77,6 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
     const populateVariantAndFilter = {
         ...populateVariation,
     };
-    console.log(queryVariant, 'queryVariant');
     const features = new APIQuery(
         Product.find({ ...clientRequiredFields, ...queryTransformed.attributeQuery, ...queryTransformed.variantQuery })
             .populate(populateVariantAndFilter)
@@ -323,13 +316,17 @@ export const createNewProduct = async (req: Request, res: Response, next: NextFu
         item.variantAttributes.map((attr: any) => ({ key: attr.key, value: attr.value })),
     );
 
-    console.log(attributeVariantForFilter, 'ttttttt');
     const attributes = req.body.attributes;
     delete req.body.variationImages;
     delete req.body.variationsString;
 
     // @add product
-    const newProduct = new Product({ ...req.body, attributes, attributeVariantForFilter });
+    const newProduct = new Product({
+        ...req.body,
+        attributes,
+        attributeVariantForFilter,
+        priceFilter: variationObjs[0].price,
+    });
 
     // @generate variations
     const variations = variationObjs.map((item: IVariationPlayload) => {

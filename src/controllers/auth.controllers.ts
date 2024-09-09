@@ -40,7 +40,7 @@ export const login = asyncHandler(async (req: Request, res: Response, next: Next
 
     return res.status(StatusCodes.OK).json(
         customResponse({
-            data: { user, accessToken: accessToken },
+            data: { user, accessToken, refreshToken },
             success: true,
             status: StatusCodes.OK,
             message: ReasonPhrases.OK,

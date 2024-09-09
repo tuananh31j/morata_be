@@ -1,23 +1,17 @@
-version: '3.8'
-
 services:
-    redis:
-        image: redis:latest
-        container_name: redis_container
+    web:
+        build:
+            context: .
+            dockerfile: Dockerfile
         ports:
-            - '6379:6379'
-        volumes:
-            - data:/redis_data
+            - '5000:5000'
 
     stripe-cli:
         image: stripe/stripe-cli
-        container_name: stripe_cli_container
-        environment:
-            - STRIPE_API_KEY=sk_test_51PCfBhJ2BXtwdiWSUlAIT5Htx5Br8McexHjp61d8g4vjKMWzq8oAi9pqOfI7cFpb5dz85ErILeeG8jDhrseXe4pv00x9I1qZZd
-        command: listen --forward-to http://host.docker.internal:5000/webhook --skip-verify --api-key $STRIPE_API_KEY
+        command: >
+            listen --forward-to http://host.docker.internal:5000/webhook
+            --skip-verify --api-key docker run --network="host" --rm -it stripe/stripe-cli -p 5000:5000  listen --forward-to http://host.docker.internal:5000/webhook --skip-verify --api-key sk_test_51PCfBhJ2BXtwdiWSUlAIT5Htx5Br8McexHjp61d8g4vjKMWzq8oAi9pqOfI7cFpb5dz85ErILeeG8jDhrseXe4pv00x9I1qZZd
         ports:
             - '5000:5000'
         network_mode: 'host'
-
-volumes:
-    data:
+        restart: 'no'

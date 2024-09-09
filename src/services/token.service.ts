@@ -23,7 +23,7 @@ export const verifyToken = async (token: string, secretKey: string, type: string
     const foundedToken = await Token.findOne({ token: token, type: type });
 
     if (!foundedToken) {
-        throw new NotAcceptableError('Not Acceptable: Invalid Verified Token.');
+        throw new NotAcceptableError('Not Acceptable: Invalid Verified Token!');
     }
     return foundedToken;
 };
