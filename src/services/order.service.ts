@@ -483,7 +483,6 @@ export const disabledReview = async (req: Request, res: Response, next: NextFunc
         })
         .lean();
 
-    console.log(req.body.productId);
     if (!product) throw new NotFoundError(`${ReasonPhrases.NOT_FOUND} product with id: ${req.body.productId}`);
 
     if (!product.isDeleted && !product.isHide) {

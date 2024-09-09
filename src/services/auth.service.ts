@@ -58,12 +58,16 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 };
 
 export const refresh = async (req: Request, res: Response, next: NextFunction) => {
-    const cookie = req.cookies;
-    console.log(cookie);
-    if (!cookie.jwt) {
+    const authHeader = req.headers['x-refresh-token'] as string;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return next(new UnAuthenticatedError('Not Acceptable: Invalid token refresh.'));
+    }
+
+    const refreshToken = req.cookies.jwt || authHeader.split(' ')[1];
+    if (!refreshToken) {
         throw new NotAcceptableError('Not Acceptable: Invalid token refresh.');
     }
-    const token = await verifyToken(cookie.jwt, config.jwt.refreshTokenKey, tokenTypes.REFRESH);
+    const token = await verifyToken(refreshToken, config.jwt.refreshTokenKey, tokenTypes.REFRESH);
 
     const user = await User.findById(token.userId);
     if (!user) {
@@ -77,11 +81,16 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
 
 // @Logout
 export const logout = async (req: Request, res: Response, next: NextFunction) => {
-    const cookie = req.cookies;
-    if (!cookie.jwt) {
+    const authHeader = req.headers['x-refresh-token'] as string;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return next(new UnAuthenticatedError('Not Acceptable: Invalid token refresh.'));
+    }
+
+    const refreshToken = req.cookies.jwt || authHeader.split(' ')[1];
+    if (!refreshToken) {
         throw new NotAcceptableError('Not Acceptable: Invalid Token');
     }
-    const token = await verifyToken(cookie.jwt, config.jwt.refreshTokenKey, tokenTypes.REFRESH);
+    const token = await verifyToken(refreshToken, config.jwt.refreshTokenKey, tokenTypes.REFRESH);
     await token.deleteOne();
 
     res.clearCookie('jwt', { maxAge: 0, sameSite: 'none', httpOnly: true, secure: true });
