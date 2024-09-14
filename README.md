@@ -1,11 +1,11 @@
-## <a href="http://34.229.217.0/">Morata</a> store
+## <a href="http://morata.originalstore.id.vn/">Morata</a> store
 
 > [!NOTE] ><br /><br />
 > Hello, I’m <a href="https://github.com/tuananh31j">Tuan Anh</a>, representing the development team of the electronics e-commerce website Morata. <br /><br />
 > In an e-commerce system, products are the central focus, providing essential information for users to make purchasing decisions. Each product typically has multiple attributes, quantities, and a variety of variants. <br /><br />
 > With the aim of fulfilling these needs, Morata has been developed as a flexible and intelligent product management system. The system not only offers detailed product information but also allows users to easily select different variants such as color, size, and configuration to suit their individual preferences. <br />
 
-### 🌐 Demo [Morata](http://34.229.217.0/)
+### 🌐 Demo [Morata](http://morata.originalstore.id.vn/)
 
 > [YouTube demo](https://www.youtube.com/watch?v=-QnXOd-N8yg) <br/>
 > Account(ADMIN): tuananh31j@gmail.com - password: 12345678
